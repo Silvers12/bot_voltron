@@ -149,14 +149,29 @@ export interface RankedMember {
   voiceSeconds: number;
 }
 
-export async function getLeaderboard(guildId: string, limit = 10): Promise<RankedMember[]> {
+export const LEADERBOARD_PAGE_SIZE = 10;
+
+export interface LeaderboardPage {
+  entries: RankedMember[];
+  page: number;
+  pageCount: number;
+  total: number;
+}
+
+/** Page du classement (page 1 = premiers). Une page hors bornes est ramenée dans les bornes. */
+export async function getLeaderboardPage(guildId: string, page: number): Promise<LeaderboardPage> {
+  const where = { guildId, leftAt: null };
+  const total = await prisma.member.count({ where });
+  const pageCount = Math.max(1, Math.ceil(total / LEADERBOARD_PAGE_SIZE));
+  const current = Math.min(Math.max(1, page), pageCount);
   const rows = await prisma.member.findMany({
-    where: { guildId, leftAt: null },
+    where,
     orderBy: [{ xp: 'desc' }, { messageCount: 'desc' }, { joinedAt: 'asc' }],
-    take: limit,
+    skip: (current - 1) * LEADERBOARD_PAGE_SIZE,
+    take: LEADERBOARD_PAGE_SIZE,
     select: { discordUserId: true, displayName: true, xp: true, messageCount: true, voiceSeconds: true },
   });
-  return rows.map((r, i) => ({ rank: i + 1, ...r }));
+  return { entries: rows.map((r, i) => ({ rank: (current - 1) * LEADERBOARD_PAGE_SIZE + i + 1, ...r })), page: current, pageCount, total };
 }
 
 /** Rang d'un membre : 1 + nombre de membres présents ayant strictement plus d'XP. */
