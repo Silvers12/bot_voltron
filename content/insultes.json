@@ -1,29 +1,29 @@
 {
   "weights": { "classique": 80, "rare": 15, "epique": 5 },
   "classique": [
-    "{cible}, tu ranges tes chaussettes par couleur, et tout le monde le sait.",
-    "{cible}, tu es la personne qui dit « j’arrive dans 5 minutes » depuis l’an dernier.",
-    "{cible}, même le salon AFK t’a trouvé trop calme.",
-    "{cible}, tu as l’aura d’un lundi matin avec du charme de vendredi soir. C’est perturbant.",
-    "{cible}, tes blagues sont si vieilles qu’elles ont leur propre fiche d’archéologie.",
-    "{cible}, tu tapes « lol » sans rire. Je le sais. Nous le savons tous.",
-    "{cible}, tu es le genre de personne qui met des glaçons dans le lait. Ne nie pas.",
-    "{cible}, ton micro grésille moins que tes idées, et c’est déjà un exploit.",
-    "{cible}, tu négocies avec le bouton « snooze » comme avec un marchand de tapis. Et tu perds.",
-    "{cible}, je t’ai vu applaudir à la fin d’un film. Seul. Chez toi."
+    "{cible}, tout le monde sait que tu ranges tes chaussettes par couleur, puis par longueur, puis par humeur. On ne te juge pas. Enfin si, un peu. Mais avec tendresse, parce qu’au fond on aimerait bien avoir ton tiroir.",
+    "{cible}, tu es la personne qui écrit « j’arrive dans cinq minutes » depuis l’an dernier. On a vu des saisons passer, des mises à jour sortir, des amitiés naître, et toi, toujours à cinq minutes. Un jour tu arriveras, et on fera une fête. Sans toi, probablement, parce que tu seras en retard.",
+    "{cible}, même le salon AFK t’a trouvé trop calme et a demandé à ce qu’on te déplace ailleurs. Quand tu actives ton micro, les gens vérifient leurs câbles. Quand tu parles enfin, on applaudit comme pour un premier mot.",
+    "{cible}, tu as l’aura d’un lundi matin avec le charme d’un vendredi soir, et personne n’arrive à décider si c’est une qualité ou un avertissement. Les nouveaux te regardent avec un mélange de respect et de prudence, comme un animal sauvage attachant.",
+    "{cible}, tes blagues sont si vieilles qu’elles ont leur propre fiche au musée d’archéologie. Les guides les présentent aux enfants comme des témoignages d’une époque révolue. Et pourtant tu les racontes encore, avec la même fierté, et c’est presque beau.",
+    "{cible}, tu tapes « lol » sans rire. Je le sais, nous le savons tous, ton visage reste de marbre pendant que tes doigts prétendent le contraire. C’est la plus grande imposture de ce serveur, et on la laisse passer uniquement parce qu’on t’aime bien.",
+    "{cible}, tu es le genre de personne qui met des glaçons dans le lait, du ketchup sur les pâtes et des chaussettes avec des sandales. Ne nie pas, j’ai des témoins. Tu es un chaos culinaire et vestimentaire ambulant, et c’est étrangement rassurant.",
+    "{cible}, ton micro grésille moins que tes idées, et c’est déjà un exploit technique. Quand tu proposes un plan, le groupe se tait, non pas par admiration, mais par incrédulité. Et puis on le suit quand même, parce qu’on n’a rien de mieux.",
+    "{cible}, tu négocies avec le bouton « snooze » comme un marchand de tapis négocie avec un touriste, avec passion, avec stratégie, et tu perds à chaque fois. Neuf minutes, puis neuf de plus, puis la journée. Ton réveil a déjà renoncé.",
+    "{cible}, je t’ai vu applaudir à la fin d’un film. Seul. Chez toi. Dans le noir. Et tu as regardé autour pour voir si quelqu’un applaudissait aussi. Ce moment t’appartient pour toujours, et désormais il nous appartient un peu aussi."
   ],
   "rare": [
-    "{cible}, les oracles ont prédit ta venue. Ils ont aussi demandé un remboursement.",
-    "{cible}, tu as le sens de l’orientation d’une chaussette dans une machine à laver.",
-    "{cible}, si l’élégance était une quête, tu l’aurais abandonnée au tutoriel.",
-    "{cible}, ta playlist a été classée arme de dissuasion par trois royaumes voisins.",
-    "{cible}, tu es la seule personne capable de perdre à pile ou face en lançant une pièce à deux faces identiques."
+    "{cible}, les oracles avaient prédit ta venue depuis des siècles. Ils avaient parlé d’un être unique, qui marquerait la compagnie de son empreinte. Puis tu es arrivé, tu as renversé ton verre sur la table du conseil, et les oracles ont demandé un remboursement intégral. Ils t’aiment bien quand même, mais ils ne le diront jamais en public.",
+    "{cible}, tu as le sens de l’orientation d’une chaussette dans une machine à laver : tu pars confiant, tu tournes beaucoup, et tu finis seul dans un endroit où personne ne te cherche. Les cartes, les boussoles et les GPS ont signé une pétition pour ne plus jamais travailler avec toi.",
+    "{cible}, si l’élégance était une quête, tu l’aurais abandonnée dès le tutoriel, juste après avoir cliqué sur le mauvais bouton trois fois de suite. Mais tu aurais trouvé une quête secrète que personne ne connaissait, et tu l’aurais terminée avec panache. C’est tout toi : jamais là où on t’attend, toujours là où c’est intéressant.",
+    "{cible}, ta playlist a été officiellement classée arme de dissuasion par trois royaumes voisins. Quand tu partages ton écran, les alliés se bouchent les oreilles et les ennemis se rendent sans conditions. C’est une puissance que personne ne comprend, mais que tout le monde redoute.",
+    "{cible}, tu es la seule personne de l’histoire capable de perdre à pile ou face avec une pièce à deux faces identiques. Elle est tombée sur la tranche. Puis elle a roulé sous un meuble. Puis on ne l’a jamais retrouvée. La malchance t’a adopté, et elle t’offre des cadeaux à Noël."
   ],
   "epique": [
-    "{cible}, PAR MON BOUCLIER ET MES MOUSTACHES ! Les bardes ont écrit une chanson sur toi. Personne n’ose la chanter.",
-    "{cible}, les dragons eux-mêmes refusent de te combattre : ils ont peur de ton accent quand tu cries.",
-    "{cible}, on raconte que tu as un jour fait une bonne décision. Les historiens cherchent encore la source.",
-    "{cible}, tu es l’élu de la prophétie. La prophétie de celui qui renverse son verre à chaque banquet.",
-    "{cible}, même ma rivière a dit « non merci » quand tu as voulu y nager. Une RIVIÈRE."
+    "PAR MON BOUCLIER ET MES MOUSTACHES ! Qu’on fasse silence dans les rangs. {cible}, les bardes des sept royaumes ont écrit une chanson sur toi. Elle fait vingt-trois couplets, un pont et un refrain que personne n’ose chanter en entier, parce que dès le troisième vers les tavernes se vident et les chiens se mettent à hurler. Elle raconte tes exploits, tes chutes, tes plans qui ne marchent jamais et pourtant finissent bien. C’est la chanson la plus honnête jamais écrite, et tu en es le héros malgré toi.",
+    "{cible}, les dragons eux-mêmes refusent de te combattre. Ce n’est pas par peur de ta force, ni de ton armure, ni de ton courage, qui sont tous trois sujets à débat. C’est à cause de ton cri de guerre. Celui que tu pousses quand tu paniques en vocal. Les dragons l’ont entendu une fois, ont replié leurs ailes, et ont décidé collectivement de se reconvertir dans l’élevage de moutons. Tu as pacifié une espèce entière sans le vouloir.",
+    "{cible}, on raconte dans les chroniques qu’un jour, un seul jour, tu as pris une bonne décision. Les historiens cherchent encore la source. Ils ont fouillé les archives, interrogé les témoins, consulté les oracles, et n’ont trouvé que des pistes contradictoires et un reçu de pizza. Pourtant la légende persiste, et nous choisissons d’y croire, parce que ce serveur a besoin d’espoir.",
+    "{cible}, tu es l’élu de la prophétie. Pas celle qui annonce un sauveur ou un roi, non. Celle, plus ancienne et plus mystérieuse, qui parle de celui qui renverse son verre à chaque banquet, qui marche sur le seul câble qui ne fallait pas débrancher, et qui dit « c’est bon, j’ai compris » juste avant la catastrophe. Les sages l’ont attendu des siècles. Tu es arrivé. Ils ont soupiré. Mais ils ont souri aussi.",
+    "{cible}, ma rivière a tout vu. Des crues, des glaces, des barques retournées, des loutres mal élevées. Elle n’a jamais refusé personne. Et puis tu es arrivé sur la berge, tu as enlevé tes chaussettes dépareillées, tu as annoncé que tu savais nager, et pour la première fois de son existence millénaire, la rivière a dit « non merci ». Une RIVIÈRE, {cible}. Tu as fait reculer de l’eau. Personne ne t’enlèvera jamais ça."
   ]
 }
