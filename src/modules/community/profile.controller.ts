@@ -1,6 +1,27 @@
-import type { GuildMember } from 'discord.js';
+import { MessageFlags, type ChatInputCommandInteraction, type GuildMember } from 'discord.js';
 import type { Member } from '../../generated/prisma/client.js';
-import { registerButton } from '../../discord/components.js';
+import { registerButton, type ButtonContext } from '../../discord/components.js';
+import { closeSession, openSession, touchSession } from '../../discord/sessions.js';
+
+/** Durée d'inactivité avant fermeture automatique du panneau. */
+export const PROFILE_SESSION_TTL_MS = 2 * 60 * 1000;
+export const profileSessionKey = (userId: string) => `profil:${userId}`;
+
+/** Ouvre un panneau de profil en réponse à /profil : ferme l'éventuel panneau précédent du membre. */
+export async function openProfile(ctx: { interaction: ChatInputCommandInteraction<'cached'>; member: Member; guildMember: GuildMember }) {
+  const key = profileSessionKey(ctx.interaction.user.id);
+  await closeSession(key);
+  await ctx.interaction.reply({ ...(await renderProfile(ctx.member, ctx.guildMember)), flags: MessageFlags.Ephemeral });
+  await openSession(key, ctx.interaction, PROFILE_SESSION_TTL_MS);
+}
+
+/** Enregistre un bouton du panneau : chaque clic repousse l'expiration. */
+function registerProfileButton(id: string, handler: (ctx: ButtonContext) => Promise<void>) {
+  registerButton(id, async (ctx) => {
+    await handler(ctx);
+    touchSession(profileSessionKey(ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
+  });
+}
 import { getBalance, getHistory } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { claimDaily, getDailyStatus } from '../economy/daily.service.js';
@@ -29,15 +50,15 @@ export async function renderHistory(member: Member) {
 }
 
 // Les messages de /profil sont éphémères : seul leur destinataire peut cliquer ces boutons.
-registerButton(PROFILE_REFRESH_ID, async ({ interaction, member, guildMember }) => {
+registerProfileButton(PROFILE_REFRESH_ID, async ({ interaction, member, guildMember }) => {
   await interaction.update(await renderProfile(member, guildMember));
 });
 
-registerButton(PROFILE_HISTORY_ID, async ({ interaction, member }) => {
+registerProfileButton(PROFILE_HISTORY_ID, async ({ interaction, member }) => {
   await interaction.update(await renderHistory(member));
 });
 
-registerButton(PROFILE_DAILY_ID, async ({ interaction, member, guildMember }) => {
+registerProfileButton(PROFILE_DAILY_ID, async ({ interaction, member, guildMember }) => {
   const settings = await getSettings(member.guildId);
   const result = await claimDaily(member.id, member.guildId, interaction.user.id);
   const notice = result.ok
@@ -48,7 +69,7 @@ registerButton(PROFILE_DAILY_ID, async ({ interaction, member, guildMember }) =>
   await interaction.update(await renderProfile(member, guildMember, notice));
 });
 
-registerButton(PROFILE_WEEKLY_ID, async ({ interaction, member, guildMember }) => {
+registerProfileButton(PROFILE_WEEKLY_ID, async ({ interaction, member, guildMember }) => {
   const settings = await getSettings(member.guildId);
   const result = await claimWeekly(member.id, member.guildId, interaction.user.id);
   const notice = result.ok
