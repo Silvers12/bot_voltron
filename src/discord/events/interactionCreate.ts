@@ -3,7 +3,7 @@ import { defineEvent } from '../types.js';
 import { config } from '../../core/config.js';
 import { createLogger } from '../../core/logger.js';
 import { ensureMember } from '../../modules/community/member.service.js';
-import { getButtonHandler } from '../components.js';
+import { resolveButton, resolveSelect } from '../components.js';
 
 const log = createLogger('interactions');
 
@@ -38,14 +38,32 @@ export default defineEvent({
         return;
       }
 
+      if (interaction.isAutocomplete()) {
+        const command = client.commands.get(interaction.commandName);
+        if (command?.autocomplete) await command.autocomplete(interaction);
+        else await interaction.respond([]);
+        return;
+      }
+
       if (interaction.isButton()) {
-        const handler = getButtonHandler(interaction.customId);
-        if (!handler) {
+        const resolved = resolveButton(interaction.customId);
+        if (!resolved) {
           await replyError(interaction, 'Ce bouton n’est plus valide. Rouvre `/profil`.');
           return;
         }
         const member = await ensureMember(interaction.member);
-        await handler({ interaction, guildMember: interaction.member, member });
+        await resolved.handler({ interaction, guildMember: interaction.member, member, arg: resolved.arg });
+        return;
+      }
+
+      if (interaction.isStringSelectMenu()) {
+        const handler = resolveSelect(interaction.customId);
+        if (!handler) {
+          await replyError(interaction, 'Ce menu n’est plus valide. Rouvre `/profil`.');
+          return;
+        }
+        const member = await ensureMember(interaction.member);
+        await handler({ interaction, guildMember: interaction.member, member, values: interaction.values });
         return;
       }
     } catch (err) {

@@ -1,4 +1,4 @@
-import type { ChatInputCommandInteraction, Client, ClientEvents, GuildMember, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
+import type { AutocompleteInteraction, ChatInputCommandInteraction, Client, ClientEvents, GuildMember, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
 import type { Member } from '../generated/prisma/client.js';
 
 /** Contexte fourni à chaque commande : le membre est déjà créé/à jour en base. */
@@ -11,6 +11,7 @@ export interface CommandContext {
 export interface Command {
   data: { name: string; toJSON(): RESTPostAPIChatInputApplicationCommandsJSONBody };
   execute(ctx: CommandContext): Promise<void>;
+  autocomplete?(interaction: AutocompleteInteraction<'cached'>): Promise<void>;
 }
 
 export interface Event<K extends keyof ClientEvents = keyof ClientEvents> {

@@ -4,6 +4,7 @@ import { prisma } from './infrastructure/prisma.js';
 import { createClient } from './discord/client.js';
 import { loadCommands, loadEvents } from './discord/loaders.js';
 import './modules/community/profile.controller.js';
+import './modules/shop/shop.controller.js';
 
 const log = createLogger('app');
 

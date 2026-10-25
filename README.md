@@ -21,7 +21,8 @@ src/
     commands/              # une slash command par fichier
     events/                # un événement Discord par fichier
   modules/community/       # membres et profil
-  modules/economy/         # bourses, câlins, historique
+  modules/economy/         # bourses, câlins, récompenses, historique
+  modules/shop/            # boutique, inventaire, administration des articles
   modules/settings/        # réglages du serveur (monnaie, bienvenue)
 prisma/schema.prisma       # modèle de données
 prisma/migrations/         # migrations versionnées
@@ -65,14 +66,22 @@ docker compose logs -f bot
 - Récompense hebdomadaire `/hebdo` : 2 000 cœurs, une fois par **semaine civile ISO** (lundi → dimanche).
 - La monnaie (nom singulier/pluriel, symbole), le solde de bienvenue et la récompense quotidienne sont réglables par `/admin`.
 
+## Boutique
+
+- Articles gérés par les admins : nom, description, emoji, prix, stock (optionnel), limite par membre (optionnelle).
+- Deux types : **collection** (simplement possédé) et **rôle** (attribue un rôle Discord à l'achat ; le bot doit avoir « Gérer les rôles » et être placé au-dessus du rôle vendu). Si Discord refuse l'attribution, l'achat est remboursé automatiquement.
+- Achat depuis `/profil` → Boutique → choix dans le menu → fiche → bouton Acheter. Débit, stock, limite et inventaire sont mis à jour dans une seule transaction.
+- Un article retiré reste en base : les exemplaires achetés restent visibles dans les inventaires.
+
 ## Commandes
 
 Membres :
-- `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour, Hebdo et Historique. Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
+- `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour, Hebdo, Historique, Boutique et Inventaire. Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/hebdo` : récompense de la semaine (réponse privée).
 
 Administrateurs (permission Discord *Administrateur*, vérifiée côté serveur) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
 - `/admin solde membre` · `/admin stats`
+- `/admin boutique ajouter|modifier|retirer|remettre|lister` (autocomplétion des noms d'articles)
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant`

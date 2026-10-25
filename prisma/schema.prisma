@@ -31,6 +31,7 @@ model Member {
 
   dailyClaims   DailyClaim[]
   weeklyClaims  WeeklyClaim[]
+  inventory     InventoryItem[]
 
   @@unique([guildId, discordUserId])
   @@index([guildId, leftAt])
@@ -70,6 +71,8 @@ enum TransactionType {
   WELCOME
   DAILY
   WEEKLY
+  PURCHASE
+  REFUND
   ADMIN_CREDIT
   ADMIN_DEBIT
   HUG_SENT
@@ -120,4 +123,51 @@ model WeeklyClaim {
   createdAt     DateTime @default(now())
 
   @@unique([memberId, weekKey])
+}
+
+enum ItemKind {
+  /// Objet de collection : simplement possédé, visible dans l'inventaire
+  COLLECTIBLE
+  /// Attribue un rôle Discord à l'achat
+  ROLE
+}
+
+/// Article de la boutique, géré par les administrateurs.
+model ShopItem {
+  id           String    @id @default(cuid())
+  guildId      String
+  name         String
+  description  String?
+  emoji        String?
+  price        Int
+  kind         ItemKind  @default(COLLECTIBLE)
+  /// Rôle Discord attribué à l'achat (kind = ROLE)
+  roleId       String?
+  /// Stock restant ; null = illimité
+  stock        Int?
+  /// Nombre maximal d'exemplaires par membre ; null = illimité
+  maxPerMember Int?
+  /// Un article retiré reste en base pour l'historique et les inventaires
+  active       Boolean   @default(true)
+  sortOrder    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  inventory    InventoryItem[]
+
+  @@unique([guildId, name])
+  @@index([guildId, active, sortOrder])
+}
+
+/// Exemplaires d'un article possédés par un membre.
+model InventoryItem {
+  id        String   @id @default(cuid())
+  memberId  String
+  member    Member   @relation(fields: [memberId], references: [id])
+  itemId    String
+  item      ShopItem @relation(fields: [itemId], references: [id])
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([memberId, itemId])
 }

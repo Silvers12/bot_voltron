@@ -1,21 +1,49 @@
-import type { ButtonInteraction, GuildMember } from 'discord.js';
+import type { ButtonInteraction, GuildMember, StringSelectMenuInteraction } from 'discord.js';
 import type { Member } from '../generated/prisma/client.js';
 
 export interface ButtonContext {
   interaction: ButtonInteraction<'cached'>;
   guildMember: GuildMember;
   member: Member;
+  /** Partie variable du customId pour un bouton enregistré par préfixe */
+  arg: string;
+}
+
+export interface SelectContext {
+  interaction: StringSelectMenuInteraction<'cached'>;
+  guildMember: GuildMember;
+  member: Member;
+  values: string[];
 }
 
 type ButtonHandler = (ctx: ButtonContext) => Promise<void>;
+type SelectHandler = (ctx: SelectContext) => Promise<void>;
 
-const buttonHandlers = new Map<string, ButtonHandler>();
+const buttons = new Map<string, ButtonHandler>();
+const buttonPrefixes: Array<{ prefix: string; handler: ButtonHandler }> = [];
+const selects = new Map<string, SelectHandler>();
 
-/** Associe un identifiant de bouton (customId) à son traitement. */
+/** Bouton à identifiant exact. */
 export function registerButton(customId: string, handler: ButtonHandler) {
-  buttonHandlers.set(customId, handler);
+  buttons.set(customId, handler);
 }
 
-export function getButtonHandler(customId: string): ButtonHandler | undefined {
-  return buttonHandlers.get(customId);
+/** Bouton dont le customId est `prefix + argument` (ex. `shop:buy:<itemId>`). */
+export function registerButtonPrefix(prefix: string, handler: ButtonHandler) {
+  buttonPrefixes.push({ prefix, handler });
+}
+
+export function registerSelect(customId: string, handler: SelectHandler) {
+  selects.set(customId, handler);
+}
+
+export function resolveButton(customId: string): { handler: ButtonHandler; arg: string } | undefined {
+  const exact = buttons.get(customId);
+  if (exact) return { handler: exact, arg: '' };
+  const byPrefix = buttonPrefixes.find((p) => customId.startsWith(p.prefix));
+  return byPrefix ? { handler: byPrefix.handler, arg: customId.slice(byPrefix.prefix.length) } : undefined;
+}
+
+export function resolveSelect(customId: string): SelectHandler | undefined {
+  return selects.get(customId);
 }

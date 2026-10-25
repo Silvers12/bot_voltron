@@ -8,6 +8,9 @@ export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
 export const PROFILE_DAILY_ID = 'profil:daily';
 export const PROFILE_WEEKLY_ID = 'profil:weekly';
+// Identifiants des écrans de la boutique (définis ici pour éviter un import circulaire avec shop.view)
+export const SHOP_OPEN_ID = 'shop:open';
+export const INVENTORY_OPEN_ID = 'shop:inventory';
 
 const VOLTRON_COLOR = 0x2e86c1;
 const FOOTER = 'Voltron, loutre paladin · Par mon bouclier et mes moustaches !';
@@ -77,8 +80,12 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
     new ButtonBuilder().setCustomId(PROFILE_HISTORY_ID).setLabel('Historique').setStyle(ButtonStyle.Primary).setEmoji('📜'),
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
   );
+  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
+    new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
+  );
 
-  return { embeds: [embed], components: [row] };
+  return { embeds: [embed], components: [row, row2] };
 }
 
 function describeTransaction(t: Transaction): string {
@@ -86,6 +93,8 @@ function describeTransaction(t: Transaction): string {
     case 'WELCOME': return '🎁 bourse de bienvenue';
     case 'DAILY': return '🌅 récompense du jour';
     case 'WEEKLY': return '🗓️ récompense de la semaine';
+    case 'PURCHASE': return '🛒 achat';
+    case 'REFUND': return '↩️ remboursement';
     case 'HUG_SENT': return `🤗 câlin à ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'HUG_RECEIVED': return `🤗 câlin de ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'ADMIN_CREDIT': return '🛡️ offert par l’intendance';

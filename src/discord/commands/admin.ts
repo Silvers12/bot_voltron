@@ -3,6 +3,7 @@ import { defineCommand } from '../types.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { credit, debit, getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
+import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../../modules/shop/shop.admin.js';
 import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
@@ -68,7 +69,14 @@ export default defineCommand({
         .setDescription('Règle le montant de la récompense hebdomadaire')
         .addIntegerOption((o) => o.setName('montant').setDescription('Montant par semaine').setRequired(true).setMinValue(0).setMaxValue(MAX_AMOUNT)),
     )
-    .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur')),
+    .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
+    .addSubcommandGroup((group) => buildShopAdminGroup(group)),
+
+  async autocomplete(interaction) {
+    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) return void (await interaction.respond([]));
+    if (interaction.options.getSubcommandGroup(false) === 'boutique') return autocompleteShopItem(interaction);
+    await interaction.respond([]);
+  },
 
   async execute({ interaction }) {
     // Vérification côté serveur : la visibilité de la commande ne suffit pas.
@@ -76,6 +84,8 @@ export default defineCommand({
       await interaction.reply({ content: 'Cette commande est réservée aux administrateurs.', flags: MessageFlags.Ephemeral });
       return;
     }
+
+    if (interaction.options.getSubcommandGroup(false) === 'boutique') return handleShopAdmin(interaction);
 
     const sub = interaction.options.getSubcommand(true);
     const settings = await getSettings(interaction.guildId);

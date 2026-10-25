@@ -1,6 +1,6 @@
 import { MessageFlags, type ChatInputCommandInteraction, type GuildMember } from 'discord.js';
 import type { Member } from '../../generated/prisma/client.js';
-import { registerButton, type ButtonContext } from '../../discord/components.js';
+import { registerButton, registerButtonPrefix, registerSelect, type ButtonContext, type SelectContext } from '../../discord/components.js';
 import { closeSession, openSession, touchSession } from '../../discord/sessions.js';
 
 /** Durée d'inactivité avant fermeture automatique du panneau. */
@@ -15,9 +15,23 @@ export async function openProfile(ctx: { interaction: ChatInputCommandInteractio
   await openSession(key, ctx.interaction, PROFILE_SESSION_TTL_MS);
 }
 
-/** Enregistre un bouton du panneau : chaque clic repousse l'expiration. */
-function registerProfileButton(id: string, handler: (ctx: ButtonContext) => Promise<void>) {
+/** Enregistre un composant du panneau : chaque clic repousse l'expiration de la session. */
+export function registerProfileButton(id: string, handler: (ctx: ButtonContext) => Promise<void>) {
   registerButton(id, async (ctx) => {
+    await handler(ctx);
+    touchSession(profileSessionKey(ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
+  });
+}
+
+export function registerProfileButtonPrefix(prefix: string, handler: (ctx: ButtonContext) => Promise<void>) {
+  registerButtonPrefix(prefix, async (ctx) => {
+    await handler(ctx);
+    touchSession(profileSessionKey(ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
+  });
+}
+
+export function registerProfileSelect(id: string, handler: (ctx: SelectContext) => Promise<void>) {
+  registerSelect(id, async (ctx) => {
     await handler(ctx);
     touchSession(profileSessionKey(ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
   });
