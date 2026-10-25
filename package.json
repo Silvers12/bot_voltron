@@ -1,0 +1,18 @@
+{
+  "name": "voltron",
+  "version": "0.1.0",
+  "description": "Bot Discord Voltron",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "deploy": "node src/deploy-commands.js"
+  },
+  "license": "UNLICENSED",
+  "private": true,
+  "dependencies": {
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.9"
+  }
+}
