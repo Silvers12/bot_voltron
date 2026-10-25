@@ -80,7 +80,7 @@ Membres :
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/hebdo` : récompense de la semaine (réponse privée).
 
-Administrateurs (permission Discord *Administrateur*, vérifiée côté serveur) :
+Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
 - `/admin solde membre` · `/admin stats`
 - `/admin boutique ajouter|modifier|retirer|remettre|lister` (autocomplétion des noms d'articles)

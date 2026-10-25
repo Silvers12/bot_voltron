@@ -1,6 +1,7 @@
 import { MessageFlags, PermissionFlagsBits, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { prisma } from '../../infrastructure/prisma.js';
+import { isBotAdmin } from '../../core/permissions.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { credit, debit, getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../../modules/shop/shop.admin.js';
@@ -73,15 +74,15 @@ export default defineCommand({
     .addSubcommandGroup((group) => buildShopAdminGroup(group)),
 
   async autocomplete(interaction) {
-    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) return void (await interaction.respond([]));
+    if (!isBotAdmin(interaction.member)) return void (await interaction.respond([]));
     if (interaction.options.getSubcommandGroup(false) === 'boutique') return autocompleteShopItem(interaction);
     await interaction.respond([]);
   },
 
   async execute({ interaction }) {
     // Vérification côté serveur : la visibilité de la commande ne suffit pas.
-    if (!interaction.memberPermissions.has(PermissionFlagsBits.Administrator)) {
-      await interaction.reply({ content: 'Cette commande est réservée aux administrateurs.', flags: MessageFlags.Ephemeral });
+    if (!isBotAdmin(interaction.member)) {
+      await interaction.reply({ content: 'Cette commande est réservée à l’intendance de Voltron.', flags: MessageFlags.Ephemeral });
       return;
     }
 
