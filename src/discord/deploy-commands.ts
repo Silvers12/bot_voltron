@@ -1,0 +1,12 @@
+import { REST, Routes } from 'discord.js';
+import { config } from '../core/config.js';
+import { loadCommands } from './loaders.js';
+
+const commands = [...(await loadCommands()).values()].map((c) => c.data.toJSON());
+const rest = new REST().setToken(config.discord.token);
+
+console.log(`Déploiement de ${commands.length} commande(s) sur le serveur ${config.discord.guildId}...`);
+const result = (await rest.put(Routes.applicationGuildCommands(config.discord.clientId, config.discord.guildId), {
+  body: commands,
+})) as unknown[];
+console.log(`OK : ${result.length} commande(s) enregistrée(s) : ${commands.map((c) => '/' + c.name).join(', ')}`);

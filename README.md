@@ -1,28 +1,59 @@
-# Voltron — bot Discord
+# Voltron — loutre paladin, bot Discord communautaire
+
+Bot privé pour un seul serveur (~80 membres) : animation, jeux et fun. Sans modération ni administration (l'équipe du serveur s'en charge).
+
+## Stack
+
+Node 22 · TypeScript · discord.js 14 · PostgreSQL 17 · Prisma 7 · Docker Compose
 
 ## Structure
 
 ```
 src/
-  index.js            # point d'entrée : crée le client, charge commandes et événements
-  config.js           # lecture et validation du .env
-  loaders.js          # chargement automatique de src/commands et src/events
-  deploy-commands.js  # enregistre les slash commands auprès de Discord
-  commands/           # une slash command par fichier ({ data, execute })
-  events/             # un événement Discord par fichier ({ name, once?, execute })
+  index.ts                 # démarrage, chargement, arrêt propre
+  core/                    # config (.env), logger
+  infrastructure/prisma.ts # client Prisma (adapter pg)
+  discord/
+    client.ts              # client Discord et intents
+    types.ts               # defineCommand / defineEvent
+    loaders.ts             # chargement auto de commands/ et events/
+    deploy-commands.ts     # enregistre les slash commands sur le serveur
+    commands/              # une slash command par fichier
+    events/                # un événement Discord par fichier
+  modules/community/       # membres et profil
+prisma/schema.prisma       # modèle de données
+prisma/migrations/         # migrations versionnées
 ```
 
-## Mise en place
+## Membres
 
-1. Créer l'application sur https://discord.com/developers/applications, onglet **Bot** → *Reset Token*.
-2. Inviter le bot : onglet **OAuth2 → URL Generator**, scopes `bot` + `applications.commands`,
-   permission *Send Messages*, puis ouvrir l'URL générée.
-3. `cp .env.example .env` et remplir `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, `DISCORD_GUILD_ID`.
-4. `npm install`
-5. `npm run deploy` — enregistre les commandes (instantané sur un serveur de test).
-6. `npm start` (ou `npm run dev` pour relancer à chaque modification).
-7. Dans Discord : `/ping` → le bot répond *Pong !* avec la latence.
+Un profil `Member` est créé automatiquement :
+- à l'arrivée sur le serveur (`guildMemberAdd`) ;
+- par synchronisation complète au démarrage du bot ;
+- à la première interaction avec le bot (filet de sécurité).
 
-## Ajouter une commande
+Un départ marque `leftAt` sans supprimer le profil. Nécessite l'intent **Server Members** activé dans le Developer Portal (Bot → Privileged Gateway Intents).
 
-Créer `src/commands/<nom>.js` sur le modèle de `ping.js`, puis relancer `npm run deploy`.
+## Développement
+
+```bash
+cp .env.example .env            # puis remplir les valeurs
+npm install
+docker compose up -d postgres   # base locale sur 127.0.0.1:5432
+npm run db:migrate              # applique les migrations
+npm run deploy                  # enregistre les commandes sur le serveur
+npm run dev                     # lance le bot avec rechargement auto
+```
+
+Après modification de `prisma/schema.prisma` : `npm run db:migrate -- --name <nom>`.
+
+## Production (Docker)
+
+```bash
+docker compose up -d --build    # bot + postgres ; les migrations s'appliquent au démarrage
+docker compose logs -f bot
+```
+
+## Commandes
+
+- `/profil` : espace personnel du membre (réponse privée).

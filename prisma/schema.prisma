@@ -1,0 +1,33 @@
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/generated/prisma"
+  moduleFormat        = "esm"
+  importFileExtension = "js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// Un membre du serveur. Créé automatiquement à l'arrivée, à la synchronisation
+/// au démarrage, ou à la première interaction avec le bot.
+model Member {
+  id            String    @id @default(cuid())
+  guildId       String
+  discordUserId String
+  /// Dernier pseudo Discord connu (nom de compte)
+  username      String
+  /// Dernier nom affiché connu sur le serveur
+  displayName   String
+  /// Date d'arrivée sur le serveur Discord
+  joinedAt      DateTime?
+  /// Date de départ si le membre a quitté le serveur (null = présent)
+  leftAt        DateTime?
+  /// Dernière interaction avec le bot
+  lastSeenAt    DateTime  @default(now())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@unique([guildId, discordUserId])
+  @@index([guildId, leftAt])
+}
