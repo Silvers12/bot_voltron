@@ -1,9 +1,11 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, time, TimestampStyles, userMention, type GuildMember } from 'discord.js';
 import type { GuildSettings, Member, Transaction } from '../../generated/prisma/client.js';
+import type { DailyStatus } from '../economy/daily.service.js';
 import { formatAmount } from '../settings/settings.service.js';
 
 export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
+export const PROFILE_DAILY_ID = 'profil:daily';
 
 const VOLTRON_COLOR = 0x2e86c1;
 const FOOTER = 'Voltron, loutre paladin · Par mon bouclier et mes moustaches !';
@@ -13,10 +15,13 @@ export interface ProfileData {
   guildMember: GuildMember;
   balance: number;
   settings: GuildSettings;
+  daily: DailyStatus;
+  /** Message ponctuel affiché sous le profil (résultat d'une action) */
+  notice?: string;
 }
 
 /** Écran principal du profil : embed + boutons. */
-export function buildProfileView({ member, guildMember, balance, settings }: ProfileData) {
+export function buildProfileView({ member, guildMember, balance, settings, daily, notice }: ProfileData) {
   const embed = new EmbedBuilder()
     .setColor(VOLTRON_COLOR)
     .setAuthor({ name: `Profil de ${member.displayName}`, iconURL: guildMember.displayAvatarURL({ size: 128 }) })
@@ -29,10 +34,23 @@ export function buildProfileView({ member, guildMember, balance, settings }: Pro
         inline: true,
       },
       { name: 'Profil créé', value: time(member.createdAt, TimestampStyles.RelativeTime), inline: true },
+      {
+        name: 'Récompense du jour',
+        value: daily.claimedToday
+          ? `Déjà récupérée. La prochaine arrive ${time(daily.nextAt, TimestampStyles.RelativeTime)}.`
+          : `**${formatAmount(daily.amount, settings)}** t’attendent !`,
+      },
     )
     .setFooter({ text: FOOTER });
+  if (notice) embed.setDescription(notice);
 
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(PROFILE_DAILY_ID)
+      .setLabel(daily.claimedToday ? 'Récompense récupérée' : 'Récupérer ma récompense')
+      .setStyle(ButtonStyle.Success)
+      .setEmoji('🎁')
+      .setDisabled(daily.claimedToday),
     new ButtonBuilder().setCustomId(PROFILE_HISTORY_ID).setLabel('Historique').setStyle(ButtonStyle.Primary).setEmoji('📜'),
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
   );
@@ -43,6 +61,7 @@ export function buildProfileView({ member, guildMember, balance, settings }: Pro
 function describeTransaction(t: Transaction): string {
   switch (t.type) {
     case 'WELCOME': return '🎁 bourse de bienvenue';
+    case 'DAILY': return '🌅 récompense du jour';
     case 'HUG_SENT': return `🤗 câlin à ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'HUG_RECEIVED': return `🤗 câlin de ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'ADMIN_CREDIT': return '🛡️ offert par l’intendance';
@@ -54,7 +73,7 @@ function describeTransaction(t: Transaction): string {
 export function buildHistoryView(member: Member, transactions: Transaction[], balance: number, settings: GuildSettings) {
   const lines = transactions.map((t) => {
     const label = describeTransaction(t);
-    const reason = t.reason && t.type !== 'WELCOME' ? ` · ${t.reason}` : '';
+    const reason = t.reason && t.type !== 'WELCOME' && t.type !== 'DAILY' ? ` · ${t.reason}` : '';
     return `${time(t.createdAt, TimestampStyles.ShortDateTime)} — **${formatAmount(t.delta, settings, { signed: true })}** ${label}${reason}`;
   });
 

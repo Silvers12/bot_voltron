@@ -29,6 +29,8 @@ model Member {
   updatedAt     DateTime  @updatedAt
   account       Account?
 
+  dailyClaims   DailyClaim[]
+
   @@unique([guildId, discordUserId])
   @@index([guildId, leftAt])
 }
@@ -41,6 +43,10 @@ model GuildSettings {
   currencySymbol   String   @default("❤️")
   /// Solde offert à l'ouverture d'une bourse
   startingBalance  Int      @default(5000)
+  /// Montant de la récompense quotidienne
+  dailyAmount      Int      @default(100)
+  /// Fuseau servant à définir le « jour » (récompense quotidienne)
+  timezone         String   @default("Europe/Paris")
   updatedAt        DateTime @updatedAt
 }
 
@@ -57,6 +63,7 @@ model Account {
 
 enum TransactionType {
   WELCOME
+  DAILY
   ADMIN_CREDIT
   ADMIN_DEBIT
   HUG_SENT
@@ -79,4 +86,17 @@ model Transaction {
   createdAt      DateTime        @default(now())
 
   @@index([accountId, createdAt(sort: Desc)])
+}
+
+/// Réclamation de la récompense quotidienne : une seule par membre et par jour civil.
+model DailyClaim {
+  id            String   @id @default(cuid())
+  memberId      String
+  member        Member   @relation(fields: [memberId], references: [id])
+  /// Jour civil dans le fuseau du serveur, format AAAA-MM-JJ
+  dayKey        String
+  transactionId String   @unique
+  createdAt     DateTime @default(now())
+
+  @@unique([memberId, dayKey])
 }

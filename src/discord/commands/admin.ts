@@ -3,7 +3,7 @@ import { defineCommand } from '../types.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { credit, debit, getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
-import { formatAmount, getSettings, updateCurrency, updateStartingBalance } from '../../modules/settings/settings.service.js';
+import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
 
@@ -56,6 +56,12 @@ export default defineCommand({
         .setDescription('Règle le solde offert à l’ouverture d’une bourse')
         .addIntegerOption((o) => o.setName('montant').setDescription('Montant offert').setRequired(true).setMinValue(0).setMaxValue(MAX_AMOUNT)),
     )
+    .addSubcommand((sub) =>
+      sub
+        .setName('quotidien')
+        .setDescription('Règle le montant de la récompense quotidienne')
+        .addIntegerOption((o) => o.setName('montant').setDescription('Montant par jour').setRequired(true).setMinValue(0).setMaxValue(MAX_AMOUNT)),
+    )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur')),
 
   async execute({ interaction }) {
@@ -82,6 +88,12 @@ export default defineCommand({
     if (sub === 'bienvenue') {
       const updated = await updateStartingBalance(interaction.guildId, interaction.options.getInteger('montant', true));
       await reply(`Les prochaines bourses ouvriront avec ${formatAmount(updated.startingBalance, updated)}. Les bourses existantes ne changent pas.`);
+      return;
+    }
+
+    if (sub === 'quotidien') {
+      const updated = await updateDailyAmount(interaction.guildId, interaction.options.getInteger('montant', true));
+      await reply(`La récompense quotidienne vaut désormais ${formatAmount(updated.dailyAmount, updated)}.`);
       return;
     }
 

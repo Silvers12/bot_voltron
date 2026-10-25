@@ -2,13 +2,19 @@ import type { GuildMember } from 'discord.js';
 import type { Member } from '../../generated/prisma/client.js';
 import { registerButton } from '../../discord/components.js';
 import { getBalance, getHistory } from '../economy/economy.service.js';
-import { getSettings } from '../settings/settings.service.js';
-import { buildHistoryView, buildProfileView, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID } from './profile.view.js';
+import { formatAmount, getSettings } from '../settings/settings.service.js';
+import { claimDaily, getDailyStatus } from '../economy/daily.service.js';
+import { time, TimestampStyles } from 'discord.js';
+import { buildHistoryView, buildProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID } from './profile.view.js';
 
 /** Assemble les données du profil et construit l'écran. */
-export async function renderProfile(member: Member, guildMember: GuildMember) {
-  const [balance, settings] = await Promise.all([getBalance(member.id), getSettings(member.guildId)]);
-  return buildProfileView({ member, guildMember, balance, settings });
+export async function renderProfile(member: Member, guildMember: GuildMember, notice?: string) {
+  const [balance, settings, daily] = await Promise.all([
+    getBalance(member.id),
+    getSettings(member.guildId),
+    getDailyStatus(member.id, member.guildId),
+  ]);
+  return buildProfileView({ member, guildMember, balance, settings, daily, notice });
 }
 
 export async function renderHistory(member: Member) {
@@ -27,4 +33,13 @@ registerButton(PROFILE_REFRESH_ID, async ({ interaction, member, guildMember }) 
 
 registerButton(PROFILE_HISTORY_ID, async ({ interaction, member }) => {
   await interaction.update(await renderHistory(member));
+});
+
+registerButton(PROFILE_DAILY_ID, async ({ interaction, member, guildMember }) => {
+  const settings = await getSettings(member.guildId);
+  const result = await claimDaily(member.id, member.guildId, interaction.user.id);
+  const notice = result.ok
+    ? `🎁 **${formatAmount(result.amount, settings)}** rejoignent ta bourse. Belle journée pour défendre la rivière !`
+    : `Tu as déjà reçu ta récompense aujourd’hui. Reviens ${time(result.nextAt, TimestampStyles.RelativeTime)}.`;
+  await interaction.update(await renderProfile(member, guildMember, notice));
 });

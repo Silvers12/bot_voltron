@@ -61,15 +61,16 @@ docker compose logs -f bot
 - Chaque membre a une bourse, ouverte automatiquement avec le solde de bienvenue (5 000 cœurs par défaut).
 - Le solde ne peut jamais être négatif : contrainte en base + débit conditionnel atomique.
 - Chaque mouvement est historisé (`Transaction`) avec auteur, motif, solde résultant.
-- La monnaie (nom singulier/pluriel, symbole) et le solde de bienvenue sont réglables par `/admin`.
+- Récompense quotidienne depuis `/profil` : une fois par **jour civil** (fuseau `Europe/Paris`), pas par tranche de 24 h. Unicité (membre, jour) garantie en base.
+- La monnaie (nom singulier/pluriel, symbole), le solde de bienvenue et la récompense quotidienne sont réglables par `/admin`.
 
 ## Commandes
 
 Membres :
-- `/profil` : espace personnel (privé) : bourse, ancienneté, bouton Historique.
+- `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour et Historique.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 
 Administrateurs (permission Discord *Administrateur*, vérifiée côté serveur) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
 - `/admin solde membre` · `/admin stats`
-- `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant`
+- `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant`
