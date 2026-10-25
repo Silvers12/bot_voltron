@@ -1,6 +1,6 @@
 import { Events } from 'discord.js';
 import { defineEvent } from '../types.js';
-import { config } from '../../core/config.js';
+import { config, isAllowedGuild } from '../../core/config.js';
 import { createLogger } from '../../core/logger.js';
 import { syncGuildMembers } from '../../modules/community/member.service.js';
 import { reconcileVoiceSessions, tickVoiceSessions } from '../../modules/progression/xp.service.js';
@@ -14,21 +14,23 @@ export default defineEvent({
   async execute(client) {
     log.info(`Connecté en tant que ${client.user.tag}`);
 
-    const guild = client.guilds.cache.get(config.discord.guildId);
-    if (!guild) {
-      log.error(`Le bot n'est pas présent sur le serveur autorisé ${config.discord.guildId}.`);
-      return;
+    const guilds = config.discord.guildIds.map((id) => client.guilds.cache.get(id)).filter((g) => g !== undefined);
+    for (const id of config.discord.guildIds) {
+      if (!client.guilds.cache.has(id)) log.error(`Le bot n'est pas présent sur le serveur autorisé ${id}.`);
     }
-    log.info(`Serveur autorisé : ${guild.name} (${guild.memberCount} membres)`);
-
-    const others = client.guilds.cache.filter((g) => g.id !== guild.id);
+    const others = client.guilds.cache.filter((g) => !isAllowedGuild(g.id));
     if (others.size > 0) {
-      log.warn(`Présent aussi sur ${others.size} autre(s) serveur(s) non autorisé(s) : ${others.map((g) => g.name).join(', ')}`);
+      log.warn(`Présent aussi sur ${others.size} serveur(s) non autorisé(s), ignorés : ${others.map((g) => g.name).join(', ')}`);
     }
 
-    await syncGuildMembers(guild);
-    await reconcileVoiceSessions(guild);
+    for (const guild of guilds) {
+      log.info(`Serveur autorisé : ${guild.name} (${guild.memberCount} membres)`);
+      await syncGuildMembers(guild);
+      await reconcileVoiceSessions(guild);
+    }
     await settleAbandonedGames();
-    setInterval(() => void tickVoiceSessions(guild).catch((err) => log.error('Pointage vocal échoué', err)), 60_000);
+    setInterval(() => {
+      for (const guild of guilds) void tickVoiceSessions(guild).catch((err) => log.error(`Pointage vocal échoué (${guild.name})`, err));
+    }, 60_000);
   },
 });

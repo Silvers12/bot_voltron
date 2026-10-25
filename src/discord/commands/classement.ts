@@ -8,7 +8,7 @@ import { formatVoiceDuration, getLeaderboardPage, getRank, type LeaderboardPage 
 const MEDALS = ['🥇', '🥈', '🥉'];
 const PAGE_PREFIX = 'lb:page:';
 const SESSION_TTL_MS = 2 * 60 * 1000;
-const sessionKey = (userId: string) => `classement:${userId}`;
+const sessionKey = (guildId: string, userId: string) => `classement:${guildId}:${userId}`;
 
 function buildLeaderboard(data: LeaderboardPage, me: { xp: number; rank: number }) {
   const lines = data.entries.map(
@@ -36,13 +36,13 @@ async function render(guildId: string, memberId: string, page: number) {
 // Message privé : seul le demandeur voit et tourne les pages. Chaque clic repousse la fermeture.
 registerButtonPrefix(PAGE_PREFIX, async ({ interaction, member, arg }) => {
   await interaction.update(await render(interaction.guildId, member.id, Number(arg) || 1));
-  touchSession(sessionKey(interaction.user.id), interaction, SESSION_TTL_MS);
+  touchSession(sessionKey(interaction.guildId, interaction.user.id), interaction, SESSION_TTL_MS);
 });
 
 export default defineCommand({
   data: new SlashCommandBuilder().setName('classement').setDescription('Classement d’expérience de la compagnie'),
   async execute({ interaction, member }) {
-    const key = sessionKey(interaction.user.id);
+    const key = sessionKey(interaction.guildId, interaction.user.id);
     await closeSession(key);
     await interaction.reply({ ...(await render(interaction.guildId, member.id, 1)), flags: MessageFlags.Ephemeral });
     await openSession(key, interaction, SESSION_TTL_MS);

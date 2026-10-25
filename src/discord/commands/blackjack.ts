@@ -13,7 +13,7 @@ import { BJ_AGAIN_PREFIX, BJ_DOUBLE_ID, BJ_HIT_ID, BJ_STAND_ID, buildBlackjackVi
 
 /** Sans action pendant ce délai, la partie est réglée comme si le joueur restait. */
 const TURN_TTL_MS = 2 * 60 * 1000;
-const sessionKey = (userId: string) => `blackjack:${userId}`;
+const sessionKey = (guildId: string, userId: string) => `blackjack:${guildId}:${userId}`;
 
 async function render(view: GameView, member: Member) {
   const [balance, settings] = await Promise.all([getBalance(member.id), getSettings(member.guildId)]);
@@ -41,7 +41,7 @@ async function play(ctx: { interaction: RepliableInteraction; member: Member }, 
     if (reply === 'update' && interaction.isButton()) await interaction.update({ ...payload, content: '' });
     else await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
     if (view.finished) return;
-    await openSession(sessionKey(interaction.user.id), interaction, TURN_TTL_MS, expireHandler(member));
+    await openSession(sessionKey(member.guildId, interaction.user.id), interaction, TURN_TTL_MS, expireHandler(member));
   } catch (err) {
     if (err instanceof InsufficientFundsError) return void (await fail(`Il te faut ${formatAmount(bet, settings)} pour miser, et tu n’as que ${formatAmount(err.balance, settings)}.`));
     if (err instanceof BlackjackError) return void (await fail(err.message));
@@ -54,7 +54,7 @@ async function act(ctx: ButtonContext, action: (m: Member) => Promise<GameView>)
   try {
     const view = await action(member);
     await interaction.update({ ...(await render(view, member)), content: '' });
-    if (!view.finished) touchSession(sessionKey(interaction.user.id), interaction, TURN_TTL_MS);
+    if (!view.finished) touchSession(sessionKey(member.guildId, interaction.user.id), interaction, TURN_TTL_MS);
   } catch (err) {
     if (err instanceof InsufficientFundsError || err instanceof BlackjackError) {
       await interaction.reply({ content: err.message, flags: MessageFlags.Ephemeral });
@@ -83,7 +83,7 @@ export default defineCommand({
     if (active) {
       const canDouble = (active.playerCards as unknown[]).length === 2 && !active.doubled;
       await interaction.reply({ ...(await render(toView(active, { canDouble }), member)), content: 'Tu avais une partie en cours, la voici.', flags: MessageFlags.Ephemeral });
-      await openSession(sessionKey(interaction.user.id), interaction, TURN_TTL_MS, expireHandler(member));
+      await openSession(sessionKey(member.guildId, interaction.user.id), interaction, TURN_TTL_MS, expireHandler(member));
       return;
     }
     await play({ interaction, member }, interaction.options.getInteger('mise', true), { reply: 'reply' });

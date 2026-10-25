@@ -1,7 +1,7 @@
 import type { Guild, Message, VoiceState } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
-import { config } from '../../core/config.js';
+import { isAllowedGuild } from '../../core/config.js';
 import { getSettings } from '../settings/settings.service.js';
 import { ensureMember } from '../community/member.service.js';
 
@@ -13,7 +13,7 @@ const log = createLogger('xp');
 
 /** Crédite l'XP d'un message si le délai anti-spam est écoulé. Le message n'est jamais lu. */
 export async function handleMessage(message: Message) {
-  if (!message.inGuild() || message.guildId !== config.discord.guildId) return;
+  if (!message.inGuild() || !isAllowedGuild(message.guildId)) return;
   if (message.author.bot || message.system || !message.member) return;
 
   const settings = await getSettings(message.guildId);
@@ -85,7 +85,7 @@ export async function creditVoiceTime(memberId: string, guildId: string, until: 
 /** Entrée, sortie ou changement de salon vocal. */
 export async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
   const guild = newState.guild;
-  if (guild.id !== config.discord.guildId || !newState.member || newState.member.user.bot) return;
+  if (!isAllowedGuild(guild.id) || !newState.member || newState.member.user.bot) return;
 
   const wasCounted = isCountedChannel(guild, oldState.channelId);
   const isCounted = isCountedChannel(guild, newState.channelId);
@@ -100,7 +100,7 @@ export async function handleVoiceStateUpdate(oldState: VoiceState, newState: Voi
 
 /** Pointage périodique : crédite les sessions en cours sans attendre la sortie. */
 export async function tickVoiceSessions(guild: Guild) {
-  const sessions = await prisma.voiceSession.findMany({ include: { member: { select: { discordUserId: true } } } });
+  const sessions = await prisma.voiceSession.findMany({ where: { member: { guildId: guild.id } }, include: { member: { select: { discordUserId: true } } } });
   const now = new Date();
   for (const session of sessions) {
     const state = guild.voiceStates.cache.get(session.member.discordUserId);
@@ -114,7 +114,7 @@ export async function tickVoiceSessions(guild: Guild) {
  * pointage, pas jusqu'à maintenant) et ouvre une session pour chaque membre déjà présent.
  */
 export async function reconcileVoiceSessions(guild: Guild) {
-  const sessions = await prisma.voiceSession.findMany({ include: { member: { select: { discordUserId: true } } } });
+  const sessions = await prisma.voiceSession.findMany({ where: { member: { guildId: guild.id } }, include: { member: { select: { discordUserId: true } } } });
   let closed = 0;
   for (const session of sessions) {
     const state = guild.voiceStates.cache.get(session.member.discordUserId);

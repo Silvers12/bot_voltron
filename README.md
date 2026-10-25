@@ -1,6 +1,8 @@
 # Voltron — loutre paladin, bot Discord communautaire
 
-Bot privé pour un seul serveur (~80 membres) : animation, jeux et fun. Sans modération ni administration (l'équipe du serveur s'en charge).
+Bot privé pour un ou plusieurs serveurs choisis (liste `DISCORD_GUILD_IDS`) : animation, jeux et fun. Sans modération ni administration (l'équipe du serveur s'en charge).
+
+Chaque serveur autorisé a ses propres membres, bourses, boutique, réglages et classement ; les textes de `content/` et la liste des intendants (`DISCORD_ADMIN_IDS`) sont communs. Tout autre serveur est ignoré.
 
 ## Stack
 

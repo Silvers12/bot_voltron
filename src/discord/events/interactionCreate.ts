@@ -1,6 +1,6 @@
 import { Events, MessageFlags, type Interaction, type RepliableInteraction } from 'discord.js';
 import { defineEvent } from '../types.js';
-import { config } from '../../core/config.js';
+import { isAllowedGuild } from '../../core/config.js';
 import { createLogger } from '../../core/logger.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { resolveButton, resolveSelect } from '../components.js';
@@ -15,7 +15,7 @@ async function replyError(interaction: RepliableInteraction, content: string) {
 
 /** Refuse tout ce qui ne vient pas du serveur autorisé (bot privé). */
 function isAllowed(interaction: Interaction): interaction is Interaction<'cached'> {
-  return interaction.inCachedGuild() && interaction.guildId === config.discord.guildId;
+  return interaction.inCachedGuild() && isAllowedGuild(interaction.guildId);
 }
 
 export default defineEvent({

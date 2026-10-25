@@ -5,11 +5,11 @@ import { closeSession, openSession, touchSession } from '../../discord/sessions.
 
 /** Durée d'inactivité avant fermeture automatique du panneau. */
 export const PROFILE_SESSION_TTL_MS = 2 * 60 * 1000;
-export const profileSessionKey = (userId: string) => `profil:${userId}`;
+export const profileSessionKey = (guildId: string, userId: string) => `profil:${guildId}:${userId}`;
 
 /** Ouvre un panneau de profil en réponse à /profil : ferme l'éventuel panneau précédent du membre. */
 export async function openProfile(ctx: { interaction: ChatInputCommandInteraction<'cached'>; member: Member; guildMember: GuildMember }) {
-  const key = profileSessionKey(ctx.interaction.user.id);
+  const key = profileSessionKey(ctx.interaction.guildId, ctx.interaction.user.id);
   await closeSession(key);
   await ctx.interaction.reply({ ...(await renderProfile(ctx.member, ctx.guildMember)), flags: MessageFlags.Ephemeral });
   await openSession(key, ctx.interaction, PROFILE_SESSION_TTL_MS);
@@ -19,21 +19,21 @@ export async function openProfile(ctx: { interaction: ChatInputCommandInteractio
 export function registerProfileButton(id: string, handler: (ctx: ButtonContext) => Promise<void>) {
   registerButton(id, async (ctx) => {
     await handler(ctx);
-    touchSession(profileSessionKey(ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
+    touchSession(profileSessionKey(ctx.interaction.guildId, ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
   });
 }
 
 export function registerProfileButtonPrefix(prefix: string, handler: (ctx: ButtonContext) => Promise<void>) {
   registerButtonPrefix(prefix, async (ctx) => {
     await handler(ctx);
-    touchSession(profileSessionKey(ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
+    touchSession(profileSessionKey(ctx.interaction.guildId, ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
   });
 }
 
 export function registerProfileSelect(id: string, handler: (ctx: SelectContext) => Promise<void>) {
   registerSelect(id, async (ctx) => {
     await handler(ctx);
-    touchSession(profileSessionKey(ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
+    touchSession(profileSessionKey(ctx.interaction.guildId, ctx.interaction.user.id), ctx.interaction, PROFILE_SESSION_TTL_MS);
   });
 }
 import { getBalance, getHistory } from '../economy/economy.service.js';

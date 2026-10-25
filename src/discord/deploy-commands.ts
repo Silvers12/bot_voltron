@@ -5,8 +5,8 @@ import { loadCommands } from './loaders.js';
 const commands = [...(await loadCommands()).values()].map((c) => c.data.toJSON());
 const rest = new REST().setToken(config.discord.token);
 
-console.log(`Déploiement de ${commands.length} commande(s) sur le serveur ${config.discord.guildId}...`);
-const result = (await rest.put(Routes.applicationGuildCommands(config.discord.clientId, config.discord.guildId), {
-  body: commands,
-})) as unknown[];
-console.log(`OK : ${result.length} commande(s) enregistrée(s) : ${commands.map((c) => '/' + c.name).join(', ')}`);
+for (const guildId of config.discord.guildIds) {
+  console.log(`Déploiement de ${commands.length} commande(s) sur le serveur ${guildId}...`);
+  const result = (await rest.put(Routes.applicationGuildCommands(config.discord.clientId, guildId), { body: commands })) as unknown[];
+  console.log(`OK : ${result.length} commande(s) enregistrée(s) : ${commands.map((c) => '/' + c.name).join(', ')}`);
+}
