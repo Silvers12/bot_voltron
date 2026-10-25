@@ -3,7 +3,7 @@ import { defineCommand } from '../types.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { credit, debit, getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
-import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount } from '../../modules/settings/settings.service.js';
+import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
 
@@ -62,6 +62,12 @@ export default defineCommand({
         .setDescription('Règle le montant de la récompense quotidienne')
         .addIntegerOption((o) => o.setName('montant').setDescription('Montant par jour').setRequired(true).setMinValue(0).setMaxValue(MAX_AMOUNT)),
     )
+    .addSubcommand((sub) =>
+      sub
+        .setName('hebdo')
+        .setDescription('Règle le montant de la récompense hebdomadaire')
+        .addIntegerOption((o) => o.setName('montant').setDescription('Montant par semaine').setRequired(true).setMinValue(0).setMaxValue(MAX_AMOUNT)),
+    )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur')),
 
   async execute({ interaction }) {
@@ -94,6 +100,12 @@ export default defineCommand({
     if (sub === 'quotidien') {
       const updated = await updateDailyAmount(interaction.guildId, interaction.options.getInteger('montant', true));
       await reply(`La récompense quotidienne vaut désormais ${formatAmount(updated.dailyAmount, updated)}.`);
+      return;
+    }
+
+    if (sub === 'hebdo') {
+      const updated = await updateWeeklyAmount(interaction.guildId, interaction.options.getInteger('montant', true));
+      await reply(`La récompense hebdomadaire vaut désormais ${formatAmount(updated.weeklyAmount, updated)}.`);
       return;
     }
 

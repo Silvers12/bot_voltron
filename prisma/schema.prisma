@@ -30,6 +30,7 @@ model Member {
   account       Account?
 
   dailyClaims   DailyClaim[]
+  weeklyClaims  WeeklyClaim[]
 
   @@unique([guildId, discordUserId])
   @@index([guildId, leftAt])
@@ -43,8 +44,12 @@ model GuildSettings {
   currencySymbol   String   @default("❤️")
   /// Solde offert à l'ouverture d'une bourse
   startingBalance  Int      @default(5000)
-  /// Montant de la récompense quotidienne
-  dailyAmount      Int      @default(100)
+  /// Montant de base de la récompense quotidienne
+  dailyAmount      Int      @default(200)
+  /// Bonus en % par jour consécutif au-delà du premier (série sans oubli)
+  dailyStreakBonusPercent Int @default(1)
+  /// Montant de la récompense hebdomadaire (semaine civile, lundi → dimanche)
+  weeklyAmount     Int      @default(2000)
   /// Fuseau servant à définir le « jour » (récompense quotidienne)
   timezone         String   @default("Europe/Paris")
   updatedAt        DateTime @updatedAt
@@ -64,6 +69,7 @@ model Account {
 enum TransactionType {
   WELCOME
   DAILY
+  WEEKLY
   ADMIN_CREDIT
   ADMIN_DEBIT
   HUG_SENT
@@ -95,8 +101,23 @@ model DailyClaim {
   member        Member   @relation(fields: [memberId], references: [id])
   /// Jour civil dans le fuseau du serveur, format AAAA-MM-JJ
   dayKey        String
+  /// Nombre de jours consécutifs au moment de cette réclamation (1 = série entamée)
+  streak        Int      @default(1)
   transactionId String   @unique
   createdAt     DateTime @default(now())
 
   @@unique([memberId, dayKey])
+}
+
+/// Réclamation de la récompense hebdomadaire : une seule par membre et par semaine civile.
+model WeeklyClaim {
+  id            String   @id @default(cuid())
+  memberId      String
+  member        Member   @relation(fields: [memberId], references: [id])
+  /// Semaine ISO dans le fuseau du serveur, format AAAA-Wnn
+  weekKey       String
+  transactionId String   @unique
+  createdAt     DateTime @default(now())
+
+  @@unique([memberId, weekKey])
 }

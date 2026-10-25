@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, time, TimestampStyles, userMention, type GuildMember } from 'discord.js';
 import type { GuildSettings, Member, Transaction } from '../../generated/prisma/client.js';
 import type { DailyStatus } from '../economy/daily.service.js';
+import type { WeeklyStatus } from '../economy/weekly.service.js';
 import { formatAmount } from '../settings/settings.service.js';
 
 export const PROFILE_REFRESH_ID = 'profil:refresh';
@@ -16,12 +17,13 @@ export interface ProfileData {
   balance: number;
   settings: GuildSettings;
   daily: DailyStatus;
+  weekly: WeeklyStatus;
   /** Message ponctuel affiché sous le profil (résultat d'une action) */
   notice?: string;
 }
 
 /** Écran principal du profil : embed + boutons. */
-export function buildProfileView({ member, guildMember, balance, settings, daily, notice }: ProfileData) {
+export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, notice }: ProfileData) {
   const embed = new EmbedBuilder()
     .setColor(VOLTRON_COLOR)
     .setAuthor({ name: `Profil de ${member.displayName}`, iconURL: guildMember.displayAvatarURL({ size: 128 }) })
@@ -37,8 +39,22 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
       {
         name: 'Récompense du jour',
         value: daily.claimedToday
-          ? `Déjà récupérée. La prochaine arrive ${time(daily.nextAt, TimestampStyles.RelativeTime)}.`
-          : `**${formatAmount(daily.amount, settings)}** t’attendent !`,
+          ? `Déjà récupérée. La prochaine (**${formatAmount(daily.nextAmount, settings)}**) arrive ${time(daily.nextAt, TimestampStyles.RelativeTime)}.`
+          : `**${formatAmount(daily.nextAmount, settings)}** t’attendent !`,
+        inline: true,
+      },
+      {
+        name: 'Série',
+        value: daily.streak > 0
+          ? `🔥 ${daily.streak} jour${daily.streak > 1 ? 's' : ''} d’affilée (+${settings.dailyStreakBonusPercent}% par jour)`
+          : 'Aucune série en cours',
+        inline: true,
+      },
+      {
+        name: 'Récompense de la semaine',
+        value: weekly.claimedThisWeek
+          ? `Déjà récupérée. La prochaine arrive ${time(weekly.nextAt, TimestampStyles.RelativeTime)}.`
+          : `**${formatAmount(weekly.amount, settings)}** disponibles avec \`/hebdo\`.`,
       },
     )
     .setFooter({ text: FOOTER });
@@ -62,6 +78,7 @@ function describeTransaction(t: Transaction): string {
   switch (t.type) {
     case 'WELCOME': return '🎁 bourse de bienvenue';
     case 'DAILY': return '🌅 récompense du jour';
+    case 'WEEKLY': return '🗓️ récompense de la semaine';
     case 'HUG_SENT': return `🤗 câlin à ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'HUG_RECEIVED': return `🤗 câlin de ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'ADMIN_CREDIT': return '🛡️ offert par l’intendance';
@@ -73,7 +90,7 @@ function describeTransaction(t: Transaction): string {
 export function buildHistoryView(member: Member, transactions: Transaction[], balance: number, settings: GuildSettings) {
   const lines = transactions.map((t) => {
     const label = describeTransaction(t);
-    const reason = t.reason && t.type !== 'WELCOME' && t.type !== 'DAILY' ? ` · ${t.reason}` : '';
+    const reason = t.reason && !['WELCOME', 'DAILY', 'WEEKLY'].includes(t.type) ? ` · ${t.reason}` : '';
     return `${time(t.createdAt, TimestampStyles.ShortDateTime)} — **${formatAmount(t.delta, settings, { signed: true })}** ${label}${reason}`;
   });
 

@@ -1,4 +1,4 @@
-/** Utilitaires de jour civil dans un fuseau donné (sans dépendance externe). */
+/** Utilitaires de jour et de semaine civils dans un fuseau donné (sans dépendance externe). */
 
 interface Parts { year: number; month: number; day: number; hour: number; minute: number; second: number }
 
@@ -17,18 +17,55 @@ function offsetMs(date: Date, timeZone: string): number {
   return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - Math.floor(date.getTime() / 1000) * 1000;
 }
 
+const pad = (n: number) => String(n).padStart(2, '0');
+
 /** Clé du jour civil, ex. `2026-10-25`, dans le fuseau donné. */
 export function dayKey(date: Date, timeZone: string): string {
   const p = partsIn(date, timeZone);
-  return `${p.year}-${String(p.month).padStart(2, '0')}-${String(p.day).padStart(2, '0')}`;
+  return `${p.year}-${pad(p.month)}-${pad(p.day)}`;
 }
 
-/** Instant (UTC) du prochain minuit dans le fuseau donné. Tient compte des changements d'heure. */
-export function nextMidnight(date: Date, timeZone: string): Date {
+/** Jour civil précédent d'une clé `AAAA-MM-JJ` (arithmétique de dates pure). */
+export function previousDayKey(key: string): string {
+  const [y, m, d] = key.split('-').map(Number) as [number, number, number];
+  const prev = new Date(Date.UTC(y, m - 1, d - 1));
+  return `${prev.getUTCFullYear()}-${pad(prev.getUTCMonth() + 1)}-${pad(prev.getUTCDate())}`;
+}
+
+/** Jour de la semaine ISO (1 = lundi … 7 = dimanche) du jour civil courant dans le fuseau. */
+function isoWeekday(date: Date, timeZone: string): number {
   const p = partsIn(date, timeZone);
-  const naive = Date.UTC(p.year, p.month - 1, p.day + 1, 0, 0, 0);
-  // Première estimation avec le décalage courant, puis correction avec le décalage à l'instant estimé.
+  const utcDay = new Date(Date.UTC(p.year, p.month - 1, p.day)).getUTCDay(); // 0 = dimanche
+  return utcDay === 0 ? 7 : utcDay;
+}
+
+/** Clé de la semaine ISO, ex. `2026-W43`, dans le fuseau donné. */
+export function weekKey(date: Date, timeZone: string): string {
+  const p = partsIn(date, timeZone);
+  const d = new Date(Date.UTC(p.year, p.month - 1, p.day));
+  // Algorithme ISO 8601 : la semaine contenant le jeudi
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = Date.UTC(d.getUTCFullYear(), 0, 1);
+  const week = Math.ceil(((d.getTime() - yearStart) / 86_400_000 + 1) / 7);
+  return `${d.getUTCFullYear()}-W${pad(week)}`;
+}
+
+/** Instant (UTC) du minuit local situé `daysAhead` jours après le jour civil courant. Tient compte des changements d'heure. */
+function localMidnightAfter(date: Date, timeZone: string, daysAhead: number): Date {
+  const p = partsIn(date, timeZone);
+  const naive = Date.UTC(p.year, p.month - 1, p.day + daysAhead, 0, 0, 0);
   let guess = new Date(naive - offsetMs(date, timeZone));
   guess = new Date(naive - offsetMs(guess, timeZone));
   return guess;
+}
+
+/** Prochain minuit dans le fuseau donné. */
+export function nextMidnight(date: Date, timeZone: string): Date {
+  return localMidnightAfter(date, timeZone, 1);
+}
+
+/** Prochain lundi à minuit dans le fuseau donné. */
+export function nextMonday(date: Date, timeZone: string): Date {
+  return localMidnightAfter(date, timeZone, 8 - isoWeekday(date, timeZone));
 }
