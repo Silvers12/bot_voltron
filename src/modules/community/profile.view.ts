@@ -16,7 +16,6 @@ export function buildProfileView(member: Member, guildMember: GuildMember) {
         inline: true,
       },
       { name: 'Profil créé', value: time(member.createdAt, TimestampStyles.RelativeTime), inline: true },
-      { name: 'Dernière activité', value: time(member.lastSeenAt, TimestampStyles.RelativeTime), inline: true },
     )
     .setFooter({ text: 'Voltron, loutre paladin · Par mon bouclier et mes moustaches !' });
 
