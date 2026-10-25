@@ -68,7 +68,7 @@ docker compose logs -f bot
 ## Commandes
 
 Membres :
-- `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour et Historique.
+- `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour, Hebdo et Historique.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/hebdo` : récompense de la semaine (réponse privée).
 

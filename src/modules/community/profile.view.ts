@@ -7,6 +7,7 @@ import { formatAmount } from '../settings/settings.service.js';
 export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
 export const PROFILE_DAILY_ID = 'profil:daily';
+export const PROFILE_WEEKLY_ID = 'profil:weekly';
 
 const VOLTRON_COLOR = 0x2e86c1;
 const FOOTER = 'Voltron, loutre paladin · Par mon bouclier et mes moustaches !';
@@ -54,7 +55,7 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
         name: 'Récompense de la semaine',
         value: weekly.claimedThisWeek
           ? `Déjà récupérée. La prochaine arrive ${time(weekly.nextAt, TimestampStyles.RelativeTime)}.`
-          : `**${formatAmount(weekly.amount, settings)}** disponibles avec \`/hebdo\`.`,
+          : `**${formatAmount(weekly.amount, settings)}** t’attendent !`,
       },
     )
     .setFooter({ text: FOOTER });
@@ -67,6 +68,12 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
       .setStyle(ButtonStyle.Success)
       .setEmoji('🎁')
       .setDisabled(daily.claimedToday),
+    new ButtonBuilder()
+      .setCustomId(PROFILE_WEEKLY_ID)
+      .setLabel(weekly.claimedThisWeek ? 'Hebdo récupérée' : 'Récupérer l’hebdo')
+      .setStyle(ButtonStyle.Success)
+      .setEmoji('🗓️')
+      .setDisabled(weekly.claimedThisWeek),
     new ButtonBuilder().setCustomId(PROFILE_HISTORY_ID).setLabel('Historique').setStyle(ButtonStyle.Primary).setEmoji('📜'),
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
   );

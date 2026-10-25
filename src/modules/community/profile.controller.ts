@@ -4,9 +4,9 @@ import { registerButton } from '../../discord/components.js';
 import { getBalance, getHistory } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { claimDaily, getDailyStatus } from '../economy/daily.service.js';
-import { getWeeklyStatus } from '../economy/weekly.service.js';
+import { claimWeekly, getWeeklyStatus } from '../economy/weekly.service.js';
 import { time, TimestampStyles } from 'discord.js';
-import { buildHistoryView, buildProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID } from './profile.view.js';
+import { buildHistoryView, buildProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID, PROFILE_WEEKLY_ID } from './profile.view.js';
 
 /** Assemble les données du profil et construit l'écran. */
 export async function renderProfile(member: Member, guildMember: GuildMember, notice?: string) {
@@ -45,5 +45,14 @@ registerButton(PROFILE_DAILY_ID, async ({ interaction, member, guildMember }) =>
       (result.bonusPercent > 0 ? ` (série de ${result.streak} jours, +${result.bonusPercent}%)` : '') +
       '. Belle journée pour défendre la rivière !'
     : `Tu as déjà reçu ta récompense aujourd’hui. Reviens ${time(result.nextAt, TimestampStyles.RelativeTime)}.`;
+  await interaction.update(await renderProfile(member, guildMember, notice));
+});
+
+registerButton(PROFILE_WEEKLY_ID, async ({ interaction, member, guildMember }) => {
+  const settings = await getSettings(member.guildId);
+  const result = await claimWeekly(member.id, member.guildId, interaction.user.id);
+  const notice = result.ok
+    ? `🗓️ **${formatAmount(result.amount, settings)}** rejoignent ta bourse pour cette semaine !`
+    : `Tu as déjà reçu ta récompense de la semaine. Reviens ${time(result.nextAt, TimestampStyles.RelativeTime)}.`;
   await interaction.update(await renderProfile(member, guildMember, notice));
 });
