@@ -46,7 +46,7 @@ model GuildSettings {
   startingBalance  Int      @default(5000)
   /// Montant de base de la récompense quotidienne
   dailyAmount      Int      @default(200)
-  /// Bonus en % par jour consécutif au-delà du premier (série sans oubli)
+  /// Bonus en % par jour de série (jour 1 : 0 %, jour 2 : 2 %, jour 3 : 3 %…), multiplicateur
   dailyStreakBonusPercent Int @default(1)
   /// Montant de la récompense hebdomadaire (semaine civile, lundi → dimanche)
   weeklyAmount     Int      @default(2000)

@@ -19,9 +19,14 @@ export interface DailyStatus {
   nextAmount: number;
 }
 
-/** Montant d'une récompense selon la série : base + bonus% × (série - 1). */
-export function dailyAmountFor(base: number, streak: number, bonusPercent: number): number {
-  return Math.round(base * (1 + (bonusPercent * Math.max(0, streak - 1)) / 100));
+/** Bonus en % selon la série : rien le premier jour, puis la série elle-même (jour 2 : 2 %, jour 3 : 3 %…). */
+export function dailyBonusPercentFor(streak: number, bonusPercentPerDay: number): number {
+  return streak >= 2 ? streak * bonusPercentPerDay : 0;
+}
+
+/** Montant d'une récompense selon la série. */
+export function dailyAmountFor(base: number, streak: number, bonusPercentPerDay: number): number {
+  return Math.round(base * (1 + dailyBonusPercentFor(streak, bonusPercentPerDay) / 100));
 }
 
 /** Série au moment d'une réclamation pour le jour `key` : 1, ou série de la veille + 1. */
@@ -61,7 +66,7 @@ export async function claimDaily(memberId: string, guildId: string, discordUserI
   const account = await getOrCreateAccount(memberId);
   const streak = await streakFor(memberId, key);
   const amount = dailyAmountFor(settings.dailyAmount, streak, settings.dailyStreakBonusPercent);
-  const bonusPercent = settings.dailyStreakBonusPercent * (streak - 1);
+  const bonusPercent = dailyBonusPercentFor(streak, settings.dailyStreakBonusPercent);
 
   try {
     const result = await prisma.$transaction(async (db) => {
