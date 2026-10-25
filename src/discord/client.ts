@@ -9,7 +9,7 @@ declare module 'discord.js' {
 
 export function createClient(): Client {
   const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates],
   });
   client.commands = new Collection();
   return client;

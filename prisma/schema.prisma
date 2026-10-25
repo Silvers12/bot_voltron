@@ -25,6 +25,14 @@ model Member {
   leftAt        DateTime?
   /// Dernière interaction avec le bot
   lastSeenAt    DateTime  @default(now())
+  /// Expérience communautaire (messages + vocal)
+  xp            Int       @default(0)
+  messageCount  Int       @default(0)
+  /// Temps total passé en vocal, en secondes
+  voiceSeconds  Int       @default(0)
+  /// Dernier message ayant rapporté de l'XP (anti-spam)
+  lastMessageXpAt DateTime?
+  voiceSession  VoiceSession?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   account       Account?
@@ -35,6 +43,7 @@ model Member {
 
   @@unique([guildId, discordUserId])
   @@index([guildId, leftAt])
+  @@index([guildId, xp(sort: Desc)])
 }
 
 /// Réglages du serveur modifiables par les administrateurs.
@@ -53,6 +62,14 @@ model GuildSettings {
   weeklyAmount     Int      @default(2000)
   /// Fuseau servant à définir le « jour » (récompense quotidienne)
   timezone         String   @default("Europe/Paris")
+  /// XP gagnée par message éligible
+  xpPerMessage     Int      @default(1)
+  /// Délai minimal entre deux messages comptés (0 = tous les messages comptent)
+  xpMessageCooldownSeconds Int @default(60)
+  /// XP gagnée par tranche de vocal
+  xpPerVoiceInterval Int    @default(1)
+  /// Durée d'une tranche de vocal, en minutes
+  voiceIntervalMinutes Int  @default(30)
   updatedAt        DateTime @updatedAt
 }
 
@@ -170,4 +187,14 @@ model InventoryItem {
   updatedAt DateTime @updatedAt
 
   @@unique([memberId, itemId])
+}
+
+/// Présence en cours dans un salon vocal (persistée pour survivre aux redémarrages).
+model VoiceSession {
+  memberId   String   @id
+  member     Member   @relation(fields: [memberId], references: [id])
+  channelId  String
+  startedAt  DateTime @default(now())
+  /// Dernier instant jusqu'auquel le temps a été crédité
+  lastTickAt DateTime @default(now())
 }

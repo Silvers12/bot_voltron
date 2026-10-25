@@ -3,6 +3,7 @@ import { defineEvent } from '../types.js';
 import { config } from '../../core/config.js';
 import { createLogger } from '../../core/logger.js';
 import { syncGuildMembers } from '../../modules/community/member.service.js';
+import { reconcileVoiceSessions, tickVoiceSessions } from '../../modules/progression/xp.service.js';
 
 const log = createLogger('ready');
 
@@ -25,5 +26,7 @@ export default defineEvent({
     }
 
     await syncGuildMembers(guild);
+    await reconcileVoiceSessions(guild);
+    setInterval(() => void tickVoiceSessions(guild).catch((err) => log.error('Pointage vocal échoué', err)), 60_000);
   },
 });

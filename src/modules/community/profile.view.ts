@@ -22,18 +22,20 @@ export interface ProfileData {
   settings: GuildSettings;
   daily: DailyStatus;
   weekly: WeeklyStatus;
+  rank: number;
   /** Message ponctuel affiché sous le profil (résultat d'une action) */
   notice?: string;
 }
 
 /** Écran principal du profil : embed + boutons. */
-export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, notice }: ProfileData) {
+export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, notice }: ProfileData) {
   const embed = new EmbedBuilder()
     .setColor(VOLTRON_COLOR)
     .setAuthor({ name: `Profil de ${member.displayName}`, iconURL: guildMember.displayAvatarURL({ size: 128 }) })
     .setThumbnail(guildMember.displayAvatarURL({ size: 256 }))
     .addFields(
-      { name: 'Bourse', value: `**${formatAmount(balance, settings)}**`, inline: false },
+      { name: 'Bourse', value: `**${formatAmount(balance, settings)}**`, inline: true },
+      { name: 'Expérience', value: `**${member.xp} XP** · ${rank}ᵉ de la compagnie`, inline: true },
       {
         name: 'Dans la compagnie depuis',
         value: member.joinedAt ? time(member.joinedAt, TimestampStyles.LongDate) : 'Inconnu',

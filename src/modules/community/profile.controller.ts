@@ -40,18 +40,20 @@ import { getBalance, getHistory } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { claimDaily, getDailyStatus } from '../economy/daily.service.js';
 import { claimWeekly, getWeeklyStatus } from '../economy/weekly.service.js';
+import { getRank } from '../progression/xp.service.js';
 import { time, TimestampStyles } from 'discord.js';
 import { buildHistoryView, buildProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID, PROFILE_WEEKLY_ID } from './profile.view.js';
 
 /** Assemble les données du profil et construit l'écran. */
 export async function renderProfile(member: Member, guildMember: GuildMember, notice?: string) {
-  const [balance, settings, daily, weekly] = await Promise.all([
+  const [balance, settings, daily, weekly, rank] = await Promise.all([
     getBalance(member.id),
     getSettings(member.guildId),
     getDailyStatus(member.id, member.guildId),
     getWeeklyStatus(member.id, member.guildId),
+    getRank(member.guildId, member.xp),
   ]);
-  return buildProfileView({ member, guildMember, balance, settings, daily, weekly, notice });
+  return buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, notice });
 }
 
 export async function renderHistory(member: Member) {

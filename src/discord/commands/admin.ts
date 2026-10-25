@@ -5,7 +5,7 @@ import { isBotAdmin } from '../../core/permissions.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { credit, debit, getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../../modules/shop/shop.admin.js';
-import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount } from '../../modules/settings/settings.service.js';
+import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
 
@@ -70,6 +70,15 @@ export default defineCommand({
         .setDescription('Règle le montant de la récompense hebdomadaire')
         .addIntegerOption((o) => o.setName('montant').setDescription('Montant par semaine').setRequired(true).setMinValue(0).setMaxValue(MAX_AMOUNT)),
     )
+    .addSubcommand((sub) =>
+      sub
+        .setName('xp')
+        .setDescription('Affiche ou règle les gains d’expérience')
+        .addIntegerOption((o) => o.setName('par_message').setDescription('XP par message (0 = désactivé)').setMinValue(0).setMaxValue(1000))
+        .addIntegerOption((o) => o.setName('delai_message').setDescription('Secondes minimum entre deux messages comptés (0 = tous)').setMinValue(0).setMaxValue(86400))
+        .addIntegerOption((o) => o.setName('par_tranche_vocal').setDescription('XP par tranche de vocal (0 = désactivé)').setMinValue(0).setMaxValue(1000))
+        .addIntegerOption((o) => o.setName('tranche_vocal').setDescription('Durée d’une tranche de vocal, en minutes').setMinValue(1).setMaxValue(1440)),
+    )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
     .addSubcommandGroup((group) => buildShopAdminGroup(group)),
 
@@ -117,6 +126,23 @@ export default defineCommand({
     if (sub === 'hebdo') {
       const updated = await updateWeeklyAmount(interaction.guildId, interaction.options.getInteger('montant', true));
       await reply(`La récompense hebdomadaire vaut désormais ${formatAmount(updated.weeklyAmount, updated)}.`);
+      return;
+    }
+
+    if (sub === 'xp') {
+      const changes = {
+        xpPerMessage: interaction.options.getInteger('par_message') ?? undefined,
+        xpMessageCooldownSeconds: interaction.options.getInteger('delai_message') ?? undefined,
+        xpPerVoiceInterval: interaction.options.getInteger('par_tranche_vocal') ?? undefined,
+        voiceIntervalMinutes: interaction.options.getInteger('tranche_vocal') ?? undefined,
+      };
+      const updated = Object.values(changes).some((v) => v !== undefined) ? await updateXpSettings(interaction.guildId, changes) : settings;
+      await reply(
+        [
+          `**Messages :** +${updated.xpPerMessage} XP, au plus un message compté toutes les ${updated.xpMessageCooldownSeconds} s`,
+          `**Vocal :** +${updated.xpPerVoiceInterval} XP par tranche de ${updated.voiceIntervalMinutes} min`,
+        ].join('\n'),
+      );
       return;
     }
 

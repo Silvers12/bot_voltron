@@ -50,6 +50,15 @@ export async function updateWeeklyAmount(guildId: string, weeklyAmount: number):
   return settings;
 }
 
+export async function updateXpSettings(
+  guildId: string,
+  changes: Partial<Pick<GuildSettings, 'xpPerMessage' | 'xpMessageCooldownSeconds' | 'xpPerVoiceInterval' | 'voiceIntervalMinutes'>>,
+): Promise<GuildSettings> {
+  const settings = await prisma.guildSettings.upsert({ where: { guildId }, create: { guildId, ...changes }, update: changes });
+  cache.set(guildId, settings);
+  return settings;
+}
+
 /** Formate un montant avec le nom de monnaie du serveur : `1 écu 🪙`, `25 écus 🪙`, `-3 écus 🪙`. */
 export function formatAmount(amount: number, settings: GuildSettings, { signed = false } = {}): string {
   const abs = Math.abs(amount);
