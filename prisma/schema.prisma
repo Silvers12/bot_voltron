@@ -33,6 +33,7 @@ model Member {
   /// Dernier message ayant rapporté de l'XP (anti-spam)
   lastMessageXpAt DateTime?
   voiceSession  VoiceSession?
+  blackjackGames BlackjackGame[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   account       Account?
@@ -70,6 +71,9 @@ model GuildSettings {
   xpPerVoiceInterval Int    @default(1)
   /// Durée d'une tranche de vocal, en minutes
   voiceIntervalMinutes Int  @default(30)
+  /// Mises autorisées au blackjack
+  blackjackMinBet  Int      @default(10)
+  blackjackMaxBet  Int      @default(2000)
   updatedAt        DateTime @updatedAt
 }
 
@@ -90,6 +94,8 @@ enum TransactionType {
   WEEKLY
   PURCHASE
   REFUND
+  BET
+  BET_WIN
   ADMIN_CREDIT
   ADMIN_DEBIT
   HUG_SENT
@@ -197,4 +203,34 @@ model VoiceSession {
   startedAt  DateTime @default(now())
   /// Dernier instant jusqu'auquel le temps a été crédité
   lastTickAt DateTime @default(now())
+}
+
+enum BlackjackState {
+  PLAYING
+  WON
+  LOST
+  PUSH
+  BLACKJACK
+}
+
+/// Partie de blackjack. La mise est débitée à la création ; le gain est crédité à la résolution.
+model BlackjackGame {
+  id             String         @id @default(cuid())
+  memberId       String
+  member         Member         @relation(fields: [memberId], references: [id])
+  /// = memberId tant que la partie est en cours, null ensuite : garantit une seule partie active par membre
+  activeMemberId String?        @unique
+  bet            Int
+  doubled        Boolean        @default(false)
+  /// Cartes restantes du sabot, ex. ["A♠","10♥"]
+  deck           Json
+  playerCards    Json
+  dealerCards    Json
+  state          BlackjackState @default(PLAYING)
+  /// Montant total rendu au joueur à la fin (0 si perdu)
+  payout         Int            @default(0)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  @@index([memberId, createdAt(sort: Desc)])
 }

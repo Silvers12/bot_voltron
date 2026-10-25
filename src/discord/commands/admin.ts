@@ -5,7 +5,7 @@ import { isBotAdmin } from '../../core/permissions.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { credit, debit, getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../../modules/shop/shop.admin.js';
-import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings } from '../../modules/settings/settings.service.js';
+import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
 
@@ -79,6 +79,13 @@ export default defineCommand({
         .addIntegerOption((o) => o.setName('par_tranche_vocal').setDescription('XP par tranche de vocal (0 = désactivé)').setMinValue(0).setMaxValue(1000))
         .addIntegerOption((o) => o.setName('tranche_vocal').setDescription('Durée d’une tranche de vocal, en minutes').setMinValue(1).setMaxValue(1440)),
     )
+    .addSubcommand((sub) =>
+      sub
+        .setName('blackjack')
+        .setDescription('Règle les mises autorisées au blackjack')
+        .addIntegerOption((o) => o.setName('min').setDescription('Mise minimale').setRequired(true).setMinValue(1))
+        .addIntegerOption((o) => o.setName('max').setDescription('Mise maximale').setRequired(true).setMinValue(1)),
+    )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
     .addSubcommandGroup((group) => buildShopAdminGroup(group)),
 
@@ -143,6 +150,15 @@ export default defineCommand({
           `**Vocal :** +${updated.xpPerVoiceInterval} XP par tranche de ${updated.voiceIntervalMinutes} min`,
         ].join('\n'),
       );
+      return;
+    }
+
+    if (sub === 'blackjack') {
+      const min = interaction.options.getInteger('min', true);
+      const max = interaction.options.getInteger('max', true);
+      if (min > max) return void (await reply('La mise minimale doit être inférieure ou égale à la maximale.'));
+      const updated = await updateBlackjackLimits(interaction.guildId, min, max);
+      await reply(`Blackjack : mises de ${formatAmount(updated.blackjackMinBet, updated)} à ${formatAmount(updated.blackjackMaxBet, updated)}.`);
       return;
     }
 

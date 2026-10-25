@@ -4,9 +4,14 @@ import { createLogger } from '../core/logger.js';
 const log = createLogger('sessions');
 
 interface Session {
-  /** Dernière interaction liée au panneau : sert à supprimer le message. */
+  /** Dernière interaction liée au panneau : sert à supprimer ou modifier le message. */
   interaction: RepliableInteraction;
   timer: NodeJS.Timeout;
+  /**
+   * Appelé à l'expiration à la place de la suppression. Reçoit la dernière interaction
+   * (jeton valable 15 min) pour modifier le message en conséquence.
+   */
+  onExpire?: (interaction: RepliableInteraction) => Promise<void>;
 }
 
 /** Sessions de panneau ouvertes, par clé (ex. `profil:<userId>`). */
@@ -29,10 +34,15 @@ export async function closeSession(key: string) {
 }
 
 /** Ouvre une session : ferme l'ancienne, puis programme la fermeture automatique après `ttlMs` d'inactivité. */
-export async function openSession(key: string, interaction: RepliableInteraction, ttlMs: number) {
+export async function openSession(
+  key: string,
+  interaction: RepliableInteraction,
+  ttlMs: number,
+  onExpire?: (interaction: RepliableInteraction) => Promise<void>,
+) {
   await closeSession(key);
   const timer = setTimeout(() => void expire(key), ttlMs);
-  sessions.set(key, { interaction, timer });
+  sessions.set(key, { interaction, timer, onExpire });
 }
 
 /** Signale une activité : met à jour l'interaction de référence et repousse l'expiration. */
@@ -52,6 +62,10 @@ async function expire(key: string) {
   const session = sessions.get(key);
   if (!session) return;
   sessions.delete(key);
-  await deletePanel(session);
+  if (session.onExpire) {
+    await session.onExpire(session.interaction).catch((err) => log.error(`Rappel d'expiration échoué : ${key}`, err));
+  } else {
+    await deletePanel(session);
+  }
   log.debug(`Session expirée : ${key}`);
 }

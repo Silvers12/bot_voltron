@@ -25,6 +25,7 @@ src/
   modules/shop/            # boutique, inventaire, administration des articles
   modules/progression/     # XP messages/vocal, classement
   modules/banter/          # compliments et insultes (textes dans content/)
+  modules/casino/          # blackjack
 content/                   # textes éditables (compliments, insultes)
   modules/settings/        # réglages du serveur (monnaie, bienvenue)
 prisma/schema.prisma       # modèle de données
@@ -88,6 +89,14 @@ docker compose logs -f bot
 - `/compliment membre` et `/insulte membre` : message public avec un texte tiré au sort. Second degré, bienveillant.
 - Textes dans `content/compliments.json` et `content/insultes.json` : 3 catégories (10 classiques, 5 rares, 5 épiques) et poids de tirage (80 / 15 / 5 par défaut). Modifiables sans toucher au code ; rechargés au démarrage du bot. Variables : `{cible}`, `{auteur}`.
 
+## Blackjack
+
+- `/blackjack mise` : partie privée contre la banque (Voltron). Boutons Tirer / Rester / Doubler, puis Rejouer.
+- Règles : banque tire jusqu'à 17 (reste sur 17 souple), blackjack naturel payé 3:2, double sur les deux premières cartes, pas de split ni d'assurance.
+- La mise est débitée au départ (`BET`), le gain crédité à la fin (`BET_WIN`). Une seule partie active par membre (contrainte en base) ; le règlement est atomique, un double clic ne paie pas deux fois.
+- Sans action pendant 2 min, ou après un redémarrage du bot, la partie est réglée comme si le joueur restait.
+- Mises bornées par `/admin blackjack min max` (10 à 2 000 par défaut).
+
 ## Commandes
 
 Membres :
@@ -96,6 +105,7 @@ Membres :
 - `/hebdo` : récompense de la semaine (réponse privée).
 - `/classement` : classement d'XP paginé (privé, se ferme après 2 min sans clic).
 - `/compliment membre` · `/insulte membre` : textes aléatoires par rareté (public).
+- `/blackjack mise` : blackjack contre la banque (privé).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
