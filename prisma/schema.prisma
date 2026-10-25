@@ -27,7 +27,56 @@ model Member {
   lastSeenAt    DateTime  @default(now())
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  account       Account?
 
   @@unique([guildId, discordUserId])
   @@index([guildId, leftAt])
+}
+
+/// Réglages du serveur modifiables par les administrateurs.
+model GuildSettings {
+  guildId          String   @id
+  currencySingular String   @default("cœur")
+  currencyPlural   String   @default("cœurs")
+  currencySymbol   String   @default("❤️")
+  /// Solde offert à l'ouverture d'une bourse
+  startingBalance  Int      @default(5000)
+  updatedAt        DateTime @updatedAt
+}
+
+/// Compte bancaire d'un membre. Le solde ne peut jamais être négatif (contrainte en base).
+model Account {
+  id           String        @id @default(cuid())
+  memberId     String        @unique
+  member       Member        @relation(fields: [memberId], references: [id])
+  balance      Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  transactions Transaction[]
+}
+
+enum TransactionType {
+  WELCOME
+  ADMIN_CREDIT
+  ADMIN_DEBIT
+  HUG_SENT
+  HUG_RECEIVED
+}
+
+/// Mouvement sur un compte : montant signé, solde résultant, auteur et motif.
+model Transaction {
+  id             String          @id @default(cuid())
+  accountId      String
+  account        Account         @relation(fields: [accountId], references: [id])
+  type           TransactionType
+  delta          Int
+  balanceAfter   Int
+  reason         String?
+  /// Discord ID de la personne à l'origine du mouvement
+  actorDiscordId String
+  /// Autre partie d'un câlin (Discord ID du destinataire ou de l'expéditeur)
+  counterpartyDiscordId String?
+  createdAt      DateTime        @default(now())
+
+  @@index([accountId, createdAt(sort: Desc)])
 }

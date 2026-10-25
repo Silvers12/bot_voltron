@@ -1,4 +1,4 @@
-import type { ChatInputCommandInteraction, Client, ClientEvents, GuildMember, SlashCommandOptionsOnlyBuilder, SlashCommandBuilder } from 'discord.js';
+import type { ChatInputCommandInteraction, Client, ClientEvents, GuildMember, RESTPostAPIChatInputApplicationCommandsJSONBody } from 'discord.js';
 import type { Member } from '../generated/prisma/client.js';
 
 /** Contexte fourni à chaque commande : le membre est déjà créé/à jour en base. */
@@ -9,7 +9,7 @@ export interface CommandContext {
 }
 
 export interface Command {
-  data: SlashCommandBuilder | SlashCommandOptionsOnlyBuilder;
+  data: { name: string; toJSON(): RESTPostAPIChatInputApplicationCommandsJSONBody };
   execute(ctx: CommandContext): Promise<void>;
 }
 

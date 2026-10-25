@@ -1,0 +1,48 @@
+import { prisma } from '../../infrastructure/prisma.js';
+import type { GuildSettings } from '../../generated/prisma/client.js';
+
+const cache = new Map<string, GuildSettings>();
+
+/** Réglages du serveur, créés avec les valeurs par défaut au premier accès. */
+export async function getSettings(guildId: string): Promise<GuildSettings> {
+  const cached = cache.get(guildId);
+  if (cached) return cached;
+  const settings = await prisma.guildSettings.upsert({ where: { guildId }, create: { guildId }, update: {} });
+  cache.set(guildId, settings);
+  return settings;
+}
+
+export interface CurrencyInput {
+  singular: string;
+  plural: string;
+  symbol: string;
+}
+
+export async function updateCurrency(guildId: string, currency: CurrencyInput): Promise<GuildSettings> {
+  const settings = await prisma.guildSettings.upsert({
+    where: { guildId },
+    create: { guildId, currencySingular: currency.singular, currencyPlural: currency.plural, currencySymbol: currency.symbol },
+    update: { currencySingular: currency.singular, currencyPlural: currency.plural, currencySymbol: currency.symbol },
+  });
+  cache.set(guildId, settings);
+  return settings;
+}
+
+export async function updateStartingBalance(guildId: string, startingBalance: number): Promise<GuildSettings> {
+  const settings = await prisma.guildSettings.upsert({
+    where: { guildId },
+    create: { guildId, startingBalance },
+    update: { startingBalance },
+  });
+  cache.set(guildId, settings);
+  return settings;
+}
+
+/** Formate un montant avec le nom de monnaie du serveur : `1 écu 🪙`, `25 écus 🪙`, `-3 écus 🪙`. */
+export function formatAmount(amount: number, settings: GuildSettings, { signed = false } = {}): string {
+  const abs = Math.abs(amount);
+  const unit = abs === 1 ? settings.currencySingular : settings.currencyPlural;
+  const sign = amount < 0 ? '-' : signed && amount > 0 ? '+' : '';
+  const symbol = settings.currencySymbol ? ` ${settings.currencySymbol}` : '';
+  return `${sign}${abs.toLocaleString('fr-FR')} ${unit}${symbol}`;
+}

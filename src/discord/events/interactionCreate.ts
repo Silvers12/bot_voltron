@@ -3,7 +3,7 @@ import { defineEvent } from '../types.js';
 import { config } from '../../core/config.js';
 import { createLogger } from '../../core/logger.js';
 import { ensureMember } from '../../modules/community/member.service.js';
-import { buildProfileView, PROFILE_REFRESH_ID } from '../../modules/community/profile.view.js';
+import { getButtonHandler } from '../components.js';
 
 const log = createLogger('interactions');
 
@@ -38,9 +38,14 @@ export default defineEvent({
         return;
       }
 
-      if (interaction.isButton() && interaction.customId === PROFILE_REFRESH_ID) {
+      if (interaction.isButton()) {
+        const handler = getButtonHandler(interaction.customId);
+        if (!handler) {
+          await replyError(interaction, 'Ce bouton n’est plus valide. Rouvre `/profil`.');
+          return;
+        }
         const member = await ensureMember(interaction.member);
-        await interaction.update(buildProfileView(member, interaction.member));
+        await handler({ interaction, guildMember: interaction.member, member });
         return;
       }
     } catch (err) {
