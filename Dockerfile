@@ -13,6 +13,7 @@ COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
+COPY content ./content
 USER node
 # Applique les migrations puis démarre le bot
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]

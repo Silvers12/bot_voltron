@@ -1,0 +1,29 @@
+{
+  "weights": { "classique": 80, "rare": 15, "epique": 5 },
+  "classique": [
+    "{cible}, tu ranges tes chaussettes par couleur, et tout le monde le sait.",
+    "{cible}, tu es la personne qui dit « j’arrive dans 5 minutes » depuis l’an dernier.",
+    "{cible}, même le salon AFK t’a trouvé trop calme.",
+    "{cible}, tu as l’aura d’un lundi matin avec du charme de vendredi soir. C’est perturbant.",
+    "{cible}, tes blagues sont si vieilles qu’elles ont leur propre fiche d’archéologie.",
+    "{cible}, tu tapes « lol » sans rire. Je le sais. Nous le savons tous.",
+    "{cible}, tu es le genre de personne qui met des glaçons dans le lait. Ne nie pas.",
+    "{cible}, ton micro grésille moins que tes idées, et c’est déjà un exploit.",
+    "{cible}, tu négocies avec le bouton « snooze » comme avec un marchand de tapis. Et tu perds.",
+    "{cible}, je t’ai vu applaudir à la fin d’un film. Seul. Chez toi."
+  ],
+  "rare": [
+    "{cible}, les oracles ont prédit ta venue. Ils ont aussi demandé un remboursement.",
+    "{cible}, tu as le sens de l’orientation d’une chaussette dans une machine à laver.",
+    "{cible}, si l’élégance était une quête, tu l’aurais abandonnée au tutoriel.",
+    "{cible}, ta playlist a été classée arme de dissuasion par trois royaumes voisins.",
+    "{cible}, tu es la seule personne capable de perdre à pile ou face en lançant une pièce à deux faces identiques."
+  ],
+  "epique": [
+    "{cible}, PAR MON BOUCLIER ET MES MOUSTACHES ! Les bardes ont écrit une chanson sur toi. Personne n’ose la chanter.",
+    "{cible}, les dragons eux-mêmes refusent de te combattre : ils ont peur de ton accent quand tu cries.",
+    "{cible}, on raconte que tu as un jour fait une bonne décision. Les historiens cherchent encore la source.",
+    "{cible}, tu es l’élu de la prophétie. La prophétie de celui qui renverse son verre à chaque banquet.",
+    "{cible}, même ma rivière a dit « non merci » quand tu as voulu y nager. Une RIVIÈRE."
+  ]
+}

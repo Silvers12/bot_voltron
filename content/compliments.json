@@ -1,0 +1,29 @@
+{
+  "weights": { "classique": 80, "rare": 15, "epique": 5 },
+  "classique": [
+    "{cible}, tu es la loutre la plus douce de toute la rivière. Et je m’y connais.",
+    "{cible}, quand tu entres dans le vocal, même les micros coupés sourient.",
+    "{cible}, tu as le cœur aussi grand que ma collection de cailloux brillants. C’est dire.",
+    "{cible}, si la gentillesse était une armure, tu serais indestructible.",
+    "{cible}, tu es le genre de personne qu’on invite en premier et qui part en dernier. Par choix.",
+    "{cible}, ton rire devrait être classé au patrimoine du serveur.",
+    "{cible}, tu rends cette compagnie meilleure rien qu’en y étant.",
+    "{cible}, tu es la preuve que le bon sens et le bon cœur peuvent partager le même corps.",
+    "{cible}, je donnerais mon bouclier pour un câlin de ta part. Ne le répète pas.",
+    "{cible}, tu es une rivière calme : on vient toujours se poser près de toi."
+  ],
+  "rare": [
+    "{cible}, les anciens chantent ta loyauté autour du feu, et pour une fois ils n’exagèrent pas.",
+    "{cible}, j’ai juré de protéger la compagnie. Avec toi dedans, mon serment est facile à tenir.",
+    "{cible}, tu es le soleil sur la rivière un matin d’hiver : rare, chaud, et tout le monde se tourne vers toi.",
+    "{cible}, si je devais choisir un seul camarade pour une quête impossible, ce serait toi. Et on reviendrait.",
+    "{cible}, ta bienveillance ferait pleurer un boss de donjon."
+  ],
+  "epique": [
+    "{cible}, PAR MON BOUCLIER ET MES MOUSTACHES ! Les bardes composeront des ballades sur toi, et elles seront toutes trop courtes.",
+    "{cible}, les étoiles ont demandé la permission de briller aussi fort que toi. Elles attendent toujours la réponse.",
+    "{cible}, tu es la légende dont cette compagnie se souviendra quand même Voltron sera oublié.",
+    "{cible}, j’ai vu des dragons, des tempêtes et des chats sur des claviers. Rien n’est aussi impressionnant que ton cœur.",
+    "{cible}, une loutre paladin ne s’agenouille devant personne. Sauf devant toi. Juste cette fois."
+  ]
+}

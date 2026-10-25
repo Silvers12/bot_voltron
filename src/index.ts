@@ -5,11 +5,14 @@ import { createClient } from './discord/client.js';
 import { loadCommands, loadEvents } from './discord/loaders.js';
 import './modules/community/profile.controller.js';
 import './modules/shop/shop.controller.js';
+import { loadBanter } from './modules/banter/banter.service.js';
 
 const log = createLogger('app');
 
 await prisma.$connect();
 log.info('Base de données connectée');
+
+await loadBanter();
 
 const client = createClient();
 

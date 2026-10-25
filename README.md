@@ -24,6 +24,8 @@ src/
   modules/economy/         # bourses, câlins, récompenses, historique
   modules/shop/            # boutique, inventaire, administration des articles
   modules/progression/     # XP messages/vocal, classement
+  modules/banter/          # compliments et insultes (textes dans content/)
+content/                   # textes éditables (compliments, insultes)
   modules/settings/        # réglages du serveur (monnaie, bienvenue)
 prisma/schema.prisma       # modèle de données
 prisma/migrations/         # migrations versionnées
@@ -81,6 +83,11 @@ docker compose logs -f bot
 - `/classement` : 10 membres par page avec boutons, rang du demandeur en pied de page. L'XP et le rang figurent aussi sur `/profil`.
 - Réglages : `/admin xp` (sans option : affiche ; avec options : modifie).
 
+## Compliments et insultes
+
+- `/compliment membre` et `/insulte membre` : message public avec un texte tiré au sort. Second degré, bienveillant.
+- Textes dans `content/compliments.json` et `content/insultes.json` : 3 catégories (10 classiques, 5 rares, 5 épiques) et poids de tirage (80 / 15 / 5 par défaut). Modifiables sans toucher au code ; rechargés au démarrage du bot. Variables : `{cible}`, `{auteur}`.
+
 ## Commandes
 
 Membres :
@@ -88,6 +95,7 @@ Membres :
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/hebdo` : récompense de la semaine (réponse privée).
 - `/classement` : classement d'XP paginé (privé, se ferme après 2 min sans clic).
+- `/compliment membre` · `/insulte membre` : textes aléatoires par rareté (public).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
