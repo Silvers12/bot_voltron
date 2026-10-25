@@ -1,4 +1,5 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, SlashCommandBuilder, userMention } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, SlashCommandBuilder, userMention } from 'discord.js';
+import { closeSession, openSession, touchSession } from '../sessions.js';
 import { defineCommand } from '../types.js';
 import { registerButtonPrefix } from '../components.js';
 import { prisma } from '../../infrastructure/prisma.js';
@@ -6,6 +7,8 @@ import { formatVoiceDuration, getLeaderboardPage, getRank, type LeaderboardPage 
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 const PAGE_PREFIX = 'lb:page:';
+const SESSION_TTL_MS = 2 * 60 * 1000;
+const sessionKey = (userId: string) => `classement:${userId}`;
 
 function buildLeaderboard(data: LeaderboardPage, me: { xp: number; rank: number }) {
   const lines = data.entries.map(
@@ -30,14 +33,18 @@ async function render(guildId: string, memberId: string, page: number) {
   return buildLeaderboard(data, { xp: fresh.xp, rank });
 }
 
-// Le classement est public : n'importe qui peut tourner les pages, le pied de page reflète alors son propre rang.
+// Message privé : seul le demandeur voit et tourne les pages. Chaque clic repousse la fermeture.
 registerButtonPrefix(PAGE_PREFIX, async ({ interaction, member, arg }) => {
   await interaction.update(await render(interaction.guildId, member.id, Number(arg) || 1));
+  touchSession(sessionKey(interaction.user.id), interaction, SESSION_TTL_MS);
 });
 
 export default defineCommand({
   data: new SlashCommandBuilder().setName('classement').setDescription('Classement d’expérience de la compagnie'),
   async execute({ interaction, member }) {
-    await interaction.reply(await render(interaction.guildId, member.id, 1));
+    const key = sessionKey(interaction.user.id);
+    await closeSession(key);
+    await interaction.reply({ ...(await render(interaction.guildId, member.id, 1)), flags: MessageFlags.Ephemeral });
+    await openSession(key, interaction, SESSION_TTL_MS);
   },
 });

@@ -78,7 +78,7 @@ docker compose logs -f bot
 
 - +1 XP par message, dans tout salon visible par le bot (le contenu n'est pas lu : intent `GuildMessages` seulement). Au plus un message compté par minute (anti-spam, réglable).
 - +1 XP par tranche de 30 min en vocal, hors salon AFK. Les sessions sont persistées (`VoiceSession`) et pointées chaque minute : un redémarrage du bot ne perd pas le temps déjà crédité.
-- `/classement` : top 10 et rang du demandeur. L'XP et le rang figurent aussi sur `/profil`.
+- `/classement` : 10 membres par page avec boutons, rang du demandeur en pied de page. L'XP et le rang figurent aussi sur `/profil`.
 - Réglages : `/admin xp` (sans option : affiche ; avec options : modifie).
 
 ## Commandes
@@ -87,7 +87,7 @@ Membres :
 - `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour, Hebdo, Historique, Boutique et Inventaire. Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/hebdo` : récompense de la semaine (réponse privée).
-- `/classement` : classement d'XP (public).
+- `/classement` : classement d'XP paginé (privé, se ferme après 2 min sans clic).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
