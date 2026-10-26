@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "GuildSettings" ADD COLUMN     "slotMaxBet" INTEGER NOT NULL DEFAULT 1000,
+ADD COLUMN     "slotMinBet" INTEGER NOT NULL DEFAULT 10;

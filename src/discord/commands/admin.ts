@@ -7,7 +7,7 @@ import { credit, debit, getBalance, InsufficientFundsError } from '../../modules
 import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../../modules/shop/shop.admin.js';
 import { buildGroupHugAdminGroup, handleGroupHugAdmin } from '../../modules/events/grouphug.admin.js';
 import { buildLevelsAdminGroup, handleLevelsAdmin } from '../../modules/progression/levels.admin.js';
-import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits } from '../../modules/settings/settings.service.js';
+import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits, updateSlotLimits } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
 
@@ -88,6 +88,13 @@ export default defineCommand({
         .addIntegerOption((o) => o.setName('min').setDescription('Mise minimale').setRequired(true).setMinValue(1))
         .addIntegerOption((o) => o.setName('max').setDescription('Mise maximale').setRequired(true).setMinValue(1)),
     )
+    .addSubcommand((sub) =>
+      sub
+        .setName('machine')
+        .setDescription('Règle les mises autorisées à la machine à sous')
+        .addIntegerOption((o) => o.setName('min').setDescription('Mise minimale').setRequired(true).setMinValue(1))
+        .addIntegerOption((o) => o.setName('max').setDescription('Mise maximale').setRequired(true).setMinValue(1)),
+    )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
     .addSubcommandGroup((group) => buildShopAdminGroup(group))
     .addSubcommandGroup((group) => buildGroupHugAdminGroup(group))
@@ -165,6 +172,15 @@ export default defineCommand({
       if (min > max) return void (await reply('La mise minimale doit être inférieure ou égale à la maximale.'));
       const updated = await updateBlackjackLimits(interaction.guildId, min, max);
       await reply(`Blackjack : mises de ${formatAmount(updated.blackjackMinBet, updated)} à ${formatAmount(updated.blackjackMaxBet, updated)}.`);
+      return;
+    }
+
+    if (sub === 'machine') {
+      const min = interaction.options.getInteger('min', true);
+      const max = interaction.options.getInteger('max', true);
+      if (min > max) return void (await reply('La mise minimale doit être inférieure ou égale à la maximale.'));
+      const updated = await updateSlotLimits(interaction.guildId, min, max);
+      await reply(`Machine à sous : mises de ${formatAmount(updated.slotMinBet, updated)} à ${formatAmount(updated.slotMaxBet, updated)}.`);
       return;
     }
 

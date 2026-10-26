@@ -77,6 +77,9 @@ model GuildSettings {
   /// Mises autorisées au blackjack
   blackjackMinBet  Int      @default(10)
   blackjackMaxBet  Int      @default(2000)
+  /// Mises autorisées à la machine à sous
+  slotMinBet       Int      @default(10)
+  slotMaxBet       Int      @default(1000)
   /// Câlin collectif : salons d'apparition, tirés au hasard (vide = désactivé)
   groupHugChannelIds String[] @default([])
   /// Cœurs par câlineur, multipliés par le nombre de câlineurs
