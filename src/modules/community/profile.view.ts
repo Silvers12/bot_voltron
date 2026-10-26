@@ -3,6 +3,7 @@ import type { GuildSettings, Member, Transaction } from '../../generated/prisma/
 import type { DailyStatus } from '../economy/daily.service.js';
 import type { WeeklyStatus } from '../economy/weekly.service.js';
 import { formatAmount } from '../settings/settings.service.js';
+import { progressFor } from '../progression/levels.service.js';
 
 export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
@@ -35,7 +36,7 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
     .setThumbnail(guildMember.displayAvatarURL({ size: 256 }))
     .addFields(
       { name: 'Bourse', value: `**${formatAmount(balance, settings)}**`, inline: true },
-      { name: 'Expérience', value: `**${member.xp} XP** · ${rank}ᵉ de la compagnie`, inline: true },
+      { name: 'Niveau', value: levelLine(member.xp, settings, rank), inline: true },
       {
         name: 'Dans la compagnie depuis',
         value: member.joinedAt ? time(member.joinedAt, TimestampStyles.LongDate) : 'Inconnu',
@@ -88,6 +89,13 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
   );
 
   return { embeds: [embed], components: [row, row2] };
+}
+
+function levelLine(xp: number, settings: GuildSettings, rank: number): string {
+  const p = progressFor(xp, settings);
+  const filled = Math.round((p.current / p.needed) * 10);
+  const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
+  return `**Niveau ${p.level}** · ${rank}ᵉ de la compagnie\n${bar} ${p.current}/${p.needed} XP`;
 }
 
 function describeTransaction(t: Transaction): string {

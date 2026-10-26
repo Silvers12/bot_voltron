@@ -4,6 +4,7 @@ import { createLogger } from '../../core/logger.js';
 import { isAllowedGuild } from '../../core/config.js';
 import { getSettings } from '../settings/settings.service.js';
 import { ensureMember } from '../community/member.service.js';
+import { syncLevel } from './levels.service.js';
 
 const log = createLogger('xp');
 
@@ -39,6 +40,7 @@ export async function handleMessage(message: Message) {
       : { messageCount: { increment: 1 } },
   });
   if (count === 0) await prisma.member.update({ where: { id: member.id }, data: { messageCount: { increment: 1 } } });
+  else if (eligible) await syncLevel(message.guild, member.id);
 }
 
 // ---------------------------------------------------------------------------
@@ -62,11 +64,11 @@ async function startVoiceSession(memberId: string, channelId: string, at = new D
  * Crédite le temps écoulé depuis le dernier pointage et l'XP correspondante
  * (une tranche = voiceIntervalMinutes). Les tranches entamées sont conservées dans voiceSeconds.
  */
-export async function creditVoiceTime(memberId: string, guildId: string, until: Date, { close }: { close: boolean }) {
+export async function creditVoiceTime(memberId: string, guildId: string, until: Date, { close }: { close: boolean }, guild?: Guild) {
   const settings = await getSettings(guildId);
   const intervalSeconds = Math.max(60, settings.voiceIntervalMinutes * 60);
 
-  await prisma.$transaction(async (db) => {
+  const gained = await prisma.$transaction(async (db) => {
     const session = await db.voiceSession.findUnique({ where: { memberId } });
     if (!session) return;
     const elapsed = Math.max(0, Math.floor((until.getTime() - session.lastTickAt.getTime()) / 1000));
@@ -79,7 +81,9 @@ export async function creditVoiceTime(memberId: string, guildId: string, until: 
     if (close) await db.voiceSession.delete({ where: { memberId } });
     else await db.voiceSession.update({ where: { memberId }, data: { lastTickAt: until } });
     if (xpGain > 0) log.debug(`+${xpGain} XP vocal pour ${memberId}`);
+    return xpGain;
   });
+  if (gained && gained > 0 && guild) await syncLevel(guild, memberId);
 }
 
 /** Entrée, sortie ou changement de salon vocal. */
@@ -93,7 +97,7 @@ export async function handleVoiceStateUpdate(oldState: VoiceState, newState: Voi
 
   const member = await ensureMember(newState.member);
   const channelId = newState.channelId;
-  if (wasCounted && !isCounted) await creditVoiceTime(member.id, guild.id, new Date(), { close: true });
+  if (wasCounted && !isCounted) await creditVoiceTime(member.id, guild.id, new Date(), { close: true }, guild);
   else if (channelId !== null && !wasCounted) await startVoiceSession(member.id, channelId);
   else if (channelId !== null) await prisma.voiceSession.update({ where: { memberId: member.id }, data: { channelId } }).catch(() => startVoiceSession(member.id, channelId));
 }
@@ -105,7 +109,7 @@ export async function tickVoiceSessions(guild: Guild) {
   for (const session of sessions) {
     const state = guild.voiceStates.cache.get(session.member.discordUserId);
     const stillThere = state && isCountedChannel(guild, state.channelId);
-    await creditVoiceTime(session.memberId, guild.id, now, { close: !stillThere });
+    await creditVoiceTime(session.memberId, guild.id, now, { close: !stillThere }, guild);
   }
 }
 

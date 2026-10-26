@@ -27,6 +27,8 @@ model Member {
   lastSeenAt    DateTime  @default(now())
   /// Expérience communautaire (messages + vocal)
   xp            Int       @default(0)
+  /// Niveau atteint (dérivé de l'XP, stocké pour détecter les montées)
+  level         Int       @default(0)
   messageCount  Int       @default(0)
   /// Temps total passé en vocal, en secondes
   voiceSeconds  Int       @default(0)
@@ -85,6 +87,11 @@ model GuildSettings {
   groupHugMaxIntervalMinutes Int @default(360)
   /// Prochaine apparition programmée (persistée pour survivre aux redémarrages)
   nextGroupHugAt   DateTime?
+  /// Courbe de niveaux : XP pour passer du niveau L au niveau L+1 = base + pas × L
+  levelBaseXp      Int      @default(20)
+  levelStepXp      Int      @default(10)
+  /// Salon des annonces de montée de niveau (null = pas d'annonce)
+  levelUpChannelId String?
   updatedAt        DateTime @updatedAt
 }
 
@@ -277,4 +284,15 @@ model GroupHugParticipant {
   joinedAt DateTime @default(now())
 
   @@id([hugId, memberId])
+}
+
+/// Rôle attribué à partir d'un niveau. Seul le palier le plus élevé atteint est conservé.
+model LevelRole {
+  id      String @id @default(cuid())
+  guildId String
+  level   Int
+  roleId  String
+
+  @@unique([guildId, level])
+  @@unique([guildId, roleId])
 }

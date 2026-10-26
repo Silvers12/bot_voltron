@@ -4,15 +4,17 @@ import { defineCommand } from '../types.js';
 import { registerButtonPrefix } from '../components.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { formatVoiceDuration, getLeaderboardPage, getRank, type LeaderboardPage } from '../../modules/progression/xp.service.js';
+import { levelForXp } from '../../modules/progression/levels.service.js';
+import { getSettings } from '../../modules/settings/settings.service.js';
 
 const MEDALS = ['🥇', '🥈', '🥉'];
 const PAGE_PREFIX = 'lb:page:';
 const SESSION_TTL_MS = 2 * 60 * 1000;
 const sessionKey = (guildId: string, userId: string) => `classement:${guildId}:${userId}`;
 
-function buildLeaderboard(data: LeaderboardPage, me: { xp: number; rank: number }) {
+function buildLeaderboard(data: LeaderboardPage, me: { xp: number; rank: number }, s: { levelBaseXp: number; levelStepXp: number }) {
   const lines = data.entries.map(
-    (r) => `${MEDALS[r.rank - 1] ?? `**${r.rank}.**`} ${userMention(r.discordUserId)} — **${r.xp} XP** · ${r.messageCount} msg · ${formatVoiceDuration(r.voiceSeconds)} vocal`,
+    (r) => `${MEDALS[r.rank - 1] ?? `**${r.rank}.**`} ${userMention(r.discordUserId)} — niv. ${levelForXp(r.xp, s)} · **${r.xp} XP** · ${r.messageCount} msg · ${formatVoiceDuration(r.voiceSeconds)} vocal`,
   );
   const embed = new EmbedBuilder()
     .setColor(0x2e86c1)
@@ -29,8 +31,8 @@ function buildLeaderboard(data: LeaderboardPage, me: { xp: number; rank: number 
 
 async function render(guildId: string, memberId: string, page: number) {
   const fresh = await prisma.member.findUniqueOrThrow({ where: { id: memberId }, select: { xp: true } });
-  const [data, rank] = await Promise.all([getLeaderboardPage(guildId, page), getRank(guildId, fresh.xp)]);
-  return buildLeaderboard(data, { xp: fresh.xp, rank });
+  const [data, rank, s] = await Promise.all([getLeaderboardPage(guildId, page), getRank(guildId, fresh.xp), getSettings(guildId)]);
+  return buildLeaderboard(data, { xp: fresh.xp, rank }, s);
 }
 
 // Message privé : seul le demandeur voit et tourne les pages. Chaque clic repousse la fermeture.

@@ -25,7 +25,7 @@ src/
   modules/community/       # membres et profil
   modules/economy/         # bourses, câlins, récompenses, historique
   modules/shop/            # boutique, inventaire, administration des articles
-  modules/progression/     # XP messages/vocal, classement
+  modules/progression/     # XP messages/vocal, classement, niveaux et paliers
   modules/banter/          # compliments et insultes (textes dans content/)
   modules/casino/          # blackjack
   modules/events/          # câlin collectif (apparitions planifiées)
@@ -117,6 +117,13 @@ docker compose logs -f bot
 - Intervalle aléatoire entre deux apparitions : 1 h à 6 h par défaut. La prochaine date est persistée ; un câlin en cours survit à un redémarrage.
 - `/admin calin ajouter-salon #salon` active la fonction ; `retirer-salon`, `regler`, `lancer` (manuel), `etat`.
 
+## Niveaux et rôles de palier
+
+- Niveau dérivé de l'XP : XP pour passer du niveau L au suivant = `base + pas × L` (20 et 10 par défaut : niv. 1 à 20 XP, niv. 5 à 200, niv. 10 à 650, niv. 20 à 2 300). Courbe réglable.
+- Paliers : un rôle Discord par niveau choisi ; seul le palier le plus élevé atteint est porté. Le bot doit avoir « Gérer les rôles » et être placé au-dessus des rôles de palier.
+- Montée de niveau annoncée dans un salon configurable. Le profil affiche niveau et barre de progression ; le classement affiche le niveau.
+- `/admin niveaux ajouter-role niveau role`, `retirer-role`, `salon`, `courbe base pas`, `recalculer`, `lister`.
+
 ## Commandes
 
 Membres :
@@ -132,4 +139,5 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin solde membre` · `/admin stats`
 - `/admin boutique ajouter|modifier|retirer|remettre|lister` (autocomplétion des noms d'articles)
 - `/admin calin ajouter-salon|retirer-salon|regler|lancer|etat`
+- `/admin niveaux ajouter-role|retirer-role|salon|courbe|recalculer|lister`
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant`

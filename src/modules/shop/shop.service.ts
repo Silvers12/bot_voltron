@@ -1,5 +1,5 @@
-import type { Guild, GuildMember } from 'discord.js';
-import { PermissionFlagsBits } from 'discord.js';
+import type { GuildMember } from 'discord.js';
+import { roleAssignabilityProblem } from '../../core/roles.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
 import type { InventoryItem, ItemKind, ShopItem } from '../../generated/prisma/client.js';
@@ -59,17 +59,7 @@ export async function getOwnedQuantity(memberId: string, itemId: string): Promis
   return entry?.quantity ?? 0;
 }
 
-/** Vérifie que le bot peut attribuer ce rôle : permission, hiérarchie, rôle non géré par une intégration. */
-export function roleAssignabilityProblem(guild: Guild, roleId: string): string | null {
-  const role = guild.roles.cache.get(roleId);
-  const me = guild.members.me;
-  if (!role) return 'Ce rôle n’existe plus sur le serveur.';
-  if (!me) return 'Le bot n’est pas chargé sur ce serveur.';
-  if (!me.permissions.has(PermissionFlagsBits.ManageRoles)) return 'Le bot n’a pas la permission « Gérer les rôles ».';
-  if (role.managed) return 'Ce rôle est géré par une intégration et ne peut pas être attribué.';
-  if (role.position >= me.roles.highest.position) return 'Ce rôle est placé au-dessus du rôle du bot : déplacez le rôle de Voltron plus haut dans la liste des rôles.';
-  return null;
-}
+export { roleAssignabilityProblem };
 
 export interface PurchaseResult {
   item: ShopItem;
