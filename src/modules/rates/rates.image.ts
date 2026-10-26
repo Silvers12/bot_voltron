@@ -82,3 +82,43 @@ export async function renderRateCard({ displayName, avatarPng, rate, percent, co
     .png()
     .toBuffer();
 }
+
+export interface DuoCard {
+  leftName: string;
+  leftAvatarPng: Buffer;
+  rightName: string;
+  rightAvatarPng: Buffer;
+  rate: Rate;
+  percent: number;
+  comment: string;
+}
+
+/** Bannière à deux : avatar gauche, icône remplie et taux au centre, avatar droite, commentaire en bas. */
+export async function renderDuoCard({ leftName, leftAvatarPng, rightName, rightAvatarPng, rate, percent, comment }: DuoCard): Promise<Buffer> {
+  const short = (n: string) => esc(n.length > 12 ? `${n.slice(0, 11)}…` : n);
+  const cx = W / 2, cy = 150, iconSize = 168, iconTop = 60;
+  const lx = 60 + AVATAR / 2, rx = W - 60 - AVATAR / 2;
+  const bg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1b2838"/><stop offset="0.5" stop-color="${rate.color}" stop-opacity="0.8"/><stop offset="1" stop-color="#1b2838"/></linearGradient>
+    </defs>
+    <rect width="${W}" height="${H}" rx="36" fill="url(#g)"/>
+    <circle cx="${lx}" cy="${cy}" r="${AVATAR / 2 + 8}" fill="${rate.color}" opacity="0.9"/>
+    <circle cx="${rx}" cy="${cy}" r="${AVATAR / 2 + 8}" fill="${rate.color}" opacity="0.9"/>
+    <text x="${lx}" y="330" text-anchor="middle" font-family="${FONT}" font-size="30" font-weight="bold" fill="#fff">${short(leftName)}</text>
+    <text x="${rx}" y="330" text-anchor="middle" font-family="${FONT}" font-size="30" font-weight="bold" fill="#fff">${short(rightName)}</text>
+    <text x="${cx}" y="46" text-anchor="middle" font-family="${FONT}" font-size="30" fill="#dfe6ee">Taux ${/^[aeiouy]/i.test(rate.of) ? 'd’' : 'de '}${esc(rate.of)}</text>
+    <text x="${cx}" y="292" text-anchor="middle" font-family="${FONT}" font-size="60" font-weight="bold" fill="#fff">${percent} %</text>
+    ${wrap(comment, 36).slice(0, 2).map((line, i) => `<text x="${cx}" y="${338 + i * 28}" text-anchor="middle" font-family="${FONT}" font-size="22" fill="#eef3f7">${esc(line)}</text>`).join('')}
+  </svg>`;
+  const [left, right, icon] = await Promise.all([circleAvatar(leftAvatarPng), circleAvatar(rightAvatarPng), filledIcon(rate, percent)]);
+  const iconResized = await sharp(icon).resize(iconSize, iconSize, { fit: 'inside' }).png().toBuffer();
+  return sharp(Buffer.from(bg))
+    .composite([
+      { input: left, left: 60, top: cy - AVATAR / 2 },
+      { input: right, left: W - 60 - AVATAR, top: cy - AVATAR / 2 },
+      { input: iconResized, left: Math.round(cx - iconSize / 2), top: iconTop },
+    ])
+    .png()
+    .toBuffer();
+}

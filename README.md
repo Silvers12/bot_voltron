@@ -184,6 +184,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 - `/taux type:… [membre]` : chance, choupitude, suspicion, criminalité, loutritude, flemme, sagesse, chaos. Le taux est aléatoire mais fixe pour un membre, un taux et un jour civil (hachage, aucun stockage) ; il change à minuit dans le fuseau du serveur.
 - Réponse publique avec une bannière 1200 × 400 générée par `sharp` : avatar à gauche, nom, taux, barre et commentaire au centre, icône du taux à droite grisée et remplie par le bas selon le pourcentage.
+- `/duo type:… membre:@… [avec:@…]` : taux entre deux membres (amour, amitié, complicité, rivalité, esprit d'équipe, chaos à deux), symétrique, fixe sur la journée. Bannière avec un avatar de chaque côté et l'icône remplie au centre. Clés d'icônes : amour, amitie, complicite, rivalite, equipe, chaos_duo.
 - Icônes : PNG à fond transparent dans `content/taux/<clé>.png` (voir `content/taux/README.md`) ; sans fichier, icône vectorielle de secours. Textes et couleurs dans `src/modules/rates/rates.catalog.ts`. Le conteneur installe `ttf-dejavu` et `font-noto-emoji` (emojis des pseudos, rendus en monochrome) pour le texte des images.
 
 ## Statistiques
@@ -250,6 +251,7 @@ Membres :
 - `/succes [membre]` : badges d'un membre (public).
 - `/stats [membre]` : statistiques de jeu (public).
 - `/taux type [membre]` : taux du jour avec bannière (public).
+- `/duo type membre [avec]` : taux entre deux membres (public).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`

@@ -62,3 +62,41 @@ export function rateByKey(key: string): Rate | undefined {
 export function commentFor(rate: Rate, value: number): string {
   return rate.comments[Math.min(4, Math.floor(value / 20.01))]!;
 }
+
+/** Taux entre deux membres (/duo). Icône PNG optionnelle : content/taux/<key>.png */
+export const DUO_RATES: Rate[] = [
+  {
+    key: 'amour', label: 'Amour', of: 'amour', emoji: '❤️', color: '#e74c3c',
+    icon: '<path d="M50 88 C20 66 6 50 10 32 C14 16 34 12 50 30 C66 12 86 16 90 32 C94 50 80 66 50 88 Z"/>',
+    comments: ['Deux icebergs qui se croisent. Poliment.', 'Un frisson, vite réprimé.', 'Ça pourrait. Ou pas. Le suspense est total.', 'Les regards s’attardent. Voltron détourne les moustaches.', 'Grand amour de rivière. Voltron sort les mouchoirs.'],
+  },
+  {
+    key: 'amitie', label: 'Amitié', of: 'amitié', emoji: '🤝', color: '#f1c40f',
+    icon: '<circle cx="32" cy="34" r="16"/><circle cx="68" cy="34" r="16"/><path d="M8 92 C8 60 32 56 32 56 C32 56 50 66 50 66 C50 66 68 56 68 56 C68 56 92 60 92 92 Z"/>',
+    comments: ['Vous vous saluez d’un signe de tête. Parfois.', 'Camarades de salon, sans plus.', 'Une bonne entente, à entretenir.', 'Vous finissez les phrases de l’autre.', 'Amitié inoxydable. Voltron veut rejoindre la bande.'],
+  },
+  {
+    key: 'complicite', label: 'Complicité', of: 'complicité', emoji: '😏', color: '#9b59b6',
+    icon: '<circle cx="50" cy="50" r="42"/><circle cx="34" cy="40" r="6" fill="#fff"/><path d="M58 36 L74 42" stroke="#fff" stroke-width="6" stroke-linecap="round"/><path d="M28 64 Q50 84 72 60" stroke="#fff" stroke-width="7" fill="none" stroke-linecap="round"/>',
+    comments: ['Aucun regard échangé. Même pas un clin d’œil.', 'Une blague privée, une seule.', 'Vous riez parfois des mêmes bêtises.', 'Un regard suffit, et c’est le fou rire.', 'Duo de malfaiteurs. Voltron compte les biscuits.'],
+  },
+  {
+    key: 'rivalite', label: 'Rivalité', of: 'rivalité', emoji: '⚔️', color: '#c0392b',
+    icon: '<path d="M14 86 L70 30 M86 86 L30 30" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><path d="M6 78 L22 94 M94 78 L78 94" stroke="currentColor" stroke-width="12" stroke-linecap="round"/><circle cx="70" cy="30" r="10"/><circle cx="30" cy="30" r="10"/>',
+    comments: ['Paix totale. Suspect, mais paisible.', 'Un petit esprit de compétition au blackjack.', 'Rivaux honnêtes : le meilleur gagne.', 'Duel en vue. Voltron prépare les dés.', 'Némésis. Voltron tient le bouclier entre vous deux.'],
+  },
+  {
+    key: 'equipe', label: 'Esprit d’équipe', of: 'synergie', emoji: '🧩', color: '#1abc9c',
+    icon: '<path d="M12 36 h24 a10 10 0 1 1 20 0 h24 v24 a10 10 0 1 1 0 20 v24 h-24 a10 10 0 1 1 -20 0 h-24 v-24 a10 10 0 1 1 0 -20 Z" transform="translate(-4 -14) scale(1.04)"/>',
+    comments: ['Vous tirez chacun de votre côté. La corde souffre.', 'Ça avance, en zigzag.', 'Une équipe correcte, un jour sur deux.', 'Vous vous complétez comme pain et beurre.', 'Machine de guerre à deux têtes. Voltron recrute.'],
+  },
+  {
+    key: 'chaos_duo', label: 'Chaos à deux', of: 'chaos combiné', emoji: '💥', color: '#e67e22',
+    icon: '<path d="M50 6 L58 36 L90 30 L66 52 L84 84 L52 66 L30 92 L34 58 L6 46 L36 40 Z"/>',
+    comments: ['Ensemble, vous rangez des bibliothèques.', 'Quelques étincelles, vite éteintes.', 'Le désordre créatif, à deux.', 'Voltron vérifie que les meubles sont vissés.', 'Réaction en chaîne. Évacuez la rivière.'],
+  },
+];
+
+export function duoRateByKey(key: string): Rate | undefined {
+  return DUO_RATES.find((r) => r.key === key);
+}
