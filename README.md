@@ -162,6 +162,12 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Résolution par jets de d20 commentés (textes dans `content/duels.json`), relance en cas d'égalité. Un défi sans réponse expire après 2 min et rembourse ; les défis en attente survivent à un redémarrage.
 - Un seul défi en attente par défieur. Mises bornées par `/admin duel min max` (10 à 5 000 par défaut).
 
+## Titres
+
+- Un article de boutique de type **titre** (`/admin boutique ajouter nom:… prix:… titre:true`, limite 1 par membre par défaut) : son nom devient un titre de profil. L'emoji de l'article est affiché devant.
+- Le premier titre acheté est porté automatiquement. Dans l'inventaire, un menu « Choisir le titre porté » permet de changer ou de n'en porter aucun.
+- Le titre porté s'affiche en tête du profil et dans `/succes`. Un titre retiré de la vente reste possédé et portable.
+
 ## Succès et badges
 
 - Catalogue de 30 succès en code (`src/modules/achievements/achievements.catalog.ts`), en quatre catégories : Compagnie (messages, vocal, niveaux), Économie (séries, câlins, bourse, achats), Jeux (blackjack, machine, duels, câlin collectif, tombola), Collection (méta : 10 succès, tous les succès). Trois paliers avec récompense : bronze 100, argent 300, or 1 000 cœurs (transaction `ACHIEVEMENT`).

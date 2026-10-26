@@ -15,12 +15,12 @@ export function badgeLine(unlocked: MemberAchievement[]): string {
 }
 
 /** Écran complet des succès d'un membre : débloqués avec date, verrouillés avec indice. */
-export function buildAchievementsEmbed(displayName: string, unlocked: MemberAchievement[], s: GuildSettings, { showHints = true } = {}) {
+export function buildAchievementsEmbed(displayName: string, unlocked: MemberAchievement[], s: GuildSettings, { showHints = true, title = null as string | null } = {}) {
   const byKey = new Map(unlocked.map((u) => [u.key, u]));
   const embed = new EmbedBuilder()
     .setColor(COLOR)
     .setTitle(`🏅 Succès de ${displayName}`)
-    .setDescription(`**${unlocked.length}** succès sur ${ACHIEVEMENTS.length}.`)
+    .setDescription(`${title ? `🏷️ *${title}*\n` : ''}**${unlocked.length}** succès sur ${ACHIEVEMENTS.length}.`)
     .setFooter({ text: FOOTER });
   const categories = [...new Set(ACHIEVEMENTS.map((a) => a.category))];
   for (const cat of categories) {

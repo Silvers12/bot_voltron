@@ -97,7 +97,7 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
       return {
         lines: [
           `Articles en vente : ${active.length} (${items.length - active.length} retiré(s))`,
-          ...active.slice(0, 10).map((i) => `• ${i.name} · ${formatAmount(i.price, s)}${i.kind === 'ROLE' ? ' · rôle' : ''}${i.stock !== null ? ` · stock ${i.stock}` : ''}`),
+          ...active.slice(0, 10).map((i) => `• ${i.name} · ${formatAmount(i.price, s)}${i.kind === 'ROLE' ? ' · rôle' : i.kind === 'TITLE' ? ' · titre' : ''}${i.stock !== null ? ` · stock ${i.stock}` : ''}`),
           ...(active.length > 10 ? [`… et ${active.length - 10} autre(s)`] : []),
         ],
         commands: ['/admin boutique ajouter · modifier · retirer · liste'],

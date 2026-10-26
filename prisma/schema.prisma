@@ -49,6 +49,9 @@ model Member {
   inventory     InventoryItem[]
   achievements  MemberAchievement[]
   /// Compteurs de machine à sous (source fiable pour les succès)
+  /// Titre porté (article de type TITLE possédé)
+  titleItemId   String?
+  title         ShopItem? @relation("MemberTitle", fields: [titleItemId], references: [id])
   slotSpins     Int       @default(0)
   slotJackpots  Int       @default(0)
 
@@ -213,6 +216,8 @@ enum ItemKind {
   COLLECTIBLE
   /// Attribue un rôle Discord à l'achat
   ROLE
+  /// Titre affichable sur le profil (le nom de l'article est le titre)
+  TITLE
 }
 
 /// Article de la boutique, géré par les administrateurs.
@@ -233,6 +238,7 @@ model ShopItem {
   /// Un article retiré reste en base pour l'historique et les inventaires
   active       Boolean   @default(true)
   sortOrder    Int       @default(0)
+  titledMembers Member[] @relation("MemberTitle")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   inventory    InventoryItem[]

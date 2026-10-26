@@ -2,8 +2,8 @@ import { trackAchievements } from '../achievements/achievements.service.js';
 import { registerProfileButton, registerProfileButtonPrefix, registerProfileSelect } from '../community/profile.controller.js';
 import { getBalance, InsufficientFundsError } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
-import { getInventory, getItem, getOwnedQuantity, listItems, purchase, PurchaseError } from './shop.service.js';
-import { buildInventoryView, buildItemView, buildShopView, INVENTORY_OPEN_ID, SHOP_BUY_PREFIX, SHOP_OPEN_ID, SHOP_SELECT_ID } from './shop.view.js';
+import { equipTitle, getEquippedTitle, getInventory, getItem, getOwnedQuantity, listItems, purchase, PurchaseError } from './shop.service.js';
+import { buildInventoryView, buildItemView, buildShopView, INVENTORY_OPEN_ID, NO_TITLE_VALUE, SHOP_BUY_PREFIX, SHOP_OPEN_ID, SHOP_SELECT_ID, SHOP_TITLE_SELECT_ID } from './shop.view.js';
 import type { Member } from '../../generated/prisma/client.js';
 
 async function renderShop(member: Member, notice?: string) {
@@ -26,9 +26,24 @@ registerProfileSelect(SHOP_SELECT_ID, async ({ interaction, member, values }) =>
   await interaction.update(await renderItem(member, values[0] ?? ''));
 });
 
+async function renderInventory(member: Member, notice?: string) {
+  const [entries, settings, title] = await Promise.all([getInventory(member.id), getSettings(member.guildId), getEquippedTitle(member.id)]);
+  return buildInventoryView(entries, settings, title?.id ?? null, notice);
+}
+
 registerProfileButton(INVENTORY_OPEN_ID, async ({ interaction, member }) => {
-  const [entries, settings] = await Promise.all([getInventory(member.id), getSettings(member.guildId)]);
-  await interaction.update(buildInventoryView(entries, settings));
+  await interaction.update(await renderInventory(member));
+});
+
+registerProfileSelect(SHOP_TITLE_SELECT_ID, async ({ interaction, member, values }) => {
+  const choice = values[0] ?? NO_TITLE_VALUE;
+  try {
+    const title = await equipTitle(member.id, choice === NO_TITLE_VALUE ? null : choice);
+    await interaction.update(await renderInventory(member, title ? `🏷️ Tu portes désormais le titre **${title.name}**.` : 'Tu ne portes plus de titre.'));
+  } catch (err) {
+    if (err instanceof PurchaseError) return void (await interaction.update(await renderInventory(member, `❌ ${err.message}`)));
+    throw err;
+  }
 });
 
 registerProfileButtonPrefix(SHOP_BUY_PREFIX, async ({ interaction, member, guildMember, arg: itemId }) => {

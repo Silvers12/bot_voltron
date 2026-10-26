@@ -61,6 +61,30 @@ export async function getOwnedQuantity(memberId: string, itemId: string): Promis
 
 export { roleAssignabilityProblem };
 
+/** Titre porté par un membre (null si aucun). */
+export async function getEquippedTitle(memberId: string): Promise<ShopItem | null> {
+  const m = await prisma.member.findUnique({ where: { id: memberId }, select: { title: true } });
+  return m?.title ?? null;
+}
+
+/** Titres possédés par un membre. */
+export async function listOwnedTitles(memberId: string): Promise<ShopItem[]> {
+  const entries = await prisma.inventoryItem.findMany({ where: { memberId, item: { kind: 'TITLE' } }, include: { item: true }, orderBy: { createdAt: 'asc' } });
+  return entries.map((e) => e.item);
+}
+
+/** Porte un titre possédé, ou aucun (null). Refuse un titre non possédé. */
+export async function equipTitle(memberId: string, itemId: string | null): Promise<ShopItem | null> {
+  if (itemId === null) {
+    await prisma.member.update({ where: { id: memberId }, data: { titleItemId: null } });
+    return null;
+  }
+  const owned = await prisma.inventoryItem.findUnique({ where: { memberId_itemId: { memberId, itemId } }, include: { item: true } });
+  if (!owned || owned.item.kind !== 'TITLE') throw new PurchaseError('unavailable', 'Tu ne possèdes pas ce titre.');
+  await prisma.member.update({ where: { id: memberId }, data: { titleItemId: itemId } });
+  return owned.item;
+}
+
 export interface PurchaseResult {
   item: ShopItem;
   balanceAfter: number;
@@ -120,6 +144,9 @@ export async function purchase(item: ShopItem, member: { id: string; discordUser
   });
 
   log.info(`Achat « ${item.name} » (${item.price}) par ${member.discordUserId}`);
+
+  // Premier titre acheté : porté aussitôt, pour qu'il soit visible sans manipulation.
+  if (item.kind === 'TITLE') await prisma.member.updateMany({ where: { id: member.id, titleItemId: null }, data: { titleItemId: item.id } });
 
   if (item.kind === 'ROLE' && item.roleId) {
     try {

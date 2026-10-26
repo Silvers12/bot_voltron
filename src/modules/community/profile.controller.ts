@@ -42,21 +42,23 @@ import { claimDaily, getDailyStatus } from '../economy/daily.service.js';
 import { claimWeekly, getWeeklyStatus } from '../economy/weekly.service.js';
 import { getRank } from '../progression/xp.service.js';
 import { listUnlocked, trackAchievements } from '../achievements/achievements.service.js';
+import { getEquippedTitle } from '../shop/shop.service.js';
 import { buildAchievementsView, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
 import { time, TimestampStyles } from 'discord.js';
 import { buildHistoryView, buildProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID, PROFILE_WEEKLY_ID } from './profile.view.js';
 
 /** Assemble les données du profil et construit l'écran. */
 export async function renderProfile(member: Member, guildMember: GuildMember, notice?: string) {
-  const [balance, settings, daily, weekly, rank, achievements] = await Promise.all([
+  const [balance, settings, daily, weekly, rank, achievements, title] = await Promise.all([
     getBalance(member.id),
     getSettings(member.guildId),
     getDailyStatus(member.id, member.guildId),
     getWeeklyStatus(member.id, member.guildId),
     getRank(member.guildId, member.xp),
     listUnlocked(member.id),
+    getEquippedTitle(member.id),
   ]);
-  return buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, notice });
+  return buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, title, notice });
 }
 
 export async function renderHistory(member: Member) {

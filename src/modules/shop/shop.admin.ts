@@ -19,6 +19,7 @@ export function buildShopAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
         .addStringOption((o) => o.setName('description').setDescription('Texte affiché sur la fiche').setMaxLength(300))
         .addStringOption((o) => o.setName('emoji').setDescription('Emoji affiché devant le nom').setMaxLength(20))
         .addRoleOption((o) => o.setName('role').setDescription('Rôle attribué à l’achat (article de type rôle)'))
+        .addBooleanOption((o) => o.setName('titre').setDescription('Article de type titre : le nom est affiché sur le profil de l’acheteur'))
         .addIntegerOption((o) => o.setName('stock').setDescription('Stock initial (vide = illimité)').setMinValue(0))
         .addIntegerOption((o) => o.setName('max_par_membre').setDescription('Exemplaires max par membre (vide = illimité)').setMinValue(1))
         .addIntegerOption((o) => o.setName('ordre').setDescription('Ordre d’affichage (petit = en haut)')),
@@ -77,7 +78,7 @@ export async function handleShopAdmin(interaction: ChatInputCommandInteraction<'
         i.active ? '' : '**retiré**',
         i.stock === null ? 'stock ∞' : `stock ${i.stock}`,
         i.maxPerMember === null ? '' : `max ${i.maxPerMember}/membre`,
-        i.kind === 'ROLE' && i.roleId ? `rôle ${roleMention(i.roleId)}` : '',
+        i.kind === 'ROLE' && i.roleId ? `rôle ${roleMention(i.roleId)}` : i.kind === 'TITLE' ? 'titre' : '',
       ].filter(Boolean).join(', ');
       return `• ${i.emoji ? i.emoji + ' ' : ''}**${i.name}** — ${formatAmount(i.price, settings)} (${flags})`;
     });
@@ -89,6 +90,8 @@ export async function handleShopAdmin(interaction: ChatInputCommandInteraction<'
     const name = opt.getString('nom', true).trim();
     if (await findItemByName(interaction.guildId, name)) return void (await reply(`Un article nommé **${name}** existe déjà.`));
     const role = opt.getRole('role');
+    const isTitle = opt.getBoolean('titre') ?? false;
+    if (role && isTitle) return void (await reply('Un article est soit un rôle, soit un titre, pas les deux.'));
     if (role) {
       const problem = roleAssignabilityProblem(interaction.guild, role.id);
       if (problem) return void (await reply(`Impossible d’utiliser ce rôle : ${problem}`));
@@ -98,13 +101,13 @@ export async function handleShopAdmin(interaction: ChatInputCommandInteraction<'
       price: opt.getInteger('prix', true),
       description: opt.getString('description'),
       emoji: opt.getString('emoji')?.trim() || null,
-      kind: role ? 'ROLE' : 'COLLECTIBLE',
+      kind: role ? 'ROLE' : isTitle ? 'TITLE' : 'COLLECTIBLE',
       roleId: role?.id ?? null,
       stock: opt.getInteger('stock'),
-      maxPerMember: opt.getInteger('max_par_membre') ?? (role ? 1 : null),
+      maxPerMember: opt.getInteger('max_par_membre') ?? (role || isTitle ? 1 : null),
       sortOrder: opt.getInteger('ordre') ?? 0,
     });
-    await reply(`**${item.name}** est en vente pour ${formatAmount(item.price, settings)}${role ? ` et donne le rôle ${roleMention(role.id)}` : ''}.`);
+    await reply(`**${item.name}** est en vente pour ${formatAmount(item.price, settings)}${role ? ` et donne le rôle ${roleMention(role.id)}` : isTitle ? ' comme titre de profil' : ''}.`);
     return;
   }
 

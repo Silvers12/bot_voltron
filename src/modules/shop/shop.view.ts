@@ -9,6 +9,8 @@ import { INVENTORY_OPEN_ID, PROFILE_REFRESH_ID, SHOP_OPEN_ID } from '../communit
 export { SHOP_OPEN_ID, INVENTORY_OPEN_ID };
 export const SHOP_SELECT_ID = 'shop:select';
 export const SHOP_BUY_PREFIX = 'shop:buy:';
+export const SHOP_TITLE_SELECT_ID = 'shop:title';
+export const NO_TITLE_VALUE = 'none';
 
 const VOLTRON_COLOR = 0x2e86c1;
 const FOOTER = 'Voltron, loutre paladin · La boutique garde ton équipement au chaud.';
@@ -67,6 +69,7 @@ export function buildShopView(items: ShopItem[], balance: number, settings: Guil
 export function buildItemView(item: ShopItem, balance: number, owned: number, settings: GuildSettings) {
   const details = [`**Prix :** ${formatAmount(item.price, settings)}`];
   if (item.kind === 'ROLE' && item.roleId) details.push(`**Effet :** donne le rôle ${roleMention(item.roleId)}`);
+  if (item.kind === 'TITLE') details.push('**Effet :** titre affiché sur ton profil (à choisir depuis l’inventaire)');
   if (item.stock !== null) details.push(`**Stock :** ${item.stock === 0 ? 'épuisé' : item.stock}`);
   if (item.maxPerMember !== null) details.push(`**Limite :** ${item.maxPerMember} par membre`);
   if (owned > 0) details.push(`**Tu en possèdes :** ${owned}`);
@@ -88,21 +91,39 @@ export function buildItemView(item: ShopItem, balance: number, owned: number, se
   return { embeds: [embed], components: rows };
 }
 
-/** Inventaire du membre. */
-export function buildInventoryView(entries: InventoryEntry[], settings: GuildSettings) {
+/** Inventaire du membre, avec le choix du titre porté s'il en possède. */
+export function buildInventoryView(entries: InventoryEntry[], settings: GuildSettings, equippedTitleId: string | null, notice?: string) {
+  const describe = (e: InventoryEntry) => {
+    const qty = e.quantity > 1 ? ` ×${e.quantity}` : '';
+    if (e.item.kind === 'ROLE' && e.item.roleId) return `${itemLabel(e.item)}${qty} (${roleMention(e.item.roleId)})`;
+    if (e.item.kind === 'TITLE') return `${itemLabel(e.item)}${e.item.id === equippedTitleId ? ' · **porté**' : ''}`;
+    return `${itemLabel(e.item)}${qty}`;
+  };
   const embed = new EmbedBuilder()
     .setColor(VOLTRON_COLOR)
     .setTitle('🎒 Inventaire')
-    .setDescription(
-      entries.length
-        ? entries.map((e) => `${itemLabel(e.item)}${e.quantity > 1 ? ` ×${e.quantity}` : ''}${e.item.kind === 'ROLE' && e.item.roleId ? ` (${roleMention(e.item.roleId)})` : ''}`).join('\n')
-        : 'Ton sac est vide. Fais un tour à la boutique !',
-    )
+    .setDescription(entries.length ? entries.map(describe).join('\n') : 'Ton sac est vide. Fais un tour à la boutique !')
     .setFooter({ text: `${entries.reduce((n, e) => n + e.quantity, 0)} objet(s) · valeur d’achat ${formatAmount(entries.reduce((n, e) => n + e.quantity * e.item.price, 0), settings)}` });
+  if (notice) embed.addFields({ name: '​', value: notice });
 
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
-    new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Retour au profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
+  const components: Array<ActionRowBuilder<ButtonBuilder> | ActionRowBuilder<StringSelectMenuBuilder>> = [];
+  const titles = entries.filter((e) => e.item.kind === 'TITLE').map((e) => e.item);
+  if (titles.length) {
+    const menu = new StringSelectMenuBuilder().setCustomId(SHOP_TITLE_SELECT_ID).setPlaceholder('Choisir le titre porté');
+    menu.addOptions(new StringSelectMenuOptionBuilder().setLabel('Aucun titre').setValue(NO_TITLE_VALUE).setDefault(equippedTitleId === null));
+    for (const t of titles.slice(0, 24)) {
+      const option = new StringSelectMenuOptionBuilder().setLabel(t.name.slice(0, 100)).setValue(t.id).setDefault(t.id === equippedTitleId);
+      const emoji = componentEmoji(t.emoji);
+      if (emoji) option.setEmoji(emoji);
+      menu.addOptions(option);
+    }
+    components.push(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu));
+  }
+  components.push(
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
+      new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Retour au profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
+    ),
   );
-  return { embeds: [embed], components: [row] };
+  return { embeds: [embed], components };
 }

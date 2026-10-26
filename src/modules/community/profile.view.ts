@@ -6,7 +6,7 @@ import { formatAmount } from '../settings/settings.service.js';
 import { progressFor } from '../progression/levels.service.js';
 import { isFeatureEnabled } from '../features/features.js';
 import { badgeLine, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
-import type { MemberAchievement } from '../../generated/prisma/client.js';
+import type { MemberAchievement, ShopItem } from '../../generated/prisma/client.js';
 
 export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
@@ -28,16 +28,18 @@ export interface ProfileData {
   weekly: WeeklyStatus;
   rank: number;
   achievements: MemberAchievement[];
+  title: ShopItem | null;
   /** Message ponctuel affiché sous le profil (résultat d'une action) */
   notice?: string;
 }
 
 /** Écran principal du profil : embed + boutons. */
-export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, notice }: ProfileData) {
+export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, title, notice }: ProfileData) {
   const embed = new EmbedBuilder()
     .setColor(VOLTRON_COLOR)
     .setAuthor({ name: `Profil de ${member.displayName}`, iconURL: guildMember.displayAvatarURL({ size: 128 }) })
     .setThumbnail(guildMember.displayAvatarURL({ size: 256 }))
+    .setTitle(title ? `${title.emoji ? title.emoji + ' ' : '🏷️ '}${title.name}` : null)
     .addFields(
       { name: 'Bourse', value: `**${formatAmount(balance, settings)}**`, inline: true },
       { name: 'Niveau', value: levelLine(member.xp, settings, rank), inline: true },
