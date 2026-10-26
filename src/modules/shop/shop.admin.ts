@@ -1,7 +1,7 @@
 import type { AutocompleteInteraction, ChatInputCommandInteraction, SlashCommandSubcommandGroupBuilder } from 'discord.js';
 import { MessageFlags, roleMention } from 'discord.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
-import { createItem, findItemByName, listItems, roleAssignabilityProblem, updateItem, type ItemInput } from './shop.service.js';
+import { createItem, findItemByName, importCatalog, listItems, roleAssignabilityProblem, updateItem, type ItemInput } from './shop.service.js';
 
 const MAX_PRICE = 10_000_000;
 
@@ -49,6 +49,7 @@ export function buildShopAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
         .setDescription('Remet en vente un article retiré')
         .addStringOption((o) => o.setName('article').setDescription('Article').setRequired(true).setAutocomplete(true)),
     )
+    .addSubcommand((sub) => sub.setName('importer').setDescription('Charge le catalogue de départ (content/boutique.json) sans toucher aux articles existants'))
     .addSubcommand((sub) => sub.setName('lister').setDescription('Liste tous les articles, y compris retirés'));
 }
 
@@ -69,6 +70,12 @@ export async function handleShopAdmin(interaction: ChatInputCommandInteraction<'
   const settings = await getSettings(interaction.guildId);
   const reply = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
   const opt = interaction.options;
+
+  if (sub === 'importer') {
+    const { created, skipped } = await importCatalog(interaction.guildId);
+    await reply(created.length ? `${created.length} article(s) ajouté(s) : ${created.join(', ')}.${skipped ? ` ${skipped} déjà présent(s).` : ''}` : `Rien à ajouter : les ${skipped} articles du catalogue sont déjà en boutique.`);
+    return;
+  }
 
   if (sub === 'lister') {
     const items = await listItems(interaction.guildId, { includeInactive: true });

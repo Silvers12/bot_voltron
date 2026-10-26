@@ -192,6 +192,11 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - `/stats [membre]` : activité (messages, vocal, niveau, meilleure série), câlins donnés et reçus, blackjack, machine à sous, duels, tombola, câlins collectifs, comptage, chacun avec son bilan net en cœurs. Seules les fonctionnalités actives apparaissent. Public.
 - Même écran depuis le profil, via le menu « Explorer… » qui remplace les boutons Boutique/Inventaire/Succès : Historique, Boutique, Inventaire, Succès, Statistiques.
 
+## Catalogue de boutique de départ
+
+- `content/boutique.json` : 28 articles au ton absurde (chaussette sale à 5 cœurs jusqu'à la couronne de la rivière à 100 000), objets de collection et titres, stocks limités pour les plus chers. Modifiable à la main.
+- `/admin boutique importer` charge le fichier sur le serveur : les articles déjà présents (même nom) ne sont pas touchés, donc relançable après avoir ajouté des lignes.
+
 ## Titres
 
 - Un article de boutique de type **titre** (`/admin boutique ajouter nom:… prix:… titre:true`, limite 1 par membre par défaut) : son nom devient un titre de profil. L'emoji de l'article est affiché devant.
