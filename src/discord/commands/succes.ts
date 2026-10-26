@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { getSettings } from '../../modules/settings/settings.service.js';
@@ -12,6 +12,7 @@ export default defineCommand({
     .addUserOption((o) => o.setName('membre').setDescription('Membre à afficher')),
   async execute({ interaction, member }) {
     const target = interaction.options.getMember('membre');
+    if (target?.user.bot) return void (await interaction.reply({ content: 'Les bots n’ont pas de badges. Même Voltron, et il en est un peu triste.', flags: MessageFlags.Ephemeral }));
     const shown = target ? await ensureMember(target) : member;
     const s = await getSettings(interaction.guildId);
     const unlocked = await listUnlocked(shown.id);

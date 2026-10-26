@@ -114,13 +114,16 @@ export async function closeHug(client: Client, hugId: string) {
   await prisma.groupHug.update({ where: { id: hugId }, data: { rewardEach } });
 
   for (const p of hug.participants) {
-    await credit({ memberId: p.memberId, amount: rewardEach, type: 'GROUP_HUG', actorDiscordId: 'voltron', reason: `Câlin collectif à ${count}` });
+    if (rewardEach <= 0) break;
+    await credit({ memberId: p.memberId, amount: rewardEach, type: 'GROUP_HUG', actorDiscordId: 'voltron', reason: `Câlin collectif à ${count}` })
+      .catch((err) => log.error(`Crédit du câlin collectif impossible pour ${p.memberId}`, err));
   }
   log.info(`Câlin collectif ${hugId} clôturé : ${count} câlineur(s), ${rewardEach} chacun`);
   const hugGuild = client.guilds.cache.get(hug.guildId);
   if (hugGuild) for (const p of hug.participants) trackAchievements(hugGuild, p.memberId);
 
-  await editHugMessage(client, hug, async (s) => buildHugClosedMessage(hug, hug.participants.map((p) => p.member.discordUserId), rewardEach, s));
+  await editHugMessage(client, hug, async (s) => buildHugClosedMessage(hug, hug.participants.map((p) => p.member.discordUserId), rewardEach, s))
+    .catch((err) => log.warn('Mise à jour du message de câlin impossible', err));
   await scheduleNext(hug.guildId);
 }
 

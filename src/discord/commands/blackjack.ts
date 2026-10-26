@@ -2,7 +2,7 @@ import { MessageFlags, SlashCommandBuilder, type RepliableInteraction } from 'di
 import { defineCommand } from '../types.js';
 import { trackAchievements } from '../../modules/achievements/achievements.service.js';
 import { registerButton, registerButtonPrefix, type ButtonContext } from '../components.js';
-import { openSession, touchSession } from '../sessions.js';
+import { forgetSession, openSession, touchSession } from '../sessions.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import type { Member } from '../../generated/prisma/client.js';
 import { getBalance } from '../../modules/economy/economy.service.js';
@@ -42,6 +42,8 @@ async function play(ctx: { interaction: RepliableInteraction; member: Member }, 
     const payload = await render(view, member);
     if (reply === 'update' && interaction.isButton()) await interaction.update({ ...payload, content: '' });
     else await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
+    const key = sessionKey(member.guildId, interaction.user.id);
+    forgetSession(key); // une partie précédente a pu laisser une session : ne pas supprimer le message qu'on vient de mettre à jour
     if (view.finished) { if (interaction.inCachedGuild()) trackAchievements(interaction.guild, member.id); return; }
     await openSession(sessionKey(member.guildId, interaction.user.id), interaction, TURN_TTL_MS, expireHandler(member));
   } catch (err) {
@@ -56,8 +58,9 @@ async function act(ctx: ButtonContext, action: (m: Member) => Promise<GameView>)
   try {
     const view = await action(member);
     await interaction.update({ ...(await render(view, member)), content: '' });
-    if (view.finished) trackAchievements(interaction.guild, member.id);
-    if (!view.finished) touchSession(sessionKey(member.guildId, interaction.user.id), interaction, TURN_TTL_MS);
+    const key = sessionKey(member.guildId, interaction.user.id);
+    if (view.finished) { forgetSession(key); trackAchievements(interaction.guild, member.id); }
+    else touchSession(key, interaction, TURN_TTL_MS, expireHandler(member));
   } catch (err) {
     if (err instanceof InsufficientFundsError || err instanceof BlackjackError) {
       await interaction.reply({ content: err.message, flags: MessageFlags.Ephemeral });

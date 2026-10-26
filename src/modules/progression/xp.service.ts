@@ -25,27 +25,33 @@ export async function handleMessage(message: Message) {
 
   const member = await prisma.member.findUnique({
     where: { guildId_discordUserId: { guildId: message.guildId, discordUserId: message.author.id } },
-    select: { id: true, lastMessageXpAt: true },
+    select: { id: true, lastMessageXpAt: true, messageCount: true },
   }) ?? await ensureMember(message.member);
 
   const now = new Date();
   const cooldownMs = settings.xpMessageCooldownSeconds * 1000;
   const eligible = !member.lastMessageXpAt || now.getTime() - member.lastMessageXpAt.getTime() >= cooldownMs;
 
-  // Mise à jour conditionnelle : deux messages simultanés ne créditent qu'une fois.
-  const { count } = await prisma.member.updateMany({
-    where: {
-      id: member.id,
-      ...(cooldownMs > 0 ? { OR: [{ lastMessageXpAt: null }, { lastMessageXpAt: { lte: new Date(now.getTime() - cooldownMs) } }] } : {}),
-    },
-    data: eligible
-      ? { messageCount: { increment: 1 }, xp: { increment: settings.xpPerMessage }, lastMessageXpAt: now }
-      : { messageCount: { increment: 1 } },
-  });
-  if (count === 0) await prisma.member.update({ where: { id: member.id }, data: { messageCount: { increment: 1 } } });
-  else if (eligible) await syncLevel(message.guild, member.id);
-  const after = await prisma.member.findUnique({ where: { id: member.id }, select: { messageCount: true } });
-  if (after && MESSAGE_THRESHOLDS.includes(after.messageCount)) trackAchievements(message.guild, member.id);
+  let credited = false;
+  if (!eligible) {
+    await prisma.member.update({ where: { id: member.id }, data: { messageCount: { increment: 1 } } });
+  } else if (cooldownMs === 0) {
+    await prisma.member.update({ where: { id: member.id }, data: { messageCount: { increment: 1 }, xp: { increment: settings.xpPerMessage }, lastMessageXpAt: now } });
+    credited = true;
+  } else {
+    // Mise à jour conditionnelle : deux messages simultanés ne créditent qu'une fois.
+    const { count } = await prisma.member.updateMany({
+      where: { id: member.id, OR: [{ lastMessageXpAt: null }, { lastMessageXpAt: { lte: new Date(now.getTime() - cooldownMs) } }] },
+      data: { messageCount: { increment: 1 }, xp: { increment: settings.xpPerMessage }, lastMessageXpAt: now },
+    });
+    credited = count > 0;
+    if (!credited) await prisma.member.update({ where: { id: member.id }, data: { messageCount: { increment: 1 } } });
+  }
+  if (credited) await syncLevel(message.guild, member.id);
+
+  // Succès de messages : au franchissement d'un palier (robuste aux messages simultanés, l'évaluation est idempotente).
+  const before = member.messageCount;
+  if (MESSAGE_THRESHOLDS.some((t) => before < t && before + 1 >= t)) trackAchievements(message.guild, member.id);
 }
 
 // ---------------------------------------------------------------------------

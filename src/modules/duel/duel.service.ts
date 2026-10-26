@@ -1,3 +1,4 @@
+import { contentDir } from '../../core/paths.js';
 import { randomInt } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -17,7 +18,7 @@ interface DuelTexts { attaques: string[]; victoires: string[]; egalites: string[
 let texts: DuelTexts = { attaques: ['{a} attaque'], victoires: ['{w} gagne'], egalites: ['Égalité'] };
 
 export async function loadDuelTexts() {
-  const file = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../content/duels.json');
+  const file = path.join(contentDir, 'duels.json');
   const data = JSON.parse(await readFile(file, 'utf8')) as DuelTexts;
   for (const k of ['attaques', 'victoires', 'egalites'] as const) {
     if (!Array.isArray(data[k]) || !data[k].length) throw new Error(`duels.json : « ${k} » doit contenir au moins un texte`);
@@ -47,10 +48,20 @@ export async function createDuel(input: { guildId: string; channelId: string; ch
   if (pending) throw new DuelError('Tu as déjà un défi en attente. Attends la réponse ou annule-le.');
 
   await debit({ memberId: input.challenger.id, amount: input.stake, type: 'DUEL_STAKE', actorDiscordId: input.challenger.discordUserId, reason: 'Duel : mise bloquée' });
-  const duel = await prisma.duel.create({
-    data: { guildId: input.guildId, channelId: input.channelId, challengerId: input.challenger.id, opponentId: input.opponentId, stake: input.stake, expiresAt: new Date(Date.now() + DUEL_TTL_MS) },
-    include: withMembers,
-  });
+  let duel: DuelWithMembers;
+  try {
+    duel = await prisma.duel.create({
+      data: { guildId: input.guildId, channelId: input.channelId, challengerId: input.challenger.id, opponentId: input.opponentId, stake: input.stake, expiresAt: new Date(Date.now() + DUEL_TTL_MS) },
+      include: withMembers,
+    });
+  } catch (err) {
+    // Index unique partiel : un second défi lancé au même instant est refusé et la mise rendue.
+    if (typeof err === 'object' && err && 'code' in err && err.code === 'P2002') {
+      await credit({ memberId: input.challenger.id, amount: input.stake, type: 'DUEL_REFUND', actorDiscordId: 'voltron', reason: 'Duel en double, mise rendue' });
+      throw new DuelError('Tu as déjà un défi en attente. Attends la réponse ou annule-le.');
+    }
+    throw err;
+  }
   log.info(`Duel ${duel.id} : ${input.challenger.discordUserId} défie ${duel.opponent.discordUserId} pour ${input.stake}`);
   return duel;
 }

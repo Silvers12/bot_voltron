@@ -5,7 +5,6 @@ export interface MemberStats {
   level: number;
   balance: number;
   maxStreak: number;
-  weeklyClaims: number;
   hugsSent: number;
   hugsSentTotal: number;
   hugsReceived: number;
@@ -15,7 +14,6 @@ export interface MemberStats {
   blackjackNaturals: number;
   slotSpins: number;
   jackpots: number;
-  duelsPlayed: number;
   duelWins: number;
   groupHugs: number;
   lotteryTickets: number;
@@ -79,8 +77,13 @@ export const ACHIEVEMENTS: Achievement[] = [
   { key: 'chanceux', name: 'Patte chanceuse', emoji: '🍀', tier: 'or', category: 'Jeux', description: 'a gagné la tombola.', hint: 'Gagner la tombola', check: (s) => s.lotteryWins >= 1 },
   // Collection (méta)
   { key: 'collection', name: 'Collectionneur', emoji: '🏅', tier: 'argent', category: 'Collection', description: 'a débloqué 10 succès.', hint: 'Débloquer 10 succès', check: (s) => s.unlocked >= 10 },
-  { key: 'encyclopedie', name: 'Encyclopédie vivante', emoji: '🎖️', tier: 'or', category: 'Collection', description: 'a débloqué tous les autres succès. Voltron s’incline.', hint: 'Débloquer tous les autres succès', check: (s) => s.unlocked >= ACHIEVEMENTS.length - 1 },
+  { key: 'encyclopedie', name: 'Encyclopédie vivante', emoji: '🎖️', tier: 'or', category: 'Collection', description: 'a débloqué tous les autres succès. Voltron s’incline.', hint: 'Débloquer tous les autres succès', check: (s) => s.unlocked >= nonMetaCount() },
 ];
+
+/** Nombre de succès hors catégorie Collection : c'est ce que compte `MemberStats.unlocked`. */
+export function nonMetaCount(): number {
+  return ACHIEVEMENTS.filter((a) => a.category !== 'Collection').length;
+}
 
 export function achievementByKey(key: string): Achievement | undefined {
   return ACHIEVEMENTS.find((a) => a.key === key);

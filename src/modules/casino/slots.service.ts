@@ -46,6 +46,7 @@ export async function playSlots(member: { id: string; guildId: string; discordUs
       payout = Math.floor((before * s.slotTriplePercent) / 100);
       after = before - payout;
     }
+    await db.member.update({ where: { id: member.id }, data: { slotSpins: { increment: 1 }, ...(outcome.kind === 'jackpot' ? { slotJackpots: { increment: 1 } } : {}) } });
     await db.slotJackpot.update({
       where: { guildId: member.guildId },
       data: outcome.kind === 'jackpot'

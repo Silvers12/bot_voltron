@@ -9,8 +9,8 @@ import { FEATURE_KEYS, featureInfo, isFeatureEnabled, setEnabledFeatures, setFea
 import { getJackpot } from '../casino/slots.service.js';
 import { listItems } from '../shop/shop.service.js';
 import { listLevelRoles } from '../progression/levels.service.js';
-import { reconcileVoiceSessions } from '../progression/xp.service.js';
-import { getOpenHug, scheduleNext } from '../events/grouphug.service.js';
+import { getOpenHug } from '../events/grouphug.service.js';
+import { applyFeatureEffects } from '../features/features.effects.js';
 import { describeLottery } from '../lottery/lottery.admin.js';
 import { ACHIEVEMENTS } from '../achievements/achievements.catalog.js';
 import { unlockCounts } from '../achievements/achievements.service.js';
@@ -157,12 +157,6 @@ async function renderModule(guild: Guild, module: ModuleKey, notice?: string) {
   return buildModuleView(s, moduleInfo(module), await moduleDetails(guild, module), notice);
 }
 
-/** Effets de bord d'un changement d'état : reprise des sessions vocales, replanification des câlins. */
-async function afterToggle(guild: Guild, changed: FeatureKey[], enabledNow: (k: FeatureKey) => boolean) {
-  if (changed.includes('xp') && enabledNow('xp')) await reconcileVoiceSessions(guild);
-  if (changed.includes('calin_collectif') && enabledNow('calin_collectif')) await scheduleNext(guild.id);
-}
-
 function describeChange(changed: FeatureKey[], enabledNow: (k: FeatureKey) => boolean): string | undefined {
   if (!changed.length) return undefined;
   return changed.map((k) => `${enabledNow(k) ? '🟢 activé' : '⛔ désactivé'} : ${featureInfo(k).label}`).join('\n');
@@ -172,14 +166,15 @@ function describeChange(changed: FeatureKey[], enabledNow: (k: FeatureKey) => bo
 // Composants : réservés aux administrateurs, chaque action repousse l'expiration.
 // ---------------------------------------------------------------------------
 
-function guarded<C extends ButtonContext | SelectContext | ModalContext>(handler: (ctx: C) => Promise<void>) {
+function guarded<C extends ButtonContext | SelectContext | ModalContext>(handler: (ctx: C) => Promise<void>, { touch = true } = {}) {
   return async (ctx: C) => {
     if (!isBotAdmin(ctx.guildMember)) {
       await ctx.interaction.reply({ content: 'Ce panneau est réservé à l’intendance de Voltron.', flags: MessageFlags.Ephemeral });
       return;
     }
     await handler(ctx);
-    touchSession(key(ctx.interaction.guildId, ctx.interaction.user.id), ctx.interaction, TTL_MS);
+    // Une interaction consommée par showModal ne peut plus modifier le panneau : on garde la précédente comme référence.
+    if (touch) touchSession(key(ctx.interaction.guildId, ctx.interaction.user.id), ctx.interaction, TTL_MS, expire);
   };
 }
 
@@ -188,7 +183,7 @@ registerSelect(ADMIN_FEATURES_SELECT_ID, guarded(async ({ interaction, values })
   const after = await setEnabledFeatures(interaction.guildId, values);
   const changed = FEATURE_KEYS.filter((k) => isFeatureEnabled(before, k) !== isFeatureEnabled(after, k));
   const enabledNow = (k: FeatureKey) => isFeatureEnabled(after, k);
-  await afterToggle(interaction.guild, changed, enabledNow);
+  await applyFeatureEffects(interaction.guild, changed, enabledNow);
   await interaction.update(await renderHome(interaction.guildId, describeChange(changed, enabledNow) ?? 'Aucun changement.'));
 }));
 
@@ -210,7 +205,7 @@ registerButtonPrefix(ADMIN_TOGGLE_PREFIX, guarded(async ({ interaction, arg }) =
   const before = await getSettings(interaction.guildId);
   const after = await setFeatureEnabled(interaction.guildId, featureKey, !isFeatureEnabled(before, featureKey));
   const enabledNow = (k: FeatureKey) => isFeatureEnabled(after, k);
-  await afterToggle(interaction.guild, [featureKey], enabledNow);
+  await applyFeatureEffects(interaction.guild, [featureKey], enabledNow);
   await interaction.update(await renderModule(interaction.guild, module.key, describeChange([featureKey], enabledNow)));
 }));
 
@@ -219,7 +214,7 @@ registerButtonPrefix(ADMIN_EDIT_PREFIX, guarded(async ({ interaction, arg }) => 
   const form = findForm(arg);
   if (!form) return void (await interaction.update(await renderHome(interaction.guildId)));
   await interaction.showModal(buildFormModal(form, await getSettings(interaction.guildId)));
-}));
+}, { touch: false }));
 
 registerModalPrefix(ADMIN_FORM_PREFIX, guarded(async ({ interaction, arg }) => {
   const form = findForm(arg);

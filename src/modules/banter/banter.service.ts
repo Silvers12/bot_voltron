@@ -1,3 +1,4 @@
+import { contentDir } from '../../core/paths.js';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createLogger } from '../../core/logger.js';
@@ -18,8 +19,6 @@ export type BanterKind = 'compliment' | 'insulte';
 
 const catalogs = new Map<BanterKind, Catalog>();
 
-/** Dossier `content/` à la racine du projet (fonctionne depuis src/ et dist/). */
-const contentDir = path.resolve(path.dirname(new URL(import.meta.url).pathname), '../../../content');
 
 function validate(kind: BanterKind, data: unknown): Catalog {
   const c = data as Catalog;

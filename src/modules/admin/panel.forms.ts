@@ -223,7 +223,9 @@ export function findForm(key: string): Form | undefined {
 export function buildFormModal(form: Form, s: GuildSettings): ModalBuilder {
   const modal = new ModalBuilder().setCustomId(`${ADMIN_FORM_PREFIX}${form.key}`).setTitle(form.title.slice(0, 45));
   for (const f of form.fields) {
-    const input = new TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(TextInputStyle.Short).setValue(f.current(s)).setMaxLength(200);
+    const input = new TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(TextInputStyle.Short).setMaxLength(200);
+    const current = f.current(s);
+    if (current) input.setValue(current); // Discord refuse une valeur pré-remplie vide
     const required = f.type.kind === 'int' || f.type.kind === 'weekday' || (f.type.kind === 'text' && f.type.required) || (f.type.kind === 'channel' && f.type.required);
     input.setRequired(required);
     if (f.help) input.setPlaceholder(f.help);

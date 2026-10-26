@@ -46,16 +46,24 @@ export async function openSession(
 }
 
 /** Signale une activité : met à jour l'interaction de référence et repousse l'expiration. */
-export function touchSession(key: string, interaction: RepliableInteraction, ttlMs: number) {
+export function touchSession(key: string, interaction: RepliableInteraction, ttlMs: number, onExpire?: Session['onExpire']) {
   const existing = sessions.get(key);
   if (!existing) {
-    // Panneau ouvert avant un redémarrage : on le reprend en main.
-    sessions.set(key, { interaction, timer: setTimeout(() => void expire(key), ttlMs) });
+    // Panneau ouvert avant un redémarrage : on le reprend en main, avec son rappel d'expiration.
+    sessions.set(key, { interaction, timer: setTimeout(() => void expire(key), ttlMs), onExpire });
     return;
   }
   clearTimeout(existing.timer);
   existing.interaction = interaction;
   existing.timer = setTimeout(() => void expire(key), ttlMs);
+}
+
+/** Oublie une session sans toucher à son message (le panneau reste affiché tel quel). */
+export function forgetSession(key: string) {
+  const existing = sessions.get(key);
+  if (!existing) return;
+  sessions.delete(key);
+  clearTimeout(existing.timer);
 }
 
 async function expire(key: string) {

@@ -13,7 +13,10 @@ import { buildDrawAnnouncement, buildLotteryMessage } from './lottery.view.js';
 
 const log = createLogger('lottery');
 
-export class LotteryError extends Error {}
+export class LotteryError extends Error {
+  balanceAfter?: number;
+  withBalance(balance: number) { this.balanceAfter = balance; return this; }
+}
 
 export function resolveLotteryChannel(guild: Guild, channelId: string): GuildTextBasedChannel | string {
   const channel = guild.channels.cache.get(channelId);
@@ -133,15 +136,23 @@ export async function buyTickets(member: { id: string; guildId: string; discordU
   const cost = lottery.ticketPrice * count;
   const debited = await debit({ memberId: member.id, amount: cost, type: 'LOTTERY_TICKET', actorDiscordId: member.discordUserId, reason: `Tombola : ${count} ticket${count > 1 ? 's' : ''}` });
 
-  const [updated, entry] = await prisma.$transaction([
-    prisma.lottery.update({ where: { id: lottery.id }, data: { pot: { increment: cost }, totalTickets: { increment: count } } }),
-    prisma.lotteryEntry.upsert({
+  // Le tirage ne peut pas se glisser entre les deux écritures : la ligne du tirage est verrouillée (état OPEN vérifié) jusqu'au commit.
+  const result = await prisma.$transaction(async (db) => {
+    const { count: open } = await db.lottery.updateMany({ where: { id: lottery.id, state: 'OPEN' }, data: { pot: { increment: cost }, totalTickets: { increment: count } } });
+    if (open === 0) return null;
+    const entry = await db.lotteryEntry.upsert({
       where: { lotteryId_memberId: { lotteryId: lottery.id, memberId: member.id } },
       create: { lotteryId: lottery.id, memberId: member.id, tickets: count },
       update: { tickets: { increment: count } },
-    }),
-  ]);
-  return { lottery: updated, bought: count, owned: entry.tickets, balanceAfter: debited.balanceAfter };
+    });
+    const updated = await db.lottery.findUniqueOrThrow({ where: { id: lottery.id } });
+    return { updated, entry };
+  });
+  if (!result) {
+    const refund = await credit({ memberId: member.id, amount: cost, type: 'REFUND', actorDiscordId: 'voltron', reason: 'Tombola : tirage en cours, tickets remboursés' });
+    throw new LotteryError(`Le tirage vient d’avoir lieu, tes ${formatAmount(cost, s)} te sont rendus. Réessaie pour le prochain !`).withBalance(refund.balanceAfter);
+  }
+  return { lottery: result.updated, bought: count, owned: result.entry.tickets, balanceAfter: debited.balanceAfter };
 }
 
 export interface DrawResult {

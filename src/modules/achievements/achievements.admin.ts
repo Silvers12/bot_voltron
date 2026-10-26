@@ -2,6 +2,8 @@ import { MessageFlags, type ChatInputCommandInteraction, type SlashCommandSubcom
 import { ACHIEVEMENTS } from './achievements.catalog.js';
 import { evaluateAll, unlockCounts } from './achievements.service.js';
 import { describeAchievementForAdmin } from './achievements.view.js';
+import { getSettings } from '../settings/settings.service.js';
+import { isFeatureEnabled } from '../features/features.js';
 
 export function buildAchievementsAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
   return group
@@ -16,7 +18,8 @@ export async function handleAchievementsAdmin(interaction: ChatInputCommandInter
   if (sub === 'recalculer') {
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const n = await evaluateAll(interaction.guild);
-    await interaction.editReply(`Réévaluation terminée : ${n} succès débloqué(s), récompenses créditées, sans annonce.`);
+    const paused = !isFeatureEnabled(await getSettings(interaction.guildId), 'succes');
+    await interaction.editReply(`Réévaluation terminée : ${n} succès débloqué(s), récompenses créditées, sans annonce.${paused ? '\n⚠️ Les succès sont en pause : rien ne se débloquera automatiquement tant qu’ils ne sont pas réactivés.' : ''}`);
     return;
   }
   if (sub === 'liste') {

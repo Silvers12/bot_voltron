@@ -12,6 +12,7 @@ import { buildAchievementsAdminGroup, handleAchievementsAdmin } from '../../modu
 import { getJackpot } from '../../modules/casino/slots.service.js';
 import { openAdminPanel } from '../../modules/admin/panel.controller.js';
 import { FEATURES, featureInfo, isFeatureEnabled, setFeatureEnabled, type FeatureKey } from '../../modules/features/features.js';
+import { applyFeatureEffects } from '../../modules/features/features.effects.js';
 import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits, updateSlotLimits, updateDuelLimits } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
@@ -234,6 +235,7 @@ export default defineCommand({
       const name = interaction.options.getString('nom', true) as FeatureKey;
       const active = interaction.options.getBoolean('active', true);
       const updated = await setFeatureEnabled(interaction.guildId, name, active);
+      await applyFeatureEffects(interaction.guild, [name], (k) => isFeatureEnabled(updated, k));
       await reply(`${isFeatureEnabled(updated, name) ? '🟢 Activé' : '⛔ En pause'} : ${featureInfo(name).label}.`);
       return;
     }

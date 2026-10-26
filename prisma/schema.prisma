@@ -48,6 +48,9 @@ model Member {
   weeklyClaims  WeeklyClaim[]
   inventory     InventoryItem[]
   achievements  MemberAchievement[]
+  /// Compteurs de machine à sous (source fiable pour les succès)
+  slotSpins     Int       @default(0)
+  slotJackpots  Int       @default(0)
 
   @@unique([guildId, discordUserId])
   @@index([guildId, leftAt])

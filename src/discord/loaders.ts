@@ -1,3 +1,4 @@
+import { dirnameOf } from '../core/paths.js';
 import { readdir } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
@@ -5,7 +6,7 @@ import type { Command, Event } from './types.js';
 import { createLogger } from '../core/logger.js';
 
 const log = createLogger('loader');
-const here = path.dirname(new URL(import.meta.url).pathname);
+const here = dirnameOf(import.meta.url);
 
 async function importDir<T>(dirName: string): Promise<Array<{ file: string; mod: T }>> {
   const dir = path.join(here, dirName);

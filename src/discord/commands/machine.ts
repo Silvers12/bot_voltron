@@ -74,7 +74,6 @@ async function spin(interaction: ButtonInteraction<'cached'>, memberId: string) 
       throw err;
     }
 
-    trackAchievements(interaction.guild, member.id);
     // Animation publique : cagnotte d'avant le tour pendant que les rouleaux tournent, puis résultat.
     const poolBefore = result.kind === 'jackpot' ? result.payout - result.bet : result.pool - result.bet + result.payout;
     const reels = ['❔', '❔', '❔'];
@@ -87,6 +86,7 @@ async function spin(interaction: ButtonInteraction<'cached'>, memberId: string) 
     }
 
     await interaction.followUp({ content: `Il te reste ${formatAmount(result.balanceAfter, s)}.`, flags: MessageFlags.Ephemeral });
+    trackAchievements(interaction.guild, member.id);
 
     if (result.kind === 'jackpot' && interaction.channel?.isSendable()) {
       await interaction.channel.send({
