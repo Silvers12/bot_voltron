@@ -3,7 +3,7 @@ import { defineEvent } from '../types.js';
 import { isAllowedGuild } from '../../core/config.js';
 import { createLogger } from '../../core/logger.js';
 import { ensureMember } from '../../modules/community/member.service.js';
-import { resolveButton, resolveSelect } from '../components.js';
+import { resolveButton, resolveModal, resolveSelect } from '../components.js';
 import { getSettings } from '../../modules/settings/settings.service.js';
 import { DISABLED_MESSAGE, featureForCommand, featureForComponent, isFeatureEnabled } from '../../modules/features/features.js';
 
@@ -60,6 +60,17 @@ export default defineEvent({
           return;
         }
         if (await isDisabled(interaction.guildId, featureForComponent(interaction.customId))) return replyError(interaction, DISABLED_MESSAGE);
+        const member = await ensureMember(interaction.member);
+        await resolved.handler({ interaction, guildMember: interaction.member, member, arg: resolved.arg });
+        return;
+      }
+
+      if (interaction.isModalSubmit()) {
+        const resolved = resolveModal(interaction.customId);
+        if (!resolved) {
+          await replyError(interaction, 'Ce formulaire n’est plus valide.');
+          return;
+        }
         const member = await ensureMember(interaction.member);
         await resolved.handler({ interaction, guildMember: interaction.member, member, arg: resolved.arg });
         return;

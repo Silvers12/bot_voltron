@@ -2,6 +2,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, channelMention, EmbedBuil
 import type { GuildSettings } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import { FEATURES, featureInfo, isFeatureEnabled, type FeatureKey } from '../features/features.js';
+import { ADMIN_EDIT_PREFIX, formsForModule } from './panel.forms.js';
 
 export const ADMIN_FEATURES_SELECT_ID = 'admin:features';
 export const ADMIN_MODULE_SELECT_ID = 'admin:module';
@@ -128,7 +129,7 @@ export function buildModuleView(s: GuildSettings, module: ModuleInfo, details: M
     .addFields(
       { name: 'État', value: module.features.map((k) => featureLine(s, k)).join('\n') },
       { name: 'Réglages', value: details.lines.join('\n') || '*Aucun réglage*' },
-      { name: 'Pour modifier', value: details.commands.map((c) => `\`${c}\``).join('\n') || '*Rien à modifier*' },
+      { name: 'Pour modifier', value: [...formsForModule(module.key).map((f) => `✏️ bouton **${f.button}** ci-dessous`), ...details.commands.map((c) => `\`${c}\``)].join('\n') || '*Rien à modifier*' },
     )
     .setFooter({ text: FOOTER });
   if (notice) embed.setDescription(notice);
@@ -144,12 +145,16 @@ export function buildModuleView(s: GuildSettings, module: ModuleInfo, details: M
         .setEmoji(f.emoji);
     }),
   );
+  const forms = formsForModule(module.key);
+  const edits = forms.length
+    ? [new ActionRowBuilder<ButtonBuilder>().addComponents(...forms.map((f) => new ButtonBuilder().setCustomId(`${ADMIN_EDIT_PREFIX}${f.key}`).setLabel(`Modifier : ${f.button}`).setStyle(ButtonStyle.Primary).setEmoji('✏️')))]
+    : [];
   const nav = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder().setCustomId(ADMIN_HOME_ID).setLabel('Accueil').setStyle(ButtonStyle.Secondary).setEmoji('🏠'),
     new ButtonBuilder().setCustomId(`${ADMIN_MODULE_PREFIX}${module.key}`).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
     new ButtonBuilder().setCustomId(ADMIN_CLOSE_ID).setLabel('Fermer').setStyle(ButtonStyle.Danger).setEmoji('✖️'),
   );
-  return { embeds: [embed], components: [toggles, nav] };
+  return { embeds: [embed], components: [toggles, ...edits, nav] };
 }
 
 export function buildClosedView() {

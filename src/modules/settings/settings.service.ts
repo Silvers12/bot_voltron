@@ -111,6 +111,13 @@ export async function updateLotterySettings(
   return settings;
 }
 
+/** Mise à jour générique de réglages (formulaires du panneau d'intendance). */
+export async function updateSettings(guildId: string, changes: Partial<Omit<GuildSettings, 'guildId' | 'updatedAt'>>): Promise<GuildSettings> {
+  const settings = await prisma.guildSettings.upsert({ where: { guildId }, create: { guildId, ...changes }, update: changes });
+  cache.set(guildId, settings);
+  return settings;
+}
+
 export async function updateDisabledFeatures(guildId: string, disabledFeatures: string[]): Promise<GuildSettings> {
   const settings = await prisma.guildSettings.upsert({ where: { guildId }, create: { guildId, disabledFeatures }, update: { disabledFeatures } });
   cache.set(guildId, settings);

@@ -1,7 +1,8 @@
 import { MessageFlags, channelMention, roleMention, type ChatInputCommandInteraction, type Guild, type RepliableInteraction } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { isBotAdmin } from '../../core/permissions.js';
-import { registerButton, registerButtonPrefix, registerSelect, type ButtonContext, type SelectContext } from '../../discord/components.js';
+import { registerButton, registerButtonPrefix, registerModalPrefix, registerSelect, type ButtonContext, type ModalContext, type SelectContext } from '../../discord/components.js';
+import { ADMIN_EDIT_PREFIX, ADMIN_FORM_PREFIX, buildFormModal, findForm, FormError, parseForm } from './panel.forms.js';
 import { closeSession, openSession, touchSession } from '../../discord/sessions.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { FEATURE_KEYS, featureInfo, isFeatureEnabled, setEnabledFeatures, setFeatureEnabled, type FeatureKey } from '../features/features.js';
@@ -156,7 +157,7 @@ function describeChange(changed: FeatureKey[], enabledNow: (k: FeatureKey) => bo
 // Composants : réservés aux administrateurs, chaque action repousse l'expiration.
 // ---------------------------------------------------------------------------
 
-function guarded<C extends ButtonContext | SelectContext>(handler: (ctx: C) => Promise<void>) {
+function guarded<C extends ButtonContext | SelectContext | ModalContext>(handler: (ctx: C) => Promise<void>) {
   return async (ctx: C) => {
     if (!isBotAdmin(ctx.guildMember)) {
       await ctx.interaction.reply({ content: 'Ce panneau est réservé à l’intendance de Voltron.', flags: MessageFlags.Ephemeral });
@@ -196,6 +197,30 @@ registerButtonPrefix(ADMIN_TOGGLE_PREFIX, guarded(async ({ interaction, arg }) =
   const enabledNow = (k: FeatureKey) => isFeatureEnabled(after, k);
   await afterToggle(interaction.guild, [featureKey], enabledNow);
   await interaction.update(await renderModule(interaction.guild, module.key, describeChange([featureKey], enabledNow)));
+}));
+
+// Formulaires : le bouton ouvre la modale pré-remplie, la soumission applique et rafraîchit la page du module.
+registerButtonPrefix(ADMIN_EDIT_PREFIX, guarded(async ({ interaction, arg }) => {
+  const form = findForm(arg);
+  if (!form) return void (await interaction.update(await renderHome(interaction.guildId)));
+  await interaction.showModal(buildFormModal(form, await getSettings(interaction.guildId)));
+}));
+
+registerModalPrefix(ADMIN_FORM_PREFIX, guarded(async ({ interaction, arg }) => {
+  const form = findForm(arg);
+  if (!form) return void (await interaction.reply({ content: 'Formulaire inconnu.', flags: MessageFlags.Ephemeral }));
+  const { values, errors } = parseForm(form, interaction.guild, (id) => interaction.fields.getTextInputValue(id));
+  if (errors.length) return void (await interaction.reply({ content: `Rien n’a été enregistré :\n${errors.join('\n')}`, flags: MessageFlags.Ephemeral }));
+  let notice: string;
+  try {
+    notice = await form.apply({ guild: interaction.guild, client: interaction.client, before: await getSettings(interaction.guildId), values });
+  } catch (err) {
+    if (err instanceof FormError) return void (await interaction.reply({ content: `Rien n’a été enregistré : ${err.message}`, flags: MessageFlags.Ephemeral }));
+    throw err;
+  }
+  const view = await renderModule(interaction.guild, form.module, `✅ ${notice}`);
+  if (interaction.isFromMessage()) await interaction.update(view);
+  else await interaction.reply({ ...view, flags: MessageFlags.Ephemeral });
 }));
 
 registerButton(ADMIN_HOME_ID, guarded(async ({ interaction }) => {

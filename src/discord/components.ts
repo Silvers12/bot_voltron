@@ -1,4 +1,4 @@
-import type { ButtonInteraction, GuildMember, StringSelectMenuInteraction } from 'discord.js';
+import type { ButtonInteraction, GuildMember, ModalSubmitInteraction, StringSelectMenuInteraction } from 'discord.js';
 import type { Member } from '../generated/prisma/client.js';
 
 export interface ButtonContext {
@@ -14,6 +14,27 @@ export interface SelectContext {
   guildMember: GuildMember;
   member: Member;
   values: string[];
+}
+
+export interface ModalContext {
+  interaction: ModalSubmitInteraction<'cached'>;
+  guildMember: GuildMember;
+  member: Member;
+  /** Partie variable du customId */
+  arg: string;
+}
+
+type ModalHandler = (ctx: ModalContext) => Promise<void>;
+const modalPrefixes: Array<{ prefix: string; handler: ModalHandler }> = [];
+
+/** Formulaire (modale) dont le customId est `prefix + argument`. */
+export function registerModalPrefix(prefix: string, handler: ModalHandler) {
+  modalPrefixes.push({ prefix, handler });
+}
+
+export function resolveModal(customId: string): { handler: ModalHandler; arg: string } | undefined {
+  const byPrefix = modalPrefixes.find((p) => customId.startsWith(p.prefix));
+  return byPrefix ? { handler: byPrefix.handler, arg: customId.slice(byPrefix.prefix.length) } : undefined;
 }
 
 type ButtonHandler = (ctx: ButtonContext) => Promise<void>;
