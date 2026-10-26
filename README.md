@@ -43,6 +43,16 @@ Un profil `Member` est créé automatiquement :
 
 Un départ marque `leftAt` sans supprimer le profil. Nécessite l'intent **Server Members** activé dans le Developer Portal (Bot → Privileged Gateway Intents).
 
+## Inviter le bot sur un serveur
+
+Lien d'invitation (scopes `bot` + `applications.commands`, permission *Envoyer des messages*) :
+
+```
+https://discord.com/oauth2/authorize?client_id=VOTRE_CLIENT_ID&scope=bot%20applications.commands&permissions=2048
+```
+
+À retrouver dans le Developer Portal → application → **OAuth2 → URL Generator**. Ajouter *Gérer les rôles* si des articles-rôles sont vendus en boutique. Après invitation : ajouter l'identifiant du serveur à `DISCORD_GUILD_IDS`, relancer le bot, puis `npm run deploy`.
+
 ## Développement
 
 ```bash
