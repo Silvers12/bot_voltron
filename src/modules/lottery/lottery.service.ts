@@ -9,6 +9,7 @@ import { credit, debit } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { isFeatureEnabled } from '../features/features.js';
 import { trackAchievements } from '../achievements/achievements.service.js';
+import { notifyMention } from '../notify/notify.service.js';
 import { buildDrawAnnouncement, buildLotteryMessage } from './lottery.view.js';
 
 const log = createLogger('lottery');
@@ -61,7 +62,7 @@ export async function publishLottery(client: Client, lottery: Lottery, intro: st
   if (typeof channel === 'string') { log.warn(`Publication de la tombola impossible sur ${guild.name} : ${channel}`); return null; }
 
   const fresh = await prisma.lottery.findUniqueOrThrow({ where: { id: lottery.id } });
-  const message = await channel.send({ content: intro, ...buildLotteryMessage(fresh, s) }).catch((err) => { log.warn('Publication de la tombola impossible', err); return null; });
+  const message = await channel.send({ content: `${notifyMention(s, 'lottery')}${intro}`, allowedMentions: { parse: ['roles' as const] }, ...buildLotteryMessage(fresh, s) }).catch((err) => { log.warn('Publication de la tombola impossible', err); return null; });
   if (!message) return null;
 
   const canPin = channel.permissionsFor(guild.members.me!).has(PermissionFlagsBits.ManageMessages);

@@ -1,6 +1,7 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, time, TimestampStyles, userMention } from 'discord.js';
 import type { GuildSettings } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
+import { notifyMention } from '../notify/notify.service.js';
 import type { DuelResolution, DuelWithMembers } from './duel.service.js';
 
 export const DUEL_ACCEPT_PREFIX = 'duel:accept:';
@@ -24,7 +25,8 @@ export function buildChallengeMessage(duel: DuelWithMembers, s: GuildSettings) {
     new ButtonBuilder().setCustomId(DUEL_DECLINE_PREFIX + duel.id).setLabel('Refuser').setStyle(ButtonStyle.Secondary).setEmoji('🏳️'),
     new ButtonBuilder().setCustomId(DUEL_CANCEL_PREFIX + duel.id).setLabel('Annuler').setStyle(ButtonStyle.Danger).setEmoji('✖️'),
   );
-  return { embeds: [embed], components: [row], allowedMentions: { users: [duel.opponent.discordUserId] } };
+  const ping = notifyMention(s, 'duel');
+  return { content: `${ping}${userMention(duel.opponent.discordUserId)}, on te défie !`, embeds: [embed], components: [row], allowedMentions: { users: [duel.opponent.discordUserId], parse: ['roles' as const] } };
 }
 
 export function buildClosedMessage(duel: DuelWithMembers, s: GuildSettings, outcome: 'declined' | 'cancelled' | 'expired') {

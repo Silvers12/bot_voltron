@@ -186,6 +186,12 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Profil : ligne « Badges » avec les emojis et bouton **Succès** (débloqués avec date, verrouillés avec l'indice et la récompense). `/succes [membre]` affiche publiquement les badges d'un membre (les indices ne sont montrés que pour soi).
 - `/admin succes liste` : catalogue avec le nombre de membres par succès. Interrupteur « Succès et badges » dans le panneau.
 
+## Page d'accueil et rôles de notification
+
+- `/admin accueil installer salon:#accueil` : crée les rôles « Câlins collectifs », « Tombola » et « Duels » s'ils manquent (mentionnables, sans permission), publie la page d'accueil (présentation de Voltron + trois boutons) et l'épingle. Le rôle de Voltron doit être au-dessus de ces rôles.
+- Un clic sur un bouton prend le rôle, un second le retire (confirmation privée). `/admin accueil roles` pour utiliser des rôles existants, `publier` pour mettre à jour la page, `etat`.
+- Pings : le rôle est mentionné à l'apparition d'un câlin collectif, à chaque publication ou rappel de tombola, et quand un duel est lancé (le défié est toujours mentionné).
+
 ## Salons des commandes
 
 - Par défaut, les commandes fonctionnent partout. `/admin commandes ajouter-salon salon:#voltron` limite les commandes des membres à ce salon (plusieurs possibles) ; `retirer-salon`, `partout`, `liste`. Aussi dans le panneau (module Salons des commandes).
@@ -232,6 +238,7 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin succes recalculer|liste`
 - `/admin comptage salon|amende|reinitialiser|etat`
 - `/admin panneau`, `/admin fonction`
+- `/admin accueil installer|roles|publier|etat`
 - `/admin commandes ajouter-salon|retirer-salon|partout|liste`
 - `/admin messages supprimer id:… [salon]` : supprime un message · `depuis id:… [salon]` : supprime ce message et tous ceux postés après · `vider [salon]` : supprime tout le salon. Les deux derniers demandent une confirmation (bouton, 1 min). Les messages de moins de 14 jours partent par lots, les plus anciens un par un (plus lent). Le bot doit avoir « Gérer les messages » et « Lire l’historique » dans le salon.
 - `/admin message texte:… [salon] [repondre_a]` : écrit en tant que Voltron (`\n` pour un retour à la ligne, mentions de membres et de rôles autorisées, pas de @everyone)

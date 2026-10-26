@@ -126,6 +126,12 @@ model GuildSettings {
   levelStepXp      Int      @default(10)
   /// Salon des annonces de montée de niveau (null = pas d'annonce)
   levelUpChannelId String?
+  /// Page d'accueil (message avec les boutons de rôles) et rôles de notification
+  welcomeChannelId String?
+  welcomeMessageId String?
+  notifyHugRoleId  String?
+  notifyLotteryRoleId String?
+  notifyDuelRoleId String?
   /// Salons où les commandes des membres sont autorisées (vide = partout) ; /admin n'est jamais limité
   commandChannelIds String[] @default([])
   /// Salon de comptage (null = désactivé) et amende en cas d'erreur

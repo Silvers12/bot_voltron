@@ -12,6 +12,7 @@ import { buildAchievementsAdminGroup, handleAchievementsAdmin } from '../../modu
 import { buildCountingAdminGroup, handleCountingAdmin } from '../../modules/counting/counting.admin.js';
 import { buildMessagesAdminGroup, handleMessagesAdmin } from '../../modules/moderation/messages.admin.js';
 import { buildCommandsAdminGroup, handleCommandsAdmin } from '../../modules/settings/commands.admin.js';
+import { buildWelcomeAdminGroup, handleWelcomeAdmin } from '../../modules/notify/notify.admin.js';
 import { getJackpot } from '../../modules/casino/slots.service.js';
 import { openAdminPanel } from '../../modules/admin/panel.controller.js';
 import { FEATURES, featureInfo, isFeatureEnabled, setFeatureEnabled, type FeatureKey } from '../../modules/features/features.js';
@@ -136,7 +137,8 @@ export default defineCommand({
     .addSubcommandGroup((group) => buildAchievementsAdminGroup(group))
     .addSubcommandGroup((group) => buildCountingAdminGroup(group))
     .addSubcommandGroup((group) => buildMessagesAdminGroup(group))
-    .addSubcommandGroup((group) => buildCommandsAdminGroup(group)),
+    .addSubcommandGroup((group) => buildCommandsAdminGroup(group))
+    .addSubcommandGroup((group) => buildWelcomeAdminGroup(group)),
 
   async autocomplete(interaction) {
     if (!isBotAdmin(interaction.member)) return void (await interaction.respond([]));
@@ -159,6 +161,7 @@ export default defineCommand({
     if (interaction.options.getSubcommandGroup(false) === 'comptage') return handleCountingAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'messages') return handleMessagesAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'commandes') return handleCommandsAdmin(interaction);
+    if (interaction.options.getSubcommandGroup(false) === 'accueil') return handleWelcomeAdmin(interaction);
 
     const sub = interaction.options.getSubcommand(true);
     const settings = await getSettings(interaction.guildId);
