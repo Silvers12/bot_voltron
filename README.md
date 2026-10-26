@@ -70,10 +70,33 @@ Après modification de `prisma/schema.prisma` : `npm run db:migrate -- --name <n
 
 ## Production (Docker)
 
+Le bot et PostgreSQL tournent en conteneurs (`compose.yaml`), redémarrage automatique (`restart: unless-stopped`). Les migrations s'appliquent au démarrage du conteneur `bot`.
+
 ```bash
-docker compose up -d --build    # bot + postgres ; les migrations s'appliquent au démarrage
-docker compose logs -f bot
+docker compose up -d --build    # construire et (re)lancer après une modification du code
+docker compose logs -f bot      # suivre les logs
+docker compose restart bot      # relancer (ex. après modification de .env ou de content/)
+docker compose ps               # état des conteneurs
 ```
+
+**Ne jamais lancer `npm run dev` pendant que le conteneur tourne** : deux instances traiteraient chaque événement deux fois (XP, câlins…). Arrêter d'abord avec `docker compose stop bot`.
+
+Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hôte, avec `npm install` fait).
+
+### Sauvegardes
+
+- `scripts/backup.sh` : dump compressé dans `backups/`, 14 jours conservés. À planifier chaque jour dans le cron de l'hôte (`crontab -e`) :
+  `0 4 * * * /opt/Voltron/scripts/backup.sh >> /opt/Voltron/backups/backup.log 2>&1`
+- `scripts/restore.sh backups/<fichier>.sql.gz` : restaure (écrase la base). Arrêter le bot avant, le relancer après.
+- Restauration testée dans une base temporaire le 26 octobre 2026. Les sauvegardes restent sur la même machine : copier `backups/` ailleurs (autre disque, cloud) pour se protéger d'une panne de l'hôte.
+
+### Ajouter le serveur de production
+
+1. Inviter le bot (lien ci-dessus) et lui donner « Gérer les rôles » si boutique-rôles ou paliers sont utilisés ; placer le rôle Voltron au-dessus des rôles à attribuer.
+2. Ajouter l'identifiant du serveur à `DISCORD_GUILD_IDS` dans `.env`.
+3. `docker compose restart bot` puis `npm run deploy`.
+4. Sur le serveur : Intégrations → Voltron → `/admin` réservé aux intendants.
+5. Configurer : `/admin calin ajouter-salon`, `/admin niveaux salon`, `/admin boutique ajouter`, etc. Chaque serveur a ses propres réglages.
 
 ## Économie
 

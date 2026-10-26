@@ -1,5 +1,7 @@
 FROM node:22-alpine AS build
 WORKDIR /app
+# `prisma generate` charge prisma.config.ts, qui exige DATABASE_URL ; aucune connexion n'est faite au build.
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
 COPY package.json package-lock.json tsconfig.json prisma.config.ts ./
 COPY prisma ./prisma
 RUN npm ci
