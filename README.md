@@ -162,6 +162,15 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Résolution par jets de d20 commentés (textes dans `content/duels.json`), relance en cas d'égalité. Un défi sans réponse expire après 2 min et rembourse ; les défis en attente survivent à un redémarrage.
 - Un seul défi en attente par défieur. Mises bornées par `/admin duel min max` (10 à 5 000 par défaut).
 
+## Salon de comptage
+
+- Nécessite l'intent privilégié **Message Content** (portail Discord → Bot → Privileged Gateway Intents). Le contenu n'est lu que dans le salon de comptage.
+- `/admin comptage salon salon:#compter` active ; `amende`, `reinitialiser`, `etat`. Aussi dans le panneau (module Salon de comptage).
+- Règle : chacun poste le nombre suivant (1, 2, 3…) ou une expression simple qui y mène (`2+2`, `6-1`, `(1+2)*3`, `2^3`). Bonne réponse : ✅. Les messages qui ne sont pas une expression sont ignorés (on peut discuter).
+- Erreur (mauvais nombre, résultat non entier, ou deux fois de suite par le même membre) : ❌, amende de 1 000 cœurs (plafonnée à la bourse), puis pile ou face annoncé par Voltron : on continue au dernier nombre valide, ou on repart à 1.
+- Deux réponses simultanées : la première est acceptée, la seconde est évaluée contre le nouveau nombre.
+- Record et nombre d'erreurs conservés (`/admin comptage etat`).
+
 ## Titres
 
 - Un article de boutique de type **titre** (`/admin boutique ajouter nom:… prix:… titre:true`, limite 1 par membre par défaut) : son nom devient un titre de profil. L'emoji de l'article est affiché devant.
@@ -215,5 +224,6 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin niveaux ajouter-role|retirer-role|salon|courbe|recalculer|lister`
 - `/admin tombola salon|regler|publier|tirer|etat`
 - `/admin succes recalculer|liste`
+- `/admin comptage salon|amende|reinitialiser|etat`
 - `/admin panneau`, `/admin fonction`
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant` · `/admin duel min max`

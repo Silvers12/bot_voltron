@@ -195,6 +195,17 @@ export const FORMS: Form[] = [
     },
   },
   {
+    key: 'comptage', module: 'comptage', title: 'Salon de comptage', button: 'Réglages',
+    fields: [
+      { id: 'countingChannelId', label: 'Salon (vide = désactivé)', help: '#salon ou son nom', type: { kind: 'channel', required: false }, current: (s) => channelOf(s, s.countingChannelId) },
+      { id: 'countingFine', label: 'Amende en cas d’erreur (0 = aucune)', type: int(0, 1_000_000), current: (s) => `${s.countingFine}` },
+    ],
+    async apply({ guild, values }) {
+      await updateSettings(guild.id, values as Partial<GuildSettings>);
+      return values.countingChannelId ? 'Comptage enregistré. Le bot doit pouvoir écrire et réagir dans ce salon.' : 'Comptage désactivé.';
+    },
+  },
+  {
     key: 'tombola_rappels', module: 'tombola', title: 'Tombola : rappels et amorce', button: 'Rappels',
     fields: [
       { id: 'lotteryReminderWeekday', label: 'Jour du rappel (aucun = pas de rappel)', help: 'mercredi, aucun…', type: { kind: 'weekday', allowNone: true }, current: (s) => (s.lotteryReminderWeekday ? DAYS[s.lotteryReminderWeekday] ?? '' : 'aucun') },

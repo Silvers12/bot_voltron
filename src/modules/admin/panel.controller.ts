@@ -14,6 +14,8 @@ import { applyFeatureEffects } from '../features/features.effects.js';
 import { describeLottery } from '../lottery/lottery.admin.js';
 import { ACHIEVEMENTS } from '../achievements/achievements.catalog.js';
 import { unlockCounts } from '../achievements/achievements.service.js';
+import { getCounting } from '../counting/counting.service.js';
+import { describeCounting } from '../counting/counting.admin.js';
 import {
   ADMIN_CLOSE_ID, ADMIN_FEATURES_SELECT_ID, ADMIN_HOME_ID, ADMIN_MODULE_PREFIX, ADMIN_MODULE_SELECT_ID, ADMIN_REFRESH_ID, ADMIN_TOGGLE_PREFIX,
   buildClosedView, buildHomeView, buildModuleView, moduleInfo, MODULES, type ModuleDetails, type ModuleKey, type Overview,
@@ -144,6 +146,8 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
         commands: ['/admin succes recalculer · liste'],
       };
     }
+    case 'comptage':
+      return { lines: describeCounting(s, await getCounting(guild.id)).split('\n'), commands: ['/admin comptage salon · amende · reinitialiser · etat'] };
     case 'textes':
       return {
         lines: ['Textes dans `content/compliments.json` et `content/insultes.json` (rechargés au redémarrage)'],

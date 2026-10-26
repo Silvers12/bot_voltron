@@ -9,7 +9,8 @@ declare module 'discord.js' {
 
 export function createClient(): Client {
   const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates],
+    // MessageContent (privilégié, à activer dans le portail) : lecture du contenu uniquement dans le salon de comptage.
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildVoiceStates, GatewayIntentBits.MessageContent],
   });
   client.commands = new Collection();
   return client;

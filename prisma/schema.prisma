@@ -126,6 +126,9 @@ model GuildSettings {
   levelStepXp      Int      @default(10)
   /// Salon des annonces de montée de niveau (null = pas d'annonce)
   levelUpChannelId String?
+  /// Salon de comptage (null = désactivé) et amende en cas d'erreur
+  countingChannelId String?
+  countingFine     Int      @default(1000)
   /// Salon des annonces de succès (null = pas d'annonce)
   achievementChannelId String?
   /// Fonctionnalités désactivées par l'intendance (clés du registre src/modules/features)
@@ -163,6 +166,7 @@ enum TransactionType {
   HUG_SENT
   HUG_RECEIVED
   ACHIEVEMENT
+  COUNTING_FINE
 }
 
 /// Mouvement sur un compte : montant signé, solde résultant, auteur et motif.
@@ -344,6 +348,16 @@ model MemberAchievement {
 
   @@unique([memberId, key])
   @@index([key])
+}
+
+/// État du salon de comptage : dernier nombre valide, dernier compteur, record.
+model Counting {
+  guildId      String  @id
+  current      Int     @default(0)
+  lastMemberId String?
+  best         Int     @default(0)
+  failures     Int     @default(0)
+  updatedAt    DateTime @updatedAt
 }
 
 model LevelRole {

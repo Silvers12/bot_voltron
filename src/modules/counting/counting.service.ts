@@ -1,0 +1,77 @@
+import { randomInt } from 'node:crypto';
+import { userMention, type Message } from 'discord.js';
+import { prisma } from '../../infrastructure/prisma.js';
+import { createLogger } from '../../core/logger.js';
+import { isAllowedGuild } from '../../core/config.js';
+import { ensureMember } from '../community/member.service.js';
+import { getBalance, debit } from '../economy/economy.service.js';
+import { formatAmount, getSettings } from '../settings/settings.service.js';
+import { isFeatureEnabled } from '../features/features.js';
+import { evaluateExpression } from './expression.js';
+import type { Counting } from '../../generated/prisma/client.js';
+
+const log = createLogger('comptage');
+
+export const CHECK = '✅';
+export const CROSS = '❌';
+
+export async function getCounting(guildId: string): Promise<Counting> {
+  return prisma.counting.upsert({ where: { guildId }, create: { guildId }, update: {} });
+}
+
+/** Remise à zéro par l'intendance. */
+export async function resetCounting(guildId: string): Promise<Counting> {
+  return prisma.counting.upsert({ where: { guildId }, create: { guildId }, update: { current: 0, lastMemberId: null } });
+}
+
+/**
+ * Traite un message du salon de comptage. Les messages qui ne sont pas une expression sont ignorés
+ * (on peut discuter dans le salon). Une bonne réponse avance le compteur de façon atomique :
+ * si deux membres répondent en même temps, le second est évalué contre le nouveau nombre.
+ */
+export async function handleCountingMessage(message: Message) {
+  if (!message.inGuild() || !isAllowedGuild(message.guildId) || message.author.bot || !message.member) return;
+  const s = await getSettings(message.guildId);
+  if (!s.countingChannelId || message.channelId !== s.countingChannelId || !isFeatureEnabled(s, 'comptage')) return;
+
+  const parsed = evaluateExpression(message.content);
+  if (parsed === null) return;
+
+  const member = await ensureMember(message.member);
+  const state = await getCounting(message.guildId);
+  const expected = state.current + 1;
+
+  let failure: string | null = null;
+  if (parsed.kind === 'not_integer') failure = 'ce n’est pas un nombre entier';
+  else if (state.lastMemberId === member.id) failure = 'on ne compte pas deux fois de suite';
+  else if (parsed.value !== expected) failure = `il fallait **${expected}**`;
+
+  if (!failure) {
+    const { count } = await prisma.counting.updateMany({ where: { guildId: message.guildId, current: state.current }, data: { current: expected, lastMemberId: member.id, best: Math.max(state.best, expected) } });
+    if (count === 0) return handleCountingMessage(message); // quelqu'un a été plus rapide : on réévalue
+    await message.react(CHECK).catch(() => undefined);
+    return;
+  }
+
+  // Erreur : croix, amende, pile ou face.
+  const { count } = await prisma.counting.updateMany({ where: { guildId: message.guildId, current: state.current }, data: { failures: { increment: 1 } } });
+  if (count === 0) return handleCountingMessage(message);
+  await message.react(CROSS).catch(() => undefined);
+
+  const balance = await getBalance(member.id);
+  const fine = Math.min(s.countingFine, balance);
+  if (fine > 0) await debit({ memberId: member.id, amount: fine, type: 'COUNTING_FINE', actorDiscordId: 'voltron', reason: `Comptage : erreur à ${expected}` });
+
+  const restart = randomInt(2) === 0;
+  await prisma.counting.update({ where: { guildId: message.guildId }, data: { current: restart ? 0 : state.current, lastMemberId: null } });
+  log.info(`${message.author.id} se trompe à ${expected} (${failure}) : amende ${fine}, ${restart ? 'retour à 1' : `on continue à ${state.current + 1}`}`);
+
+  const fineText = fine > 0 ? `Amende de **${formatAmount(fine, s)}**${fine < s.countingFine ? ' (toute la bourse !)' : ''}.` : 'Bourse vide, pas d’amende cette fois.';
+  const coin = restart
+    ? `🪙 **Face !** On recommence à **1**.`
+    : `🪙 **Pile !** On continue : prochain nombre **${state.current + 1}**.`;
+  await message.channel.send({
+    content: `${CROSS} ${userMention(message.author.id)} s’est trompé : ${failure}. ${fineText}\nVoltron lance la pièce… ${coin}`,
+    allowedMentions: { users: [message.author.id] },
+  }).catch((err) => log.warn('Message de comptage impossible', err));
+}

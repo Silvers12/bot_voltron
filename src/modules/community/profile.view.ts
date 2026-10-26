@@ -155,6 +155,7 @@ function describeTransaction(t: Transaction): string {
     case 'ADMIN_CREDIT': return '🛡️ offert par l’intendance';
     case 'ADMIN_DEBIT': return '🛡️ retiré par l’intendance';
     case 'ACHIEVEMENT': return '🏅 succès débloqué';
+    case 'COUNTING_FINE': return '🔢 amende de comptage';
   }
 }
 
