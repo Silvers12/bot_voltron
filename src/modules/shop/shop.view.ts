@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, roleMention, type MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SectionBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, roleMention, type MessageActionRowComponentBuilder } from 'discord.js';
 import type { GuildSettings, ShopItem } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import type { InventoryEntry } from './shop.service.js';
@@ -6,7 +6,6 @@ import { backRow, INVENTORY_OPEN_ID, PROFILE_REFRESH_ID, SHOP_OPEN_ID } from '..
 import { card, clampLines, divider, screen, text } from '../../discord/v2.js';
 
 export { SHOP_OPEN_ID, INVENTORY_OPEN_ID };
-export const SHOP_SELECT_ID = 'shop:select';
 export const SHOP_BUY_PREFIX = 'shop:buy:';
 export const SHOP_PAGE_PREFIX = 'shop:page:';
 export const SHOP_PAGE_SIZE = 10;
@@ -37,30 +36,35 @@ function kindLabel(item: ShopItem): string {
   return '';
 }
 
-/** Écran de la boutique : une page de SHOP_PAGE_SIZE articles, menu de sélection, navigation. */
-export function buildShopView(allItems: ShopItem[], balance: number, settings: GuildSettings, notice?: string, page = 0) {
+/**
+ * Écran de la boutique : une page de SHOP_PAGE_SIZE articles, chacun sur une ligne avec son bouton d'achat (prix dedans).
+ * Budget de composants Discord (40 max) : conteneur + en-tête + séparateur + 10 × (section, texte, bouton) + navigation.
+ */
+export function buildShopView(allItems: ShopItem[], balance: number, settings: GuildSettings, notice?: string, page = 0, owned: Map<string, number> = new Map()) {
   const pages = Math.max(1, Math.ceil(allItems.length / SHOP_PAGE_SIZE));
   const current = Math.min(Math.max(0, page), pages - 1);
   const items = allItems.slice(current * SHOP_PAGE_SIZE, (current + 1) * SHOP_PAGE_SIZE);
   const c = card(SHOP_COLOR);
-  c.addTextDisplayComponents(text(`# 🛒 Boutique\nLa boutique garde ton équipement au chaud.${pages > 1 ? ` · page ${current + 1}/${pages}` : ''}`));
-  if (notice) c.addTextDisplayComponents(text(`> ${notice}`));
+  c.addTextDisplayComponents(text(`# 🛒 Boutique${pages > 1 ? ` · page ${current + 1}/${pages}` : ''}\n💰 Ta bourse : **${formatAmount(balance, settings)}**${notice ? `\n> ${notice}` : ''}`));
   c.addSeparatorComponents(divider(true));
-  c.addTextDisplayComponents(text(items.length ? clampLines(items.map((i) => `${itemLabel(i)} — **${formatAmount(i.price, settings)}**${stockLabel(i)}${kindLabel(i)}`)) : 'Les rayons sont vides pour le moment. Les intendants y travaillent !'));
-  c.addSeparatorComponents(divider());
-  c.addTextDisplayComponents(text(`💰 **Ta bourse** · ${formatAmount(balance, settings)}`));
-
-  const rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [];
-  if (items.length) {
-    const menu = new StringSelectMenuBuilder().setCustomId(SHOP_SELECT_ID).setPlaceholder('Choisis un article pour en savoir plus');
-    for (const item of items) {
-      const option = new StringSelectMenuOptionBuilder().setLabel(item.name.slice(0, 100)).setValue(item.id).setDescription(formatAmount(item.price, settings).slice(0, 100));
-      const emoji = componentEmoji(item.emoji);
-      if (emoji) option.setEmoji(emoji);
-      menu.addOptions(option);
-    }
-    rows.push(new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(menu));
+  if (!items.length) c.addTextDisplayComponents(text('Les rayons sont vides pour le moment. Les intendants y travaillent !'));
+  for (const item of items) {
+    const qty = owned.get(item.id) ?? 0;
+    const soldOut = item.stock !== null && item.stock <= 0;
+    const limited = item.maxPerMember !== null && qty >= item.maxPerMember;
+    const tooPoor = balance < item.price;
+    const flags = [kindLabel(item).replace(/^ · /, ''), item.stock !== null ? (soldOut ? 'épuisé' : `${item.stock} en stock`) : '', item.maxPerMember !== null ? `max ${item.maxPerMember}/membre` : '', qty ? `tu en as ${qty}` : ''].filter(Boolean).join(' · ');
+    const body = `**${itemLabel(item)}**${flags ? `  -# ${flags}` : ''}\n${item.description ? `-# ${item.description}` : ''}`.trimEnd();
+    const label = soldOut ? 'Épuisé' : limited ? 'Déjà à toi' : formatAmount(item.price, settings);
+    c.addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(text(body))
+        .setButtonAccessory(
+          new ButtonBuilder().setCustomId(SHOP_BUY_PREFIX + item.id).setLabel(label.slice(0, 80)).setStyle(soldOut || limited ? ButtonStyle.Secondary : tooPoor ? ButtonStyle.Secondary : ButtonStyle.Success).setEmoji('🛒').setDisabled(soldOut || limited || tooPoor),
+        ),
+    );
   }
+
   const nav = new ActionRowBuilder<MessageActionRowComponentBuilder>();
   if (pages > 1) {
     nav.addComponents(
@@ -70,34 +74,9 @@ export function buildShopView(allItems: ShopItem[], balance: number, settings: G
   }
   nav.addComponents(
     new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
-    new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Retour au profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
+    new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
   );
-  rows.push(nav);
-  return screen(c, rows);
-}
-
-/** Fiche d'un article avec le bouton d'achat. */
-export function buildItemView(item: ShopItem, balance: number, owned: number, settings: GuildSettings) {
-  const details = [`**Prix :** ${formatAmount(item.price, settings)}`];
-  if (item.kind === 'ROLE' && item.roleId) details.push(`**Effet :** donne le rôle ${roleMention(item.roleId)}`);
-  if (item.kind === 'TITLE') details.push('**Effet :** titre affiché sur ton profil (à choisir depuis l’inventaire)');
-  if (item.stock !== null) details.push(`**Stock :** ${item.stock === 0 ? 'épuisé' : item.stock}`);
-  if (item.maxPerMember !== null) details.push(`**Limite :** ${item.maxPerMember} par membre`);
-  if (owned > 0) details.push(`**Tu en possèdes :** ${owned}`);
-
-  const c = card(SHOP_COLOR);
-  c.addTextDisplayComponents(text(`# ${itemLabel(item)}${item.description ? `\n${item.description}` : ''}`));
-  c.addSeparatorComponents(divider(true));
-  c.addTextDisplayComponents(text(details.join('\n')));
-  c.addSeparatorComponents(divider());
-  c.addTextDisplayComponents(text(`💰 **Ta bourse** · ${formatAmount(balance, settings)}`));
-
-  const canBuy = item.active && (item.stock === null || item.stock > 0) && (item.maxPerMember === null || owned < item.maxPerMember) && balance >= item.price;
-  const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(SHOP_BUY_PREFIX + item.id).setLabel(`Acheter pour ${formatAmount(item.price, settings)}`).setStyle(ButtonStyle.Primary).setEmoji('🛒').setDisabled(!canBuy),
-    new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Retour à la boutique').setStyle(ButtonStyle.Secondary),
-  );
-  return screen(c, [row]);
+  return screen(c, [nav]);
 }
 
 /** Inventaire du membre, avec le choix du titre porté s'il en possède. */

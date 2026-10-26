@@ -2,13 +2,13 @@ import { trackAchievements } from '../achievements/achievements.service.js';
 import { registerProfileButton, registerProfileButtonPrefix, registerProfileSelect } from '../community/profile.controller.js';
 import { getBalance, InsufficientFundsError } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
-import { equipTitle, getEquippedTitle, getInventory, getItem, getOwnedQuantity, listItems, purchase, PurchaseError } from './shop.service.js';
-import { buildInventoryView, buildItemView, buildShopView, INVENTORY_OPEN_ID, NO_TITLE_VALUE, SHOP_BUY_PREFIX, SHOP_OPEN_ID, SHOP_PAGE_PREFIX, SHOP_PAGE_SIZE, SHOP_SELECT_ID, SHOP_TITLE_SELECT_ID } from './shop.view.js';
+import { equipTitle, getEquippedTitle, getInventory, getItem, listItems, purchase, PurchaseError } from './shop.service.js';
+import { buildInventoryView, buildShopView, INVENTORY_OPEN_ID, NO_TITLE_VALUE, SHOP_BUY_PREFIX, SHOP_OPEN_ID, SHOP_PAGE_PREFIX, SHOP_PAGE_SIZE, SHOP_TITLE_SELECT_ID } from './shop.view.js';
 import type { Member } from '../../generated/prisma/client.js';
 
 export async function renderShop(member: Member, notice?: string, page = 0) {
-  const [items, balance, settings] = await Promise.all([listItems(member.guildId), getBalance(member.id), getSettings(member.guildId)]);
-  return buildShopView(items, balance, settings, notice, page);
+  const [items, balance, settings, inventory] = await Promise.all([listItems(member.guildId), getBalance(member.id), getSettings(member.guildId), getInventory(member.id)]);
+  return buildShopView(items, balance, settings, notice, page, new Map(inventory.map((e) => [e.itemId, e.quantity])));
 }
 
 /** Page contenant un article donné (pour revenir au bon endroit après un achat). */
@@ -18,23 +18,12 @@ async function pageOf(member: Member, itemId: string): Promise<number> {
   return idx < 0 ? 0 : Math.floor(idx / SHOP_PAGE_SIZE);
 }
 
-async function renderItem(member: Member, itemId: string) {
-  const item = await getItem(itemId);
-  if (!item || item.guildId !== member.guildId || !item.active) return renderShop(member, 'Cet article n’est plus en vente.');
-  const [balance, owned, settings] = await Promise.all([getBalance(member.id), getOwnedQuantity(member.id, item.id), getSettings(member.guildId)]);
-  return buildItemView(item, balance, owned, settings);
-}
-
 registerProfileButton(SHOP_OPEN_ID, async ({ interaction, member }) => {
   await interaction.update(await renderShop(member));
 });
 
 registerProfileButtonPrefix(SHOP_PAGE_PREFIX, async ({ interaction, member, arg }) => {
   await interaction.update(await renderShop(member, undefined, Number(arg) || 0));
-});
-
-registerProfileSelect(SHOP_SELECT_ID, async ({ interaction, member, values }) => {
-  await interaction.update(await renderItem(member, values[0] ?? ''));
 });
 
 export async function renderInventory(member: Member, notice?: string) {
