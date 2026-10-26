@@ -8,7 +8,7 @@ import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../.
 import { buildGroupHugAdminGroup, handleGroupHugAdmin } from '../../modules/events/grouphug.admin.js';
 import { buildLevelsAdminGroup, handleLevelsAdmin } from '../../modules/progression/levels.admin.js';
 import { getJackpot } from '../../modules/casino/slots.service.js';
-import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits, updateSlotLimits } from '../../modules/settings/settings.service.js';
+import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits, updateSlotLimits, updateDuelLimits } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
 
@@ -96,6 +96,13 @@ export default defineCommand({
         .addIntegerOption((o) => o.setName('prix').setDescription('Prix fixe d’un tour').setMinValue(1).setMaxValue(100000))
         .addIntegerOption((o) => o.setName('part_triple').setDescription('% de la cagnotte gagné par un triple autre que les loutres').setMinValue(1).setMaxValue(100))
         .addIntegerOption((o) => o.setName('cagnotte_depart').setDescription('Cagnotte de départ après un jackpot').setMinValue(0).setMaxValue(1000000)),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('duel')
+        .setDescription('Règle les mises autorisées en duel')
+        .addIntegerOption((o) => o.setName('min').setDescription('Mise minimale').setRequired(true).setMinValue(1))
+        .addIntegerOption((o) => o.setName('max').setDescription('Mise maximale').setRequired(true).setMinValue(1)),
     )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
     .addSubcommandGroup((group) => buildShopAdminGroup(group))
@@ -193,6 +200,15 @@ export default defineCommand({
           jackpot.lastWinnerDiscordId ? `**Dernier jackpot :** ${formatAmount(jackpot.lastWonAmount ?? 0, updated)} par <@${jackpot.lastWinnerDiscordId}>` : '',
         ].filter(Boolean).join('\n'),
       );
+      return;
+    }
+
+    if (sub === 'duel') {
+      const min = interaction.options.getInteger('min', true);
+      const max = interaction.options.getInteger('max', true);
+      if (min > max) return void (await reply('La mise minimale doit être inférieure ou égale à la maximale.'));
+      const updated = await updateDuelLimits(interaction.guildId, min, max);
+      await reply(`Duel : mises de ${formatAmount(updated.duelMinStake, updated)} à ${formatAmount(updated.duelMaxStake, updated)}.`);
       return;
     }
 

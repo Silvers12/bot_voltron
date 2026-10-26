@@ -1,0 +1,25 @@
+{
+  "attaques": [
+    "{a} fonce bouclier en avant en hurlant le nom de sa rivière",
+    "{a} tente une roulade spectaculaire, légèrement ratée mais pleine de panache",
+    "{a} brandit une cuillère en bois trouvée dans la taverne",
+    "{a} lance un regard si intense que les spectateurs reculent d'un pas",
+    "{a} invoque la force des anciens, qui répondent avec un peu de retard",
+    "{a} esquive, pivote, glisse sur une flaque, et transforme la chute en attaque",
+    "{a} déclame un poème d'une telle beauté que l'adversaire en perd sa garde",
+    "{a} frappe avec la rage de quelqu'un qu'on a réveillé trop tôt",
+    "{a} fait tournoyer son arme comme un moulin à vent un jour de tempête",
+    "{a} tente la botte secrète apprise d'une vieille loutre"
+  ],
+  "victoires": [
+    "{w} l'emporte d'un cheveu de moustache !",
+    "{w} triomphe sous les acclamations de la compagnie !",
+    "{w} remporte le duel, et {l} jure qu'il avait le soleil dans les yeux.",
+    "{w} s'impose avec panache. {l} repart la tête haute, la bourse un peu moins.",
+    "Victoire de {w} ! Voltron note le résultat dans les chroniques de la rivière."
+  ],
+  "egalites": [
+    "Coup pour coup, les deux combattants s'effondrent en même temps. On remet ça !",
+    "Les dés sont ex æquo. Voltron exige un second assaut !"
+  ]
+}

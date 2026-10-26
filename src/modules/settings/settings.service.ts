@@ -96,6 +96,12 @@ export async function updateSlotLimits(
   return settings;
 }
 
+export async function updateDuelLimits(guildId: string, duelMinStake: number, duelMaxStake: number): Promise<GuildSettings> {
+  const settings = await prisma.guildSettings.upsert({ where: { guildId }, create: { guildId, duelMinStake, duelMaxStake }, update: { duelMinStake, duelMaxStake } });
+  cache.set(guildId, settings);
+  return settings;
+}
+
 /** Formate un montant avec le nom de monnaie du serveur : `1 écu 🪙`, `25 écus 🪙`, `-3 écus 🪙`. */
 export function formatAmount(amount: number, settings: GuildSettings, { signed = false } = {}): string {
   const abs = Math.abs(amount);

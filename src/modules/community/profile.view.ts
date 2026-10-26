@@ -108,6 +108,9 @@ function describeTransaction(t: Transaction): string {
     case 'BET': return '🎰 mise';
     case 'BET_WIN': return '🎰 gain';
     case 'GROUP_HUG': return '🤗 câlin collectif';
+    case 'DUEL_STAKE': return '⚔️ mise de duel';
+    case 'DUEL_WIN': return '⚔️ duel gagné';
+    case 'DUEL_REFUND': return '⚔️ mise rendue';
     case 'HUG_SENT': return `🤗 câlin à ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'HUG_RECEIVED': return `🤗 câlin de ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'ADMIN_CREDIT': return '🛡️ offert par l’intendance';

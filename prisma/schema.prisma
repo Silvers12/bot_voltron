@@ -37,6 +37,8 @@ model Member {
   voiceSession  VoiceSession?
   blackjackGames BlackjackGame[]
   groupHugs     GroupHugParticipant[]
+  duelsSent     Duel[]    @relation("DuelChallenger")
+  duelsReceived Duel[]    @relation("DuelOpponent")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   account       Account?
@@ -79,6 +81,9 @@ model GuildSettings {
   blackjackMaxBet  Int      @default(2000)
   /// Prix fixe d'un tour de machine à sous
   slotBet          Int      @default(50)
+  /// Mises autorisées en duel
+  duelMinStake     Int      @default(10)
+  duelMaxStake     Int      @default(5000)
   /// Part de la cagnotte remportée par un triple autre que les loutres (en %)
   slotTriplePercent Int     @default(50)
   /// Montant de départ de la cagnotte après un jackpot
@@ -121,6 +126,9 @@ enum TransactionType {
   BET
   BET_WIN
   GROUP_HUG
+  DUEL_STAKE
+  DUEL_WIN
+  DUEL_REFUND
   ADMIN_CREDIT
   ADMIN_DEBIT
   HUG_SENT
@@ -312,4 +320,35 @@ model SlotJackpot {
   lastWonAmount Int?
   lastWonAt DateTime?
   updatedAt DateTime @updatedAt
+}
+
+enum DuelState {
+  PENDING
+  RESOLVED
+  DECLINED
+  CANCELLED
+  EXPIRED
+}
+
+/// Duel entre deux membres. La mise du défieur est bloquée à la création, celle de l'adversaire à l'acceptation.
+model Duel {
+  id             String    @id @default(cuid())
+  guildId        String
+  channelId      String
+  messageId      String?
+  challengerId   String
+  challenger     Member    @relation("DuelChallenger", fields: [challengerId], references: [id])
+  opponentId     String
+  opponent       Member    @relation("DuelOpponent", fields: [opponentId], references: [id])
+  stake          Int
+  state          DuelState @default(PENDING)
+  winnerId       String?
+  challengerRoll Int?
+  opponentRoll   Int?
+  expiresAt      DateTime
+  createdAt      DateTime  @default(now())
+  resolvedAt     DateTime?
+
+  @@index([guildId, state])
+  @@index([challengerId, state])
 }

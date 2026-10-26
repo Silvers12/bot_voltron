@@ -28,6 +28,7 @@ src/
   modules/progression/     # XP messages/vocal, classement, niveaux et paliers
   modules/banter/          # compliments et insultes (textes dans content/)
   modules/casino/          # blackjack, machine à sous
+  modules/duel/            # duels entre membres (textes dans content/)
   modules/events/          # câlin collectif (apparitions planifiées)
 content/                   # textes éditables (compliments, insultes)
   modules/settings/        # réglages du serveur (monnaie, bienvenue)
@@ -131,6 +132,12 @@ docker compose logs -f bot
 - Seuls les triples gagnent : trois loutres = toute la cagnotte (≈ 1 tour sur 8 000), trois autres symboles identiques = 50 % de la cagnotte (≈ 1 tour sur 23, réglable). Tout le reste reste dans la cagnotte.
 - `/admin machine [prix] [cagnotte_depart] [part_triple]` (sans option : affiche l'état et le dernier jackpot).
 
+## Duel
+
+- `/duel membre mise` : défi public avec boutons Accepter / Refuser (défié) et Annuler (défieur). Mise du défieur bloquée à la création, celle du défié à l'acceptation ; le vainqueur empoche les deux. Pas de prélèvement.
+- Résolution par jets de d20 commentés (textes dans `content/duels.json`), relance en cas d'égalité. Un défi sans réponse expire après 2 min et rembourse ; les défis en attente survivent à un redémarrage.
+- Un seul défi en attente par défieur. Mises bornées par `/admin duel min max` (10 à 5 000 par défaut).
+
 ## Commandes
 
 Membres :
@@ -141,6 +148,7 @@ Membres :
 - `/compliment membre` · `/insulte membre` : textes aléatoires par rareté (public).
 - `/blackjack mise` : blackjack contre la banque (privé).
 - `/machine` : machine à sous publique à cagnotte progressive, prix fixe.
+- `/duel membre mise` : duel entre membres (public).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
@@ -148,4 +156,4 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin boutique ajouter|modifier|retirer|remettre|lister` (autocomplétion des noms d'articles)
 - `/admin calin ajouter-salon|retirer-salon|regler|lancer|etat`
 - `/admin niveaux ajouter-role|retirer-role|salon|courbe|recalculer|lister`
-- `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant`
+- `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant` · `/admin duel min max`

@@ -7,6 +7,7 @@ import './modules/community/profile.controller.js';
 import './modules/shop/shop.controller.js';
 import './modules/events/grouphug.controller.js';
 import { loadBanter } from './modules/banter/banter.service.js';
+import { loadDuelTexts } from './modules/duel/duel.service.js';
 
 const log = createLogger('app');
 
@@ -14,6 +15,7 @@ await prisma.$connect();
 log.info('Base de données connectée');
 
 await loadBanter();
+await loadDuelTexts();
 
 const client = createClient();
 
