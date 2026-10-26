@@ -84,7 +84,11 @@ docker compose ps               # état des conteneurs
 
 Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hôte, avec `npm install` fait).
 
-### Sauvegardes
+### Déploiement rapide
+
+`./scripts/deploy.sh [id_serveur…] [--no-build]` (ou `npm run redeploy`) : ajoute les serveurs donnés à `DISCORD_GUILD_IDS` s'ils n'y sont pas, reconstruit et relance le conteneur, enregistre les commandes sur tous les serveurs autorisés, affiche les journaux et confirme la connexion. `--no-build` relance sans reconstruire (changement de `.env` seul).
+
+## Sauvegardes
 
 - `scripts/backup.sh` : dump compressé dans `backups/`, 14 jours conservés. À planifier chaque jour dans le cron de l'hôte (`crontab -e`) :
   `0 4 * * * /opt/Voltron/scripts/backup.sh >> /opt/Voltron/backups/backup.log 2>&1`

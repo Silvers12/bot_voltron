@@ -17,7 +17,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:generate": "prisma generate",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "redeploy": "bash scripts/deploy.sh"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.1",
