@@ -126,7 +126,7 @@ docker compose logs -f bot
 
 ## Machine à sous
 
-- `/machine` : affiche la machine (cagnotte, prix, bourse) avec un bouton Lancer ; rien n'est débité avant d'appuyer. Un tour à prix fixe (50 cœurs par défaut), trois rouleaux (🦦 ❤️ 🛡️ 🐟 🌊 🪨) révélés un par un, bouton Rejouer. Partie privée. Le prix est fixe car la chance de rafler la cagnotte ne dépend pas de la mise.
+- `/machine` : installe la machine **publiquement** dans le salon (cagnotte, prix, bouton Lancer). N'importe qui appuie et joue avec sa propre bourse ; tout le monde voit les rouleaux (🦦 ❤️ 🛡️ 🐟 🌊 🪨) tourner et la cagnotte évoluer. Un seul tour à la fois par machine. Le solde du joueur lui est envoyé en privé. Prix fixe (50 par défaut) car la chance de rafler la cagnotte ne dépend pas de la mise.
 - **Modèle fermé** : chaque mise entre intégralement dans la cagnotte du serveur, chaque gain en sort. Trois loutres raflent toute la cagnotte (annonce publique), qui repart du montant de départ (1 000, amorcé par la banque). La banque ne crée ni ne détruit de cœurs en dehors de l'amorce.
 - Seuls les triples gagnent : trois loutres = toute la cagnotte (≈ 1 tour sur 8 000), trois autres symboles identiques = 50 % de la cagnotte (≈ 1 tour sur 23, réglable). Tout le reste reste dans la cagnotte.
 - `/admin machine [prix] [cagnotte_depart] [part_triple]` (sans option : affiche l'état et le dernier jackpot).
@@ -140,7 +140,7 @@ Membres :
 - `/classement` : classement d'XP paginé (privé, se ferme après 2 min sans clic).
 - `/compliment membre` · `/insulte membre` : textes aléatoires par rareté (public).
 - `/blackjack mise` : blackjack contre la banque (privé).
-- `/machine` : machine à sous à cagnotte progressive, prix fixe (privé, jackpot annoncé).
+- `/machine` : machine à sous publique à cagnotte progressive, prix fixe.
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`

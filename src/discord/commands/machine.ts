@@ -1,87 +1,111 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, SlashCommandBuilder, userMention, type RepliableInteraction } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, SlashCommandBuilder, userMention, type ButtonInteraction } from 'discord.js';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { defineCommand } from '../types.js';
 import { registerButton } from '../components.js';
 import { prisma } from '../../infrastructure/prisma.js';
-import type { GuildSettings, Member } from '../../generated/prisma/client.js';
-import { getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
+import type { GuildSettings } from '../../generated/prisma/client.js';
+import { InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { formatAmount, getSettings } from '../../modules/settings/settings.service.js';
 import { getJackpot, playSlots, type SpinResult } from '../../modules/casino/slots.service.js';
 
 const SPIN_ID = 'slots:spin';
 
-function frame(reels: string[], bet: number, s: GuildSettings, pool: number, result?: SpinResult, idle?: { balance: number }) {
-  const net = result ? result.payout - result.bet : 0;
+/** Machines en train de tourner, par identifiant de message : un seul tour à la fois par machine. */
+const spinning = new Set<string>();
+
+interface FrameOptions {
+  reels: string[];
+  s: GuildSettings;
+  pool: number;
+  /** Joueur du tour affiché (en cours ou terminé) */
+  playerId?: string;
+  result?: SpinResult;
+  busy?: boolean;
+}
+
+function frame({ reels, s, pool, playerId, result, busy }: FrameOptions) {
   const embed = new EmbedBuilder()
     .setColor(!result ? 0x2e86c1 : result.kind === 'jackpot' ? 0xf1c40f : result.kind === 'triple' ? 0x2ecc71 : 0xe74c3c)
     .setTitle('🎰 La machine de Voltron')
     .setDescription(`# ${reels.join(' │ ')}`)
-    .addFields({ name: 'Mise', value: formatAmount(bet, s), inline: true }, { name: '🦦🦦🦦 Cagnotte', value: `**${formatAmount(pool, s)}**`, inline: true });
-  if (result) {
-    embed.addFields(
-      { name: 'Résultat', value: result.kind === 'jackpot' ? `${result.label} Tu rafles toute la cagnotte : **${formatAmount(result.payout, s)}** !` : result.kind === 'triple' ? `${result.label} Tu emportes ${s.slotTriplePercent} % de la cagnotte : **${formatAmount(result.payout, s)}** !` : result.label },
-      { name: 'Bilan', value: `**${net >= 0 ? '+' : ''}${formatAmount(net, s)}** · bourse : ${formatAmount(result.balanceAfter, s)}` },
+    .addFields(
+      { name: '🦦🦦🦦 Cagnotte', value: `**${formatAmount(pool, s)}**`, inline: true },
+      { name: 'Prix du tour', value: formatAmount(s.slotBet, s), inline: true },
     );
-  } else if (idle) {
-    embed.addFields({ name: 'Ta bourse', value: formatAmount(idle.balance, s) }).setFooter({ text: 'Trois symboles identiques gagnent. Trois loutres raflent toute la cagnotte !' });
-  } else {
-    embed.setFooter({ text: 'Les rouleaux tournent…' });
+
+  if (result && playerId) {
+    const net = result.payout - result.bet;
+    const text = result.kind === 'jackpot'
+      ? `${result.label} ${userMention(playerId)} rafle toute la cagnotte : **${formatAmount(result.payout, s)}** !`
+      : result.kind === 'triple'
+        ? `${result.label} ${userMention(playerId)} emporte ${s.slotTriplePercent} % de la cagnotte : **${formatAmount(result.payout, s)}** !`
+        : `${userMention(playerId)} : ${result.label}`;
+    embed.addFields({ name: 'Dernier tour', value: `${text}\nBilan du tour : **${net >= 0 ? '+' : ''}${formatAmount(net, s)}**` });
+  } else if (playerId) {
+    embed.addFields({ name: 'En cours', value: `${userMention(playerId)} lance les rouleaux…` });
   }
+  embed.setFooter({ text: 'Trois symboles identiques gagnent. Trois loutres raflent toute la cagnotte ! Chacun joue avec sa bourse.' });
+
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(SPIN_ID)
-      .setLabel(`${result ? 'Rejouer' : 'Lancer'} (${formatAmount(bet, s)})`)
-      .setStyle(ButtonStyle.Primary)
-      .setEmoji('🎰')
-      .setDisabled(idle ? idle.balance < bet : !result || result.balanceAfter < bet),
+    new ButtonBuilder().setCustomId(SPIN_ID).setLabel(`Lancer (${formatAmount(s.slotBet, s)})`).setStyle(ButtonStyle.Primary).setEmoji('🎰').setDisabled(busy === true),
   );
-  return { embeds: [embed], components: [row] };
+  return { embeds: [embed], components: [row], allowedMentions: { parse: [] as [] } };
 }
 
-async function play(interaction: RepliableInteraction, member: Member) {
-  const s = await getSettings(member.guildId);
-  const bet = s.slotBet;
-  const fail = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
-  let result: SpinResult;
+async function spin(interaction: ButtonInteraction<'cached'>, memberId: string) {
+  const messageId = interaction.message.id;
+  const s = await getSettings(interaction.guildId);
+  if (spinning.has(messageId)) {
+    await interaction.reply({ content: 'La machine tourne déjà, attends la fin du tour.', flags: MessageFlags.Ephemeral });
+    return;
+  }
+  spinning.add(messageId);
   try {
-    result = await playSlots(member);
-  } catch (err) {
-    if (err instanceof InsufficientFundsError) return void (await fail(`Un tour coûte ${formatAmount(bet, s)}, et tu n’as que ${formatAmount(err.balance, s)}.`));
-    throw err;
-  }
+    const member = await prisma.member.findUniqueOrThrow({ where: { id: memberId } });
+    let result: SpinResult;
+    try {
+      result = await playSlots(member);
+    } catch (err) {
+      if (err instanceof InsufficientFundsError) {
+        await interaction.reply({ content: `Un tour coûte ${formatAmount(s.slotBet, s)}, et tu n’as que ${formatAmount(err.balance, s)}.`, flags: MessageFlags.Ephemeral });
+        return;
+      }
+      throw err;
+    }
 
-  // Petite animation : rouleaux masqués, puis révélés un par un.
-  const spinning = ['❔', '❔', '❔'];
-  // Pendant l'animation, on affiche la cagnotte d'avant le tour pour ne pas trahir le résultat.
-  const poolBefore = result.kind === 'jackpot' ? result.payout - result.bet : result.pool - result.bet + result.payout;
-  if (interaction.isButton()) await interaction.update(frame(spinning, bet, s, poolBefore));
-  else await interaction.reply({ ...frame(spinning, bet, s, poolBefore), flags: MessageFlags.Ephemeral });
-  for (let i = 0; i < 3; i++) {
-    await sleep(600);
-    spinning[i] = result.reels[i]!;
-    await interaction.editReply(frame(spinning, bet, s, i === 2 ? result.pool : poolBefore, i === 2 ? result : undefined));
-  }
+    // Animation publique : cagnotte d'avant le tour pendant que les rouleaux tournent, puis résultat.
+    const poolBefore = result.kind === 'jackpot' ? result.payout - result.bet : result.pool - result.bet + result.payout;
+    const reels = ['❔', '❔', '❔'];
+    await interaction.update(frame({ reels, s, pool: poolBefore, playerId: interaction.user.id, busy: true }));
+    for (let i = 0; i < 3; i++) {
+      await sleep(600);
+      reels[i] = result.reels[i]!;
+      const last = i === 2;
+      await interaction.editReply(frame({ reels, s, pool: last ? result.pool : poolBefore, playerId: interaction.user.id, result: last ? result : undefined, busy: !last }));
+    }
 
-  if (result.kind === 'jackpot' && interaction.channel?.isSendable()) {
-    await interaction.channel.send({
-      content: `🎰🦦 **JACKPOT !** ${userMention(interaction.user.id)} aligne trois loutres et rafle la cagnotte : **${formatAmount(result.payout, s)}** ! Par mon bouclier et mes moustaches ! La cagnotte repart à ${formatAmount(result.pool, s)}.`,
-      allowedMentions: { users: [interaction.user.id] },
-    }).catch(() => {});
+    await interaction.followUp({ content: `Il te reste ${formatAmount(result.balanceAfter, s)}.`, flags: MessageFlags.Ephemeral });
+
+    if (result.kind === 'jackpot' && interaction.channel?.isSendable()) {
+      await interaction.channel.send({
+        content: `🎰🦦 **JACKPOT !** ${userMention(interaction.user.id)} aligne trois loutres et rafle la cagnotte : **${formatAmount(result.payout, s)}** ! Par mon bouclier et mes moustaches ! La cagnotte repart à ${formatAmount(result.pool, s)}.`,
+        allowedMentions: { users: [interaction.user.id] },
+      }).catch(() => {});
+    }
+  } finally {
+    spinning.delete(messageId);
   }
 }
 
 registerButton(SPIN_ID, async ({ interaction, member }) => {
-  const fresh = await prisma.member.findUniqueOrThrow({ where: { id: member.id } });
-  await play(interaction, fresh);
+  await spin(interaction, member.id);
 });
 
 export default defineCommand({
-  data: new SlashCommandBuilder()
-    .setName('machine')
-    .setDescription('Tente ta chance à la machine à sous de Voltron (prix fixe par tour)'),
+  data: new SlashCommandBuilder().setName('machine').setDescription('Installe la machine à sous de Voltron dans le salon (prix fixe par tour)'),
   async execute({ interaction, member }) {
-    // La machine s'affiche à l'arrêt ; rien n'est débité avant d'appuyer sur Lancer.
-    const [s, pool, balance] = await Promise.all([getSettings(member.guildId), getJackpot(member.guildId), getBalance(member.id)]);
-    await interaction.reply({ ...frame(['🎰', '🎰', '🎰'], s.slotBet, s, pool.pool, undefined, { balance }), flags: MessageFlags.Ephemeral });
+    // Machine publique : tout le monde voit les tours et la cagnotte, chacun joue avec sa bourse.
+    const [s, jackpot] = await Promise.all([getSettings(member.guildId), getJackpot(member.guildId)]);
+    await interaction.reply(frame({ reels: ['🎰', '🎰', '🎰'], s, pool: jackpot.pool }));
   },
 });
