@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SectionBuilder, ThumbnailBuilder, time, TimestampStyles, userMention, type GuildMember, type MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SectionBuilder, StringSelectMenuBuilder, ThumbnailBuilder, time, TimestampStyles, userMention, type GuildMember, type MessageActionRowComponentBuilder } from 'discord.js';
 import type { GuildSettings, Member, MemberAchievement, ShopItem, Transaction } from '../../generated/prisma/client.js';
 import type { DailyStatus } from '../economy/daily.service.js';
 import type { WeeklyStatus } from '../economy/weekly.service.js';
@@ -12,6 +12,7 @@ export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
 export const PROFILE_DAILY_ID = 'profil:daily';
 export const PROFILE_WEEKLY_ID = 'profil:weekly';
+export const PROFILE_NAV_ID = 'profil:nav';
 // Identifiants des écrans de la boutique (définis ici pour éviter un import circulaire avec shop.view)
 export const SHOP_OPEN_ID = 'shop:open';
 export const INVENTORY_OPEN_ID = 'shop:inventory';
@@ -72,20 +73,18 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
   if (isFeatureEnabled(settings, 'hebdo')) {
     row.addComponents(new ButtonBuilder().setCustomId(PROFILE_WEEKLY_ID).setLabel(weekly.claimedThisWeek ? 'Hebdo récupérée' : 'Récupérer l’hebdo').setStyle(ButtonStyle.Success).setEmoji('🗓️').setDisabled(weekly.claimedThisWeek));
   }
-  row.addComponents(
-    new ButtonBuilder().setCustomId(PROFILE_HISTORY_ID).setLabel('Historique').setStyle(ButtonStyle.Primary).setEmoji('📜'),
-    new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
+  row.addComponents(new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'));
+
+  const nav = new StringSelectMenuBuilder().setCustomId(PROFILE_NAV_ID).setPlaceholder('Explorer…').addOptions(
+    { label: 'Historique', value: 'history', description: 'Les derniers mouvements de ta bourse', emoji: '📜' },
+    ...(isFeatureEnabled(settings, 'boutique') ? [
+      { label: 'Boutique', value: 'shop', description: 'Objets, rôles et titres à acheter', emoji: '🛒' },
+      { label: 'Inventaire', value: 'inventory', description: 'Ce que tu possèdes, titre porté', emoji: '🎒' },
+    ] : []),
+    ...(isFeatureEnabled(settings, 'succes') ? [{ label: 'Succès', value: 'achievements', description: 'Badges débloqués et à débloquer', emoji: '🏅' }] : []),
+    { label: 'Statistiques', value: 'stats', description: 'Tes chiffres de jeu et d’activité', emoji: '📊' },
   );
-  const rows = [row];
-  const row2 = new ActionRowBuilder<MessageActionRowComponentBuilder>();
-  if (isFeatureEnabled(settings, 'boutique')) {
-    row2.addComponents(
-      new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
-      new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
-    );
-  }
-  if (isFeatureEnabled(settings, 'succes')) row2.addComponents(new ButtonBuilder().setCustomId(PROFILE_ACHIEVEMENTS_ID).setLabel('Succès').setStyle(ButtonStyle.Primary).setEmoji('🏅'));
-  if (row2.components.length) rows.push(row2);
+  const rows = [new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(nav), row];
 
   c.addSeparatorComponents(divider());
   c.addTextDisplayComponents(text(SIGNATURE));

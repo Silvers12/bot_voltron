@@ -172,6 +172,11 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Deux réponses simultanées : la première est acceptée, la seconde est évaluée contre le nouveau nombre.
 - Record et nombre d'erreurs conservés (`/admin comptage etat`).
 
+## Statistiques
+
+- `/stats [membre]` : activité (messages, vocal, niveau, meilleure série), câlins donnés et reçus, blackjack, machine à sous, duels, tombola, câlins collectifs, comptage, chacun avec son bilan net en cœurs. Seules les fonctionnalités actives apparaissent. Public.
+- Même écran depuis le profil, via le menu « Explorer… » qui remplace les boutons Boutique/Inventaire/Succès : Historique, Boutique, Inventaire, Succès, Statistiques.
+
 ## Titres
 
 - Un article de boutique de type **titre** (`/admin boutique ajouter nom:… prix:… titre:true`, limite 1 par membre par défaut) : son nom devient un titre de profil. L'emoji de l'article est affiché devant.
@@ -229,6 +234,7 @@ Membres :
 - `/duel membre mise` : duel entre membres (public).
 - `/tombola` : tombola hebdomadaire (public).
 - `/succes [membre]` : badges d'un membre (public).
+- `/stats [membre]` : statistiques de jeu (public).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`

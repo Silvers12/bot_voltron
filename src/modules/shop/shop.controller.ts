@@ -6,7 +6,7 @@ import { equipTitle, getEquippedTitle, getInventory, getItem, getOwnedQuantity, 
 import { buildInventoryView, buildItemView, buildShopView, INVENTORY_OPEN_ID, NO_TITLE_VALUE, SHOP_BUY_PREFIX, SHOP_OPEN_ID, SHOP_SELECT_ID, SHOP_TITLE_SELECT_ID } from './shop.view.js';
 import type { Member } from '../../generated/prisma/client.js';
 
-async function renderShop(member: Member, notice?: string) {
+export async function renderShop(member: Member, notice?: string) {
   const [items, balance, settings] = await Promise.all([listItems(member.guildId), getBalance(member.id), getSettings(member.guildId)]);
   return buildShopView(items, balance, settings, notice);
 }
@@ -26,7 +26,7 @@ registerProfileSelect(SHOP_SELECT_ID, async ({ interaction, member, values }) =>
   await interaction.update(await renderItem(member, values[0] ?? ''));
 });
 
-async function renderInventory(member: Member, notice?: string) {
+export async function renderInventory(member: Member, notice?: string) {
   const [entries, settings, title] = await Promise.all([getInventory(member.id), getSettings(member.guildId), getEquippedTitle(member.id)]);
   return buildInventoryView(entries, settings, title?.id ?? null, notice);
 }
