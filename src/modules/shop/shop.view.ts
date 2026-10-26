@@ -8,6 +8,8 @@ import { card, clampLines, divider, screen, text } from '../../discord/v2.js';
 export { SHOP_OPEN_ID, INVENTORY_OPEN_ID };
 export const SHOP_SELECT_ID = 'shop:select';
 export const SHOP_BUY_PREFIX = 'shop:buy:';
+export const SHOP_PAGE_PREFIX = 'shop:page:';
+export const SHOP_PAGE_SIZE = 10;
 export const SHOP_TITLE_SELECT_ID = 'shop:title';
 export const NO_TITLE_VALUE = 'none';
 
@@ -35,10 +37,13 @@ function kindLabel(item: ShopItem): string {
   return '';
 }
 
-/** Écran de la boutique : liste des articles et menu de sélection. */
-export function buildShopView(items: ShopItem[], balance: number, settings: GuildSettings, notice?: string) {
+/** Écran de la boutique : une page de SHOP_PAGE_SIZE articles, menu de sélection, navigation. */
+export function buildShopView(allItems: ShopItem[], balance: number, settings: GuildSettings, notice?: string, page = 0) {
+  const pages = Math.max(1, Math.ceil(allItems.length / SHOP_PAGE_SIZE));
+  const current = Math.min(Math.max(0, page), pages - 1);
+  const items = allItems.slice(current * SHOP_PAGE_SIZE, (current + 1) * SHOP_PAGE_SIZE);
   const c = card(SHOP_COLOR);
-  c.addTextDisplayComponents(text('# 🛒 Boutique\nLa boutique garde ton équipement au chaud.'));
+  c.addTextDisplayComponents(text(`# 🛒 Boutique\nLa boutique garde ton équipement au chaud.${pages > 1 ? ` · page ${current + 1}/${pages}` : ''}`));
   if (notice) c.addTextDisplayComponents(text(`> ${notice}`));
   c.addSeparatorComponents(divider(true));
   c.addTextDisplayComponents(text(items.length ? clampLines(items.map((i) => `${itemLabel(i)} — **${formatAmount(i.price, settings)}**${stockLabel(i)}${kindLabel(i)}`)) : 'Les rayons sont vides pour le moment. Les intendants y travaillent !'));
@@ -48,7 +53,7 @@ export function buildShopView(items: ShopItem[], balance: number, settings: Guil
   const rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [];
   if (items.length) {
     const menu = new StringSelectMenuBuilder().setCustomId(SHOP_SELECT_ID).setPlaceholder('Choisis un article pour en savoir plus');
-    for (const item of items.slice(0, 25)) {
+    for (const item of items) {
       const option = new StringSelectMenuOptionBuilder().setLabel(item.name.slice(0, 100)).setValue(item.id).setDescription(formatAmount(item.price, settings).slice(0, 100));
       const emoji = componentEmoji(item.emoji);
       if (emoji) option.setEmoji(emoji);
@@ -56,10 +61,18 @@ export function buildShopView(items: ShopItem[], balance: number, settings: Guil
     }
     rows.push(new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(menu));
   }
-  rows.push(new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
+  const nav = new ActionRowBuilder<MessageActionRowComponentBuilder>();
+  if (pages > 1) {
+    nav.addComponents(
+      new ButtonBuilder().setCustomId(`${SHOP_PAGE_PREFIX}${current - 1}`).setLabel('Précédent').setStyle(ButtonStyle.Secondary).setEmoji('◀️').setDisabled(current === 0),
+      new ButtonBuilder().setCustomId(`${SHOP_PAGE_PREFIX}${current + 1}`).setLabel('Suivant').setStyle(ButtonStyle.Secondary).setEmoji('▶️').setDisabled(current >= pages - 1),
+    );
+  }
+  nav.addComponents(
     new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Retour au profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
-  ));
+  );
+  rows.push(nav);
   return screen(c, rows);
 }
 

@@ -195,6 +195,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Catalogue de boutique de départ
 
 - `content/boutique.json` : 28 articles au ton absurde (chaussette sale à 5 cœurs jusqu'à la couronne de la rivière à 100 000), objets de collection et titres, stocks limités pour les plus chers. Modifiable à la main.
+- Boutique paginée par 10 articles (boutons Précédent/Suivant) ; après un achat, on revient sur la page de l'article.
 - `/admin boutique importer` charge le fichier sur le serveur : les articles déjà présents (même nom) ne sont pas touchés, donc relançable après avoir ajouté des lignes.
 
 ## Titres
