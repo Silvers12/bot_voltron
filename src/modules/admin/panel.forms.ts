@@ -206,6 +206,16 @@ export const FORMS: Form[] = [
     },
   },
   {
+    key: 'commandes', module: 'commandes', title: 'Salons des commandes', button: 'Salons',
+    fields: [
+      { id: 'commandChannelIds', label: 'Salons autorisés (vide = partout)', help: '#salon1 #salon2…', type: { kind: 'channels' }, current: (s) => s.commandChannelIds.map((id) => channelMention(id)).join(' ') },
+    ],
+    async apply({ guild, values }) {
+      const s = await updateSettings(guild.id, values as Partial<GuildSettings>);
+      return s.commandChannelIds.length ? 'Salons enregistrés : les membres ne peuvent utiliser Voltron que là.' : 'Aucune restriction : commandes autorisées partout.';
+    },
+  },
+  {
     key: 'tombola_rappels', module: 'tombola', title: 'Tombola : rappels et amorce', button: 'Rappels',
     fields: [
       { id: 'lotteryReminderWeekday', label: 'Jour du rappel (aucun = pas de rappel)', help: 'mercredi, aucun…', type: { kind: 'weekday', allowNone: true }, current: (s) => (s.lotteryReminderWeekday ? DAYS[s.lotteryReminderWeekday] ?? '' : 'aucun') },

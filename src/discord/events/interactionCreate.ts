@@ -6,6 +6,8 @@ import { ensureMember } from '../../modules/community/member.service.js';
 import { resolveButton, resolveModal, resolveSelect } from '../components.js';
 import { getSettings } from '../../modules/settings/settings.service.js';
 import { DISABLED_MESSAGE, featureForCommand, featureForComponent, isFeatureEnabled } from '../../modules/features/features.js';
+import { isCommandChannelAllowed } from '../../modules/settings/commands.admin.js';
+import { channelMention } from 'discord.js';
 
 const log = createLogger('interactions');
 
@@ -41,6 +43,12 @@ export default defineEvent({
           return;
         }
         if (await isDisabled(interaction.guildId, featureForCommand(interaction.commandName))) return replyError(interaction, DISABLED_MESSAGE);
+        if (interaction.commandName !== 'admin') {
+          const s = await getSettings(interaction.guildId);
+          if (!isCommandChannelAllowed(s, interaction.channelId)) {
+            return replyError(interaction, `Les commandes de Voltron s’utilisent dans ${s.commandChannelIds.map(channelMention).join(' ou ')}. Je t’y attends !`);
+          }
+        }
         const member = await ensureMember(interaction.member);
         await command.execute({ interaction, guildMember: interaction.member, member });
         return;

@@ -16,6 +16,7 @@ import { ACHIEVEMENTS } from '../achievements/achievements.catalog.js';
 import { unlockCounts } from '../achievements/achievements.service.js';
 import { getCounting } from '../counting/counting.service.js';
 import { describeCounting } from '../counting/counting.admin.js';
+import { describeCommandChannels } from '../settings/commands.admin.js';
 import {
   ADMIN_CLOSE_ID, ADMIN_FEATURES_SELECT_ID, ADMIN_HOME_ID, ADMIN_MODULE_PREFIX, ADMIN_MODULE_SELECT_ID, ADMIN_REFRESH_ID, ADMIN_TOGGLE_PREFIX,
   buildClosedView, buildHomeView, buildModuleView, moduleInfo, MODULES, type ModuleDetails, type ModuleKey, type Overview,
@@ -148,6 +149,8 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
     }
     case 'comptage':
       return { lines: describeCounting(s, await getCounting(guild.id)).split('\n'), commands: ['/admin comptage salon · amende · reinitialiser · etat'] };
+    case 'commandes':
+      return { lines: [describeCommandChannels(s)], commands: ['/admin commandes ajouter-salon · retirer-salon · partout · liste'] };
     case 'textes':
       return {
         lines: ['Textes dans `content/compliments.json` et `content/insultes.json` (rechargés au redémarrage)'],

@@ -15,7 +15,7 @@ export const ADMIN_MODULE_PREFIX = 'admin:open:';
 const COLOR = 0xc0392b;
 const FOOTER = 'Intendance de Voltron · panneau réservé, se ferme après 5 min d’inactivité';
 
-export type ModuleKey = 'economie' | 'progression' | 'boutique' | 'casino' | 'duel' | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'textes';
+export type ModuleKey = 'economie' | 'progression' | 'boutique' | 'casino' | 'duel' | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'commandes' | 'textes';
 
 export interface ModuleInfo {
   key: ModuleKey;
@@ -34,6 +34,7 @@ export const MODULES: ModuleInfo[] = [
   { key: 'tombola', label: 'Tombola', emoji: '🎟️', features: ['tombola'] },
   { key: 'succes', label: 'Succès et badges', emoji: '🏅', features: ['succes'] },
   { key: 'comptage', label: 'Salon de comptage', emoji: '🔢', features: ['comptage'] },
+  { key: 'commandes', label: 'Salons des commandes', emoji: '📍', features: [] },
   { key: 'textes', label: 'Compliments et insultes', emoji: '💐', features: ['compliments', 'insultes'] },
 ];
 
@@ -129,7 +130,7 @@ export function buildModuleView(s: GuildSettings, module: ModuleInfo, details: M
     .setColor(COLOR)
     .setTitle(`${module.emoji} ${module.label}`)
     .addFields(
-      { name: 'État', value: module.features.map((k) => featureLine(s, k)).join('\n') },
+      ...(module.features.length ? [{ name: 'État', value: module.features.map((k) => featureLine(s, k)).join('\n') }] : []),
       { name: 'Réglages', value: details.lines.join('\n') || '*Aucun réglage*' },
       { name: 'Pour modifier', value: [...formsForModule(module.key).map((f) => `✏️ bouton **${f.button}** ci-dessous`), ...details.commands.map((c) => `\`${c}\``)].join('\n') || '*Rien à modifier*' },
     )
@@ -156,7 +157,7 @@ export function buildModuleView(s: GuildSettings, module: ModuleInfo, details: M
     new ButtonBuilder().setCustomId(`${ADMIN_MODULE_PREFIX}${module.key}`).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
     new ButtonBuilder().setCustomId(ADMIN_CLOSE_ID).setLabel('Fermer').setStyle(ButtonStyle.Danger).setEmoji('✖️'),
   );
-  return { embeds: [embed], components: [toggles, ...edits, nav] };
+  return { embeds: [embed], components: [...(module.features.length ? [toggles] : []), ...edits, nav] };
 }
 
 export function buildClosedView() {

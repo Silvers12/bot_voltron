@@ -186,6 +186,11 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Profil : ligne « Badges » avec les emojis et bouton **Succès** (débloqués avec date, verrouillés avec l'indice et la récompense). `/succes [membre]` affiche publiquement les badges d'un membre (les indices ne sont montrés que pour soi).
 - `/admin succes liste` : catalogue avec le nombre de membres par succès. Interrupteur « Succès et badges » dans le panneau.
 
+## Salons des commandes
+
+- Par défaut, les commandes fonctionnent partout. `/admin commandes ajouter-salon salon:#voltron` limite les commandes des membres à ce salon (plusieurs possibles) ; `retirer-salon`, `partout`, `liste`. Aussi dans le panneau (module Salons des commandes).
+- Hors de ces salons, Voltron répond en privé « Les commandes s'utilisent dans #… » et ne poste rien. `/admin` n'est jamais limité. Les boutons des messages déjà postés (câlin collectif, tombola, machine) restent utilisables là où ils sont.
+
 ## Panneau d'intendance et interrupteurs
 
 - `/admin panneau` : écran de contrôle privé (se ferme après 5 min d'inactivité). Accueil : membres, bourses, monnaie en circulation, cagnotte de la machine, tombola en cours, prochain câlin collectif, parties et duels en attente, état de chaque fonctionnalité.
@@ -227,6 +232,7 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin succes recalculer|liste`
 - `/admin comptage salon|amende|reinitialiser|etat`
 - `/admin panneau`, `/admin fonction`
+- `/admin commandes ajouter-salon|retirer-salon|partout|liste`
 - `/admin messages supprimer id:… [salon]` : supprime un message · `depuis id:… [salon]` : supprime ce message et tous ceux postés après · `vider [salon]` : supprime tout le salon. Les deux derniers demandent une confirmation (bouton, 1 min). Les messages de moins de 14 jours partent par lots, les plus anciens un par un (plus lent). Le bot doit avoir « Gérer les messages » et « Lire l’historique » dans le salon.
 - `/admin message texte:… [salon] [repondre_a]` : écrit en tant que Voltron (`\n` pour un retour à la ligne, mentions de membres et de rôles autorisées, pas de @everyone)
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant` · `/admin duel min max`
