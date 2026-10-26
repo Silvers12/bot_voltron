@@ -15,7 +15,7 @@ async function loadIcon(rate: Rate): Promise<Buffer> {
   try {
     return await sharp(await readFile(path.join(contentDir, 'taux', `${rate.key}.png`))).resize(ICON, ICON, { fit: 'inside' }).png().toBuffer();
   } catch {
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${ICON}" height="${ICON}"><g fill="${rate.color}" color="${rate.color}">${rate.icon}</g></svg>`;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="${ICON}" height="${ICON}"><g fill="${rate.color}" color="${rate.color}" stroke="#1b2838" stroke-width="5" stroke-linejoin="round" paint-order="stroke">${rate.icon}</g></svg>`;
     return sharp(Buffer.from(svg)).png().toBuffer();
   }
 }
