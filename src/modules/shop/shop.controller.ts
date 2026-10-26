@@ -1,3 +1,4 @@
+import { trackAchievements } from '../achievements/achievements.service.js';
 import { registerProfileButton, registerProfileButtonPrefix, registerProfileSelect } from '../community/profile.controller.js';
 import { getBalance, InsufficientFundsError } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
@@ -39,6 +40,7 @@ registerProfileButtonPrefix(SHOP_BUY_PREFIX, async ({ interaction, member, guild
   }
   try {
     const result = await purchase(item, member, guildMember);
+    trackAchievements(interaction.guild, member.id);
     const extra = result.quantityOwned > 1 ? ` Tu en as maintenant ${result.quantityOwned}.` : '';
     await interaction.update(await renderShop(member, `✅ **${item.name}** est à toi pour ${formatAmount(item.price, settings)} !${extra} Il te reste ${formatAmount(result.balanceAfter, settings)}.`));
   } catch (err) {

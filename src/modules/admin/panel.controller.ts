@@ -12,6 +12,8 @@ import { listLevelRoles } from '../progression/levels.service.js';
 import { reconcileVoiceSessions } from '../progression/xp.service.js';
 import { getOpenHug, scheduleNext } from '../events/grouphug.service.js';
 import { describeLottery } from '../lottery/lottery.admin.js';
+import { ACHIEVEMENTS } from '../achievements/achievements.catalog.js';
+import { unlockCounts } from '../achievements/achievements.service.js';
 import {
   ADMIN_CLOSE_ID, ADMIN_FEATURES_SELECT_ID, ADMIN_HOME_ID, ADMIN_MODULE_PREFIX, ADMIN_MODULE_SELECT_ID, ADMIN_REFRESH_ID, ADMIN_TOGGLE_PREFIX,
   buildClosedView, buildHomeView, buildModuleView, moduleInfo, MODULES, type ModuleDetails, type ModuleKey, type Overview,
@@ -129,6 +131,19 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
         lines: describeLottery(s, await prisma.lottery.findFirst({ where: { guildId: guild.id, state: 'OPEN' } })).split('\n'),
         commands: ['/admin tombola salon · regler · publier · tirer · etat'],
       };
+    case 'succes': {
+      const counts = await unlockCounts(guild.id);
+      const total = [...counts.values()].reduce((a, b) => a + b, 0);
+      const top = ACHIEVEMENTS.map((a) => ({ a, n: counts.get(a.key) ?? 0 })).filter((x) => x.n > 0).sort((x, y) => y.n - x.n).slice(0, 5);
+      return {
+        lines: [
+          `Salon des annonces : ${s.achievementChannelId ? channelMention(s.achievementChannelId) : 'aucun (déblocages silencieux)'}`,
+          `Catalogue : ${ACHIEVEMENTS.length} succès · ${total} déblocage(s) au total`,
+          ...(top.length ? ['Les plus débloqués :', ...top.map((x) => `• ${x.a.emoji} ${x.a.name} : ${x.n}`)] : []),
+        ],
+        commands: ['/admin succes recalculer · liste'],
+      };
+    }
     case 'textes':
       return {
         lines: ['Textes dans `content/compliments.json` et `content/insultes.json` (rechargés au redémarrage)'],

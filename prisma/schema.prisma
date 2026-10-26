@@ -47,6 +47,7 @@ model Member {
   dailyClaims   DailyClaim[]
   weeklyClaims  WeeklyClaim[]
   inventory     InventoryItem[]
+  achievements  MemberAchievement[]
 
   @@unique([guildId, discordUserId])
   @@index([guildId, leftAt])
@@ -119,6 +120,8 @@ model GuildSettings {
   levelStepXp      Int      @default(10)
   /// Salon des annonces de montée de niveau (null = pas d'annonce)
   levelUpChannelId String?
+  /// Salon des annonces de succès (null = pas d'annonce)
+  achievementChannelId String?
   /// Fonctionnalités désactivées par l'intendance (clés du registre src/modules/features)
   disabledFeatures String[] @default([])
   updatedAt        DateTime @updatedAt
@@ -153,6 +156,7 @@ enum TransactionType {
   ADMIN_DEBIT
   HUG_SENT
   HUG_RECEIVED
+  ACHIEVEMENT
 }
 
 /// Mouvement sur un compte : montant signé, solde résultant, auteur et motif.
@@ -321,6 +325,18 @@ model GroupHugParticipant {
 }
 
 /// Rôle attribué à partir d'un niveau. Seul le palier le plus élevé atteint est conservé.
+/// Succès débloqué par un membre (clé du catalogue src/modules/achievements).
+model MemberAchievement {
+  id         String   @id @default(cuid())
+  memberId   String
+  member     Member   @relation(fields: [memberId], references: [id])
+  key        String
+  unlockedAt DateTime @default(now())
+
+  @@unique([memberId, key])
+  @@index([key])
+}
+
 model LevelRole {
   id      String @id @default(cuid())
   guildId String

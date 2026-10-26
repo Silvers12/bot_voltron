@@ -6,6 +6,7 @@ import { config } from '../../core/config.js';
 import type { GroupHug } from '../../generated/prisma/client.js';
 import { credit } from '../economy/economy.service.js';
 import { isFeatureEnabled } from '../features/features.js';
+import { trackAchievements } from '../achievements/achievements.service.js';
 import { getSettings, updateGroupHugSettings } from '../settings/settings.service.js';
 import { buildHugClosedMessage, buildHugOpenMessage } from './grouphug.view.js';
 
@@ -116,6 +117,8 @@ export async function closeHug(client: Client, hugId: string) {
     await credit({ memberId: p.memberId, amount: rewardEach, type: 'GROUP_HUG', actorDiscordId: 'voltron', reason: `Câlin collectif à ${count}` });
   }
   log.info(`Câlin collectif ${hugId} clôturé : ${count} câlineur(s), ${rewardEach} chacun`);
+  const hugGuild = client.guilds.cache.get(hug.guildId);
+  if (hugGuild) for (const p of hug.participants) trackAchievements(hugGuild, p.memberId);
 
   await editHugMessage(client, hug, async (s) => buildHugClosedMessage(hug, hug.participants.map((p) => p.member.discordUserId), rewardEach, s));
   await scheduleNext(hug.guildId);

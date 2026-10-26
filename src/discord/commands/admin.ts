@@ -8,6 +8,7 @@ import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../.
 import { buildGroupHugAdminGroup, handleGroupHugAdmin } from '../../modules/events/grouphug.admin.js';
 import { buildLevelsAdminGroup, handleLevelsAdmin } from '../../modules/progression/levels.admin.js';
 import { buildLotteryAdminGroup, handleLotteryAdmin } from '../../modules/lottery/lottery.admin.js';
+import { buildAchievementsAdminGroup, handleAchievementsAdmin } from '../../modules/achievements/achievements.admin.js';
 import { getJackpot } from '../../modules/casino/slots.service.js';
 import { openAdminPanel } from '../../modules/admin/panel.controller.js';
 import { FEATURES, featureInfo, isFeatureEnabled, setFeatureEnabled, type FeatureKey } from '../../modules/features/features.js';
@@ -119,7 +120,8 @@ export default defineCommand({
     .addSubcommandGroup((group) => buildShopAdminGroup(group))
     .addSubcommandGroup((group) => buildGroupHugAdminGroup(group))
     .addSubcommandGroup((group) => buildLevelsAdminGroup(group))
-    .addSubcommandGroup((group) => buildLotteryAdminGroup(group)),
+    .addSubcommandGroup((group) => buildLotteryAdminGroup(group))
+    .addSubcommandGroup((group) => buildAchievementsAdminGroup(group)),
 
   async autocomplete(interaction) {
     if (!isBotAdmin(interaction.member)) return void (await interaction.respond([]));
@@ -138,6 +140,7 @@ export default defineCommand({
     if (interaction.options.getSubcommandGroup(false) === 'calin') return handleGroupHugAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'niveaux') return handleLevelsAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'tombola') return handleLotteryAdmin(interaction);
+    if (interaction.options.getSubcommandGroup(false) === 'succes') return handleAchievementsAdmin(interaction);
 
     const sub = interaction.options.getSubcommand(true);
     const settings = await getSettings(interaction.guildId);

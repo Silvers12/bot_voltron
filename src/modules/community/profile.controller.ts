@@ -41,19 +41,22 @@ import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { claimDaily, getDailyStatus } from '../economy/daily.service.js';
 import { claimWeekly, getWeeklyStatus } from '../economy/weekly.service.js';
 import { getRank } from '../progression/xp.service.js';
+import { listUnlocked, trackAchievements } from '../achievements/achievements.service.js';
+import { buildAchievementsView, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
 import { time, TimestampStyles } from 'discord.js';
 import { buildHistoryView, buildProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID, PROFILE_WEEKLY_ID } from './profile.view.js';
 
 /** Assemble les données du profil et construit l'écran. */
 export async function renderProfile(member: Member, guildMember: GuildMember, notice?: string) {
-  const [balance, settings, daily, weekly, rank] = await Promise.all([
+  const [balance, settings, daily, weekly, rank, achievements] = await Promise.all([
     getBalance(member.id),
     getSettings(member.guildId),
     getDailyStatus(member.id, member.guildId),
     getWeeklyStatus(member.id, member.guildId),
     getRank(member.guildId, member.xp),
+    listUnlocked(member.id),
   ]);
-  return buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, notice });
+  return buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, notice });
 }
 
 export async function renderHistory(member: Member) {
@@ -70,6 +73,11 @@ registerProfileButton(PROFILE_REFRESH_ID, async ({ interaction, member, guildMem
   await interaction.update(await renderProfile(member, guildMember));
 });
 
+registerProfileButton(PROFILE_ACHIEVEMENTS_ID, async ({ interaction, member }) => {
+  const [unlocked, settings] = await Promise.all([listUnlocked(member.id), getSettings(member.guildId)]);
+  await interaction.update(buildAchievementsView(member.displayName, unlocked, settings, PROFILE_REFRESH_ID));
+});
+
 registerProfileButton(PROFILE_HISTORY_ID, async ({ interaction, member }) => {
   await interaction.update(await renderHistory(member));
 });
@@ -77,6 +85,7 @@ registerProfileButton(PROFILE_HISTORY_ID, async ({ interaction, member }) => {
 registerProfileButton(PROFILE_DAILY_ID, async ({ interaction, member, guildMember }) => {
   const settings = await getSettings(member.guildId);
   const result = await claimDaily(member.id, member.guildId, interaction.user.id);
+  if (result.ok) trackAchievements(interaction.guild, member.id);
   const notice = result.ok
     ? `🎁 **${formatAmount(result.amount, settings)}** rejoignent ta bourse` +
       (result.bonusPercent > 0 ? ` (série de ${result.streak} jours, +${result.bonusPercent}%)` : '') +

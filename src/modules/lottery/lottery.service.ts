@@ -8,6 +8,7 @@ import type { GuildSettings, Lottery } from '../../generated/prisma/client.js';
 import { credit, debit } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { isFeatureEnabled } from '../features/features.js';
+import { trackAchievements } from '../achievements/achievements.service.js';
 import { buildDrawAnnouncement, buildLotteryMessage } from './lottery.view.js';
 
 const log = createLogger('lottery');
@@ -177,6 +178,7 @@ export async function draw(client: Client, lotteryId: string): Promise<DrawResul
 
   const s = await getSettings(lottery.guildId);
   const guild = client.guilds.cache.get(lottery.guildId);
+  if (guild && winner) trackAchievements(guild, winner.memberId);
   if (guild && s.lotteryChannelId) {
     const channel = resolveLotteryChannel(guild, s.lotteryChannelId);
     if (typeof channel !== 'string') await channel.send(buildDrawAnnouncement(result, total, s)).catch((err) => log.warn('Annonce du tirage impossible', err));

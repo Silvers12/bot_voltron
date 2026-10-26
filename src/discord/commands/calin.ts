@@ -1,5 +1,6 @@
 import { MessageFlags, SlashCommandBuilder, userMention } from 'discord.js';
 import { defineCommand } from '../types.js';
+import { trackAchievements } from '../../modules/achievements/achievements.service.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { hug, InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { formatAmount, getSettings } from '../../modules/settings/settings.service.js';
@@ -33,6 +34,8 @@ export default defineCommand({
         amount,
         reason: message,
       });
+      trackAchievements(interaction.guild, member.id);
+      trackAchievements(interaction.guild, toMember.id);
       const note = message ? `\n> ${message}` : '';
       await interaction.reply({
         content: `🤗 ${userMention(interaction.user.id)} fait un câlin à ${userMention(target.id)} et lui offre **${formatAmount(amount, settings)}** !${note}`,

@@ -3,6 +3,7 @@ import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
 import { roleAssignabilityProblem } from '../../core/roles.js';
 import type { GuildSettings, LevelRole } from '../../generated/prisma/client.js';
+import { trackAchievements } from '../achievements/achievements.service.js';
 import { getSettings } from '../settings/settings.service.js';
 
 const log = createLogger('levels');
@@ -101,6 +102,7 @@ export async function syncLevel(guild: Guild, memberId: string, { announceLevelU
   if (level > member.level) {
     log.info(`${member.discordUserId} passe niveau ${level} sur ${guild.name}`);
     if (announceLevelUp) await announce(guild, s, member.discordUserId, level, tier, tier !== null && tier.id !== previousTier?.id);
+    trackAchievements(guild, memberId);
   }
 }
 

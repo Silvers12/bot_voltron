@@ -1,5 +1,6 @@
 import { MessageFlags, SlashCommandBuilder, type RepliableInteraction } from 'discord.js';
 import { defineCommand } from '../types.js';
+import { trackAchievements } from '../../modules/achievements/achievements.service.js';
 import { registerButton, registerButtonPrefix, type ButtonContext } from '../components.js';
 import { openSession, touchSession } from '../sessions.js';
 import { prisma } from '../../infrastructure/prisma.js';
@@ -26,6 +27,7 @@ function expireHandler(member: Member) {
     const game = await getActiveGame(member.id);
     if (!game) return;
     const view = await settle(game, 'voltron');
+    if (interaction.inCachedGuild()) trackAchievements(interaction.guild, member.id);
     const payload = await render(view, member);
     await interaction.editReply({ ...payload, content: '⏱️ Temps écoulé : Voltron a joué pour toi en restant.' });
   };
@@ -40,7 +42,7 @@ async function play(ctx: { interaction: RepliableInteraction; member: Member }, 
     const payload = await render(view, member);
     if (reply === 'update' && interaction.isButton()) await interaction.update({ ...payload, content: '' });
     else await interaction.reply({ ...payload, flags: MessageFlags.Ephemeral });
-    if (view.finished) return;
+    if (view.finished) { if (interaction.inCachedGuild()) trackAchievements(interaction.guild, member.id); return; }
     await openSession(sessionKey(member.guildId, interaction.user.id), interaction, TURN_TTL_MS, expireHandler(member));
   } catch (err) {
     if (err instanceof InsufficientFundsError) return void (await fail(`Il te faut ${formatAmount(bet, settings)} pour miser, et tu n’as que ${formatAmount(err.balance, settings)}.`));
@@ -54,6 +56,7 @@ async function act(ctx: ButtonContext, action: (m: Member) => Promise<GameView>)
   try {
     const view = await action(member);
     await interaction.update({ ...(await render(view, member)), content: '' });
+    if (view.finished) trackAchievements(interaction.guild, member.id);
     if (!view.finished) touchSession(sessionKey(member.guildId, interaction.user.id), interaction, TURN_TTL_MS);
   } catch (err) {
     if (err instanceof InsufficientFundsError || err instanceof BlackjackError) {

@@ -5,7 +5,7 @@ import { getSettings, updateDisabledFeatures } from '../settings/settings.servic
 export type FeatureKey =
   | 'quotidien' | 'hebdo' | 'calin' | 'boutique' | 'xp'
   | 'compliments' | 'insultes' | 'blackjack' | 'machine' | 'duel'
-  | 'calin_collectif' | 'tombola';
+  | 'calin_collectif' | 'tombola' | 'succes';
 
 export interface FeatureInfo {
   key: FeatureKey;
@@ -27,6 +27,7 @@ export const FEATURES: FeatureInfo[] = [
   { key: 'duel', label: 'Duels', emoji: '⚔️', description: '/duel' },
   { key: 'calin_collectif', label: 'Câlin collectif', emoji: '🫂', description: 'Apparitions automatiques de Voltron' },
   { key: 'tombola', label: 'Tombola', emoji: '🎟️', description: '/tombola, rappels et tirages' },
+  { key: 'succes', label: 'Succès et badges', emoji: '🏅', description: 'Déblocages, annonces et /succes' },
 ];
 
 export const FEATURE_KEYS = FEATURES.map((f) => f.key);
@@ -58,13 +59,13 @@ export async function setFeatureEnabled(guildId: string, key: FeatureKey, enable
 
 const COMMAND_FEATURES: Record<string, FeatureKey> = {
   calin: 'calin', hebdo: 'hebdo', classement: 'xp', compliment: 'compliments', insulte: 'insultes',
-  blackjack: 'blackjack', machine: 'machine', duel: 'duel', tombola: 'tombola',
+  blackjack: 'blackjack', machine: 'machine', duel: 'duel', tombola: 'tombola', succes: 'succes',
 };
 
 /** Préfixes de customId des composants gardés. Les câlins collectifs déjà lancés restent cliquables. */
 const COMPONENT_FEATURES: Array<[prefix: string, key: FeatureKey]> = [
   ['profil:daily', 'quotidien'], ['profil:weekly', 'hebdo'], ['shop:', 'boutique'], ['lb:', 'xp'],
-  ['bj:', 'blackjack'], ['slots:', 'machine'], ['duel:', 'duel'], ['lottery:', 'tombola'],
+  ['bj:', 'blackjack'], ['slots:', 'machine'], ['duel:', 'duel'], ['lottery:', 'tombola'], ['profil:achievements', 'succes'],
 ];
 
 export function featureForCommand(name: string): FeatureKey | undefined {

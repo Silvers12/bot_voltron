@@ -3,6 +3,8 @@ import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
 import { isAllowedGuild } from '../../core/config.js';
 import { isFeatureEnabled, isFeatureEnabledFor } from '../features/features.js';
+import { trackAchievements } from '../achievements/achievements.service.js';
+import { MESSAGE_THRESHOLDS, VOICE_HOUR_THRESHOLDS } from '../achievements/achievements.catalog.js';
 import { getSettings } from '../settings/settings.service.js';
 import { ensureMember } from '../community/member.service.js';
 import { syncLevel } from './levels.service.js';
@@ -42,6 +44,8 @@ export async function handleMessage(message: Message) {
   });
   if (count === 0) await prisma.member.update({ where: { id: member.id }, data: { messageCount: { increment: 1 } } });
   else if (eligible) await syncLevel(message.guild, member.id);
+  const after = await prisma.member.findUnique({ where: { id: member.id }, select: { messageCount: true } });
+  if (after && MESSAGE_THRESHOLDS.includes(after.messageCount)) trackAchievements(message.guild, member.id);
 }
 
 // ---------------------------------------------------------------------------
@@ -82,9 +86,13 @@ export async function creditVoiceTime(memberId: string, guildId: string, until: 
     if (close) await db.voiceSession.delete({ where: { memberId } });
     else await db.voiceSession.update({ where: { memberId }, data: { lastTickAt: until } });
     if (xpGain > 0) log.debug(`+${xpGain} XP vocal pour ${memberId}`);
-    return xpGain;
+    const hoursBefore = member.voiceSeconds / 3600;
+    const hoursAfter = (member.voiceSeconds + elapsed) / 3600;
+    const crossed = VOICE_HOUR_THRESHOLDS.some((h) => hoursBefore < h && hoursAfter >= h);
+    return { xpGain, crossed };
   });
-  if (gained && gained > 0 && guild) await syncLevel(guild, memberId);
+  if (gained && gained.xpGain > 0 && guild) await syncLevel(guild, memberId);
+  if (gained?.crossed && guild) trackAchievements(guild, memberId);
 }
 
 /** Entrée, sortie ou changement de salon vocal. */

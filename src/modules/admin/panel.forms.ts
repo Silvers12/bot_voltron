@@ -185,6 +185,16 @@ export const FORMS: Form[] = [
     },
   },
   {
+    key: 'succes', module: 'succes', title: 'Succès et badges', button: 'Annonces',
+    fields: [
+      { id: 'achievementChannelId', label: 'Salon des annonces (vide = aucune)', help: '#salon ou son nom', type: { kind: 'channel', required: false }, current: (s) => channelOf(s, s.achievementChannelId) },
+    ],
+    async apply({ guild, values }) {
+      await updateSettings(guild.id, values as Partial<GuildSettings>);
+      return 'Salon des annonces de succès enregistré.';
+    },
+  },
+  {
     key: 'tombola_rappels', module: 'tombola', title: 'Tombola : rappels et amorce', button: 'Rappels',
     fields: [
       { id: 'lotteryReminderWeekday', label: 'Jour du rappel (aucun = pas de rappel)', help: 'mercredi, aucun…', type: { kind: 'weekday', allowNone: true }, current: (s) => (s.lotteryReminderWeekday ? DAYS[s.lotteryReminderWeekday] ?? '' : 'aucun') },

@@ -5,6 +5,8 @@ import type { WeeklyStatus } from '../economy/weekly.service.js';
 import { formatAmount } from '../settings/settings.service.js';
 import { progressFor } from '../progression/levels.service.js';
 import { isFeatureEnabled } from '../features/features.js';
+import { badgeLine, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
+import type { MemberAchievement } from '../../generated/prisma/client.js';
 
 export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
@@ -25,12 +27,13 @@ export interface ProfileData {
   daily: DailyStatus;
   weekly: WeeklyStatus;
   rank: number;
+  achievements: MemberAchievement[];
   /** Message ponctuel affiché sous le profil (résultat d'une action) */
   notice?: string;
 }
 
 /** Écran principal du profil : embed + boutons. */
-export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, notice }: ProfileData) {
+export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, notice }: ProfileData) {
   const embed = new EmbedBuilder()
     .setColor(VOLTRON_COLOR)
     .setAuthor({ name: `Profil de ${member.displayName}`, iconURL: guildMember.displayAvatarURL({ size: 128 }) })
@@ -45,6 +48,7 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
       },
       { name: 'Profil créé', value: time(member.createdAt, TimestampStyles.RelativeTime), inline: true },
       ...rewardFields(daily, weekly, settings),
+      ...(isFeatureEnabled(settings, 'succes') ? [{ name: 'Badges', value: badgeLine(achievements), inline: false }] : []),
     )
     .setFooter({ text: FOOTER });
   if (notice) embed.setDescription(notice);
@@ -75,14 +79,17 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
   );
   const components = [row];
+  const row2 = new ActionRowBuilder<ButtonBuilder>();
   if (isFeatureEnabled(settings, 'boutique')) {
-    components.push(
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
-        new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
-      ),
+    row2.addComponents(
+      new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
+      new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
     );
   }
+  if (isFeatureEnabled(settings, 'succes')) {
+    row2.addComponents(new ButtonBuilder().setCustomId(PROFILE_ACHIEVEMENTS_ID).setLabel('Succès').setStyle(ButtonStyle.Primary).setEmoji('🏅'));
+  }
+  if (row2.components.length) components.push(row2);
 
   return { embeds: [embed], components };
 }
@@ -145,6 +152,7 @@ function describeTransaction(t: Transaction): string {
     case 'HUG_RECEIVED': return `🤗 câlin de ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'ADMIN_CREDIT': return '🛡️ offert par l’intendance';
     case 'ADMIN_DEBIT': return '🛡️ retiré par l’intendance';
+    case 'ACHIEVEMENT': return '🏅 succès débloqué';
   }
 }
 

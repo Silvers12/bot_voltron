@@ -162,6 +162,14 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Résolution par jets de d20 commentés (textes dans `content/duels.json`), relance en cas d'égalité. Un défi sans réponse expire après 2 min et rembourse ; les défis en attente survivent à un redémarrage.
 - Un seul défi en attente par défieur. Mises bornées par `/admin duel min max` (10 à 5 000 par défaut).
 
+## Succès et badges
+
+- Catalogue de 30 succès en code (`src/modules/achievements/achievements.catalog.ts`), en quatre catégories : Compagnie (messages, vocal, niveaux), Économie (séries, câlins, bourse, achats), Jeux (blackjack, machine, duels, câlin collectif, tombola), Collection (méta : 10 succès, tous les succès). Trois paliers avec récompense : bronze 100, argent 300, or 1 000 cœurs (transaction `ACHIEVEMENT`).
+- Déblocage automatique après chaque action notable (récompense du jour, câlin, fin de partie, tour de machine, duel, clôture d'un câlin collectif, tirage, achat, montée de niveau, paliers de messages et d'heures de vocal). Les conditions sont recalculées à partir de la base, donc rétroactives : `/admin succes recalculer` attribue d'un coup ce qui est déjà mérité, sans annonce.
+- Annonce dans un salon configurable (panneau, module Succès, formulaire Annonces) ; sans salon, déblocage silencieux.
+- Profil : ligne « Badges » avec les emojis et bouton **Succès** (débloqués avec date, verrouillés avec l'indice et la récompense). `/succes [membre]` affiche publiquement les badges d'un membre (les indices ne sont montrés que pour soi).
+- `/admin succes liste` : catalogue avec le nombre de membres par succès. Interrupteur « Succès et badges » dans le panneau.
+
 ## Panneau d'intendance et interrupteurs
 
 - `/admin panneau` : écran de contrôle privé (se ferme après 5 min d'inactivité). Accueil : membres, bourses, monnaie en circulation, cagnotte de la machine, tombola en cours, prochain câlin collectif, parties et duels en attente, état de chaque fonctionnalité.
@@ -191,6 +199,7 @@ Membres :
 - `/machine` : machine à sous publique à cagnotte progressive, prix fixe.
 - `/duel membre mise` : duel entre membres (public).
 - `/tombola` : tombola hebdomadaire (public).
+- `/succes [membre]` : badges d'un membre (public).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
@@ -199,5 +208,6 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin calin ajouter-salon|retirer-salon|regler|lancer|etat`
 - `/admin niveaux ajouter-role|retirer-role|salon|courbe|recalculer|lister`
 - `/admin tombola salon|regler|publier|tirer|etat`
+- `/admin succes recalculer|liste`
 - `/admin panneau`, `/admin fonction`
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant` · `/admin duel min max`

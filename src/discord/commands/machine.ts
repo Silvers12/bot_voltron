@@ -7,6 +7,7 @@ import type { GuildSettings } from '../../generated/prisma/client.js';
 import { InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { formatAmount, getSettings } from '../../modules/settings/settings.service.js';
 import { getJackpot, playSlots, type SpinResult } from '../../modules/casino/slots.service.js';
+import { trackAchievements } from '../../modules/achievements/achievements.service.js';
 
 const SPIN_ID = 'slots:spin';
 
@@ -73,6 +74,7 @@ async function spin(interaction: ButtonInteraction<'cached'>, memberId: string) 
       throw err;
     }
 
+    trackAchievements(interaction.guild, member.id);
     // Animation publique : cagnotte d'avant le tour pendant que les rouleaux tournent, puis résultat.
     const poolBefore = result.kind === 'jackpot' ? result.payout - result.bet : result.pool - result.bet + result.payout;
     const reels = ['❔', '❔', '❔'];

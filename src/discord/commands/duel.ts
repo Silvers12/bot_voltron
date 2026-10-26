@@ -10,6 +10,7 @@ import {
 import { buildChallengeMessage, buildClosedMessage, buildResolvedMessage, DUEL_ACCEPT_PREFIX, DUEL_CANCEL_PREFIX, DUEL_DECLINE_PREFIX } from '../../modules/duel/duel.view.js';
 
 const log = createLogger('duel');
+import { trackAchievements } from '../../modules/achievements/achievements.service.js';
 const expiryTimers = new Map<string, NodeJS.Timeout>();
 
 async function editDuelMessage(client: Client, duel: DuelWithMembers, payload: Parameters<import('discord.js').Message['edit']>[0]) {
@@ -54,6 +55,8 @@ registerButtonPrefix(DUEL_ACCEPT_PREFIX, (ctx) => withDuel(ctx, async (duel) => 
     const result = await acceptDuel(duel, { id: member.id, discordUserId: interaction.user.id });
     if (!result) return void (await interaction.reply({ content: 'Trop tard, ce défi n’est plus valable.', flags: MessageFlags.Ephemeral }));
     disarm(duel.id);
+    trackAchievements(interaction.guild, duel.challengerId);
+    trackAchievements(interaction.guild, duel.opponentId);
     await interaction.update(buildResolvedMessage(result, s));
   } catch (err) {
     if (err instanceof InsufficientFundsError) {
