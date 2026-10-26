@@ -39,6 +39,7 @@ export async function handleCountingMessage(message: Message) {
   if (!s.countingChannelId || message.channelId !== s.countingChannelId || !isFeatureEnabled(s, 'comptage')) return;
 
   const parsed = evaluateExpression(message.content);
+  if (isSelf && parsed === null) return; // ses propres messages de jeu (❌, pile ou face) ne sont pas des tentatives
 
   const member = isSelf ? null : await ensureMember(message.member!);
   const counterId = member ? member.id : SELF_ID;
