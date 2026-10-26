@@ -79,6 +79,8 @@ model GuildSettings {
   blackjackMaxBet  Int      @default(2000)
   /// Prix fixe d'un tour de machine à sous
   slotBet          Int      @default(50)
+  /// Part de la cagnotte remportée par un triple autre que les loutres (en %)
+  slotTriplePercent Int     @default(50)
   /// Montant de départ de la cagnotte après un jackpot
   slotJackpotSeed  Int      @default(1000)
   /// Câlin collectif : salons d'apparition, tirés au hasard (vide = désactivé)

@@ -6,24 +6,24 @@ import { prisma } from '../../infrastructure/prisma.js';
 import type { GuildSettings, Member } from '../../generated/prisma/client.js';
 import { getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { formatAmount, getSettings } from '../../modules/settings/settings.service.js';
-import { getJackpot, playSlots, SlotsError, type SpinResult } from '../../modules/casino/slots.service.js';
+import { getJackpot, playSlots, type SpinResult } from '../../modules/casino/slots.service.js';
 
 const SPIN_ID = 'slots:spin';
 
 function frame(reels: string[], bet: number, s: GuildSettings, pool: number, result?: SpinResult, idle?: { balance: number }) {
   const net = result ? result.payout - result.bet : 0;
   const embed = new EmbedBuilder()
-    .setColor(!result ? 0x2e86c1 : result.jackpotWon > 0 || result.multiplier >= 30 ? 0xf1c40f : result.payout > result.bet ? 0x2ecc71 : result.payout === result.bet ? 0x95a5a6 : 0xe74c3c)
+    .setColor(!result ? 0x2e86c1 : result.kind === 'jackpot' ? 0xf1c40f : result.kind === 'triple' ? 0x2ecc71 : 0xe74c3c)
     .setTitle('🎰 La machine de Voltron')
     .setDescription(`# ${reels.join(' │ ')}`)
     .addFields({ name: 'Mise', value: formatAmount(bet, s), inline: true }, { name: '🦦🦦🦦 Cagnotte', value: `**${formatAmount(pool, s)}**`, inline: true });
   if (result) {
     embed.addFields(
-      { name: 'Résultat', value: result.jackpotWon > 0 ? `${result.label} Tu rafles la cagnotte : **${formatAmount(result.jackpotWon, s)}** !` : `${result.label}${result.multiplier > 0 ? ` **×${result.multiplier}**` : ''}` },
+      { name: 'Résultat', value: result.kind === 'jackpot' ? `${result.label} Tu rafles toute la cagnotte : **${formatAmount(result.payout, s)}** !` : result.kind === 'triple' ? `${result.label} Tu emportes ${s.slotTriplePercent} % de la cagnotte : **${formatAmount(result.payout, s)}** !` : result.label },
       { name: 'Bilan', value: `**${net >= 0 ? '+' : ''}${formatAmount(net, s)}** · bourse : ${formatAmount(result.balanceAfter, s)}` },
     );
   } else if (idle) {
-    embed.addFields({ name: 'Ta bourse', value: formatAmount(idle.balance, s) }).setFooter({ text: 'Appuie sur Lancer pour faire tourner les rouleaux. Trois loutres raflent la cagnotte !' });
+    embed.addFields({ name: 'Ta bourse', value: formatAmount(idle.balance, s) }).setFooter({ text: 'Trois symboles identiques gagnent. Trois loutres raflent toute la cagnotte !' });
   } else {
     embed.setFooter({ text: 'Les rouleaux tournent…' });
   }
@@ -47,14 +47,13 @@ async function play(interaction: RepliableInteraction, member: Member) {
     result = await playSlots(member);
   } catch (err) {
     if (err instanceof InsufficientFundsError) return void (await fail(`Un tour coûte ${formatAmount(bet, s)}, et tu n’as que ${formatAmount(err.balance, s)}.`));
-    if (err instanceof SlotsError) return void (await fail(err.message));
     throw err;
   }
 
   // Petite animation : rouleaux masqués, puis révélés un par un.
   const spinning = ['❔', '❔', '❔'];
   // Pendant l'animation, on affiche la cagnotte d'avant le tour pour ne pas trahir le résultat.
-  const poolBefore = result.jackpotWon > 0 ? result.jackpotWon - result.bet : result.pool - result.bet + result.payout;
+  const poolBefore = result.kind === 'jackpot' ? result.payout - result.bet : result.pool - result.bet + result.payout;
   if (interaction.isButton()) await interaction.update(frame(spinning, bet, s, poolBefore));
   else await interaction.reply({ ...frame(spinning, bet, s, poolBefore), flags: MessageFlags.Ephemeral });
   for (let i = 0; i < 3; i++) {
@@ -63,9 +62,9 @@ async function play(interaction: RepliableInteraction, member: Member) {
     await interaction.editReply(frame(spinning, bet, s, i === 2 ? result.pool : poolBefore, i === 2 ? result : undefined));
   }
 
-  if (result.jackpotWon > 0 && interaction.channel?.isSendable()) {
+  if (result.kind === 'jackpot' && interaction.channel?.isSendable()) {
     await interaction.channel.send({
-      content: `🎰🦦 **JACKPOT !** ${userMention(interaction.user.id)} aligne trois loutres et rafle la cagnotte : **${formatAmount(result.jackpotWon, s)}** ! Par mon bouclier et mes moustaches ! La cagnotte repart à ${formatAmount(result.pool, s)}.`,
+      content: `🎰🦦 **JACKPOT !** ${userMention(interaction.user.id)} aligne trois loutres et rafle la cagnotte : **${formatAmount(result.payout, s)}** ! Par mon bouclier et mes moustaches ! La cagnotte repart à ${formatAmount(result.pool, s)}.`,
       allowedMentions: { users: [interaction.user.id] },
     }).catch(() => {});
   }

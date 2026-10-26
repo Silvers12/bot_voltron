@@ -94,6 +94,7 @@ export default defineCommand({
         .setName('machine')
         .setDescription('Règle la machine à sous (sans option : affiche)')
         .addIntegerOption((o) => o.setName('prix').setDescription('Prix fixe d’un tour').setMinValue(1).setMaxValue(100000))
+        .addIntegerOption((o) => o.setName('part_triple').setDescription('% de la cagnotte gagné par un triple autre que les loutres').setMinValue(1).setMaxValue(100))
         .addIntegerOption((o) => o.setName('cagnotte_depart').setDescription('Cagnotte de départ après un jackpot').setMinValue(0).setMaxValue(1000000)),
     )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
@@ -180,13 +181,15 @@ export default defineCommand({
       const changes = {
         slotBet: interaction.options.getInteger('prix') ?? undefined,
         slotJackpotSeed: interaction.options.getInteger('cagnotte_depart') ?? undefined,
+        slotTriplePercent: interaction.options.getInteger('part_triple') ?? undefined,
       };
       const updated = Object.values(changes).some((v) => v !== undefined) ? await updateSlotLimits(interaction.guildId, changes) : settings;
       const jackpot = await getJackpot(interaction.guildId);
       await reply(
         [
           `**Prix du tour :** ${formatAmount(updated.slotBet, updated)}`,
-          `**Cagnotte :** ${formatAmount(jackpot.pool, updated)} actuellement (toutes les mises y entrent, tous les gains en sortent) · repart à ${formatAmount(updated.slotJackpotSeed, updated)}`,
+          `**Cagnotte :** ${formatAmount(jackpot.pool, updated)} actuellement · repart à ${formatAmount(updated.slotJackpotSeed, updated)} après un jackpot`,
+          `**Gains :** trois loutres = toute la cagnotte · trois autres identiques = ${updated.slotTriplePercent} % de la cagnotte`,
           jackpot.lastWinnerDiscordId ? `**Dernier jackpot :** ${formatAmount(jackpot.lastWonAmount ?? 0, updated)} par <@${jackpot.lastWinnerDiscordId}>` : '',
         ].filter(Boolean).join('\n'),
       );
