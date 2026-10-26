@@ -6,8 +6,8 @@ import { config } from '../../core/config.js';
 import { nextLocalWeekdayTime } from '../../core/time.js';
 import type { GuildSettings, Lottery } from '../../generated/prisma/client.js';
 import { credit, debit } from '../economy/economy.service.js';
-import { getSettings } from '../settings/settings.service.js';
-import { buildDrawAnnouncement } from './lottery.view.js';
+import { formatAmount, getSettings } from '../settings/settings.service.js';
+import { buildDrawAnnouncement, buildLotteryMessage } from './lottery.view.js';
 
 const log = createLogger('lottery');
 
@@ -28,6 +28,69 @@ export function resolveLotteryChannel(guild: Guild, channelId: string): GuildTex
 
 export function nextDrawDate(s: GuildSettings, from = new Date()): Date {
   return nextLocalWeekdayTime(from, s.timezone, s.lotteryDrawWeekday, s.lotteryDrawHour);
+}
+
+/** Date du rappel de milieu de semaine pour ce tirage, ou null s'il n'y en a pas (désactivé ou après le tirage). */
+export function reminderDate(lottery: Pick<Lottery, 'createdAt' | 'drawAt'>, s: GuildSettings): Date | null {
+  if (s.lotteryReminderWeekday < 1) return null;
+  const d = nextLocalWeekdayTime(lottery.createdAt, s.timezone, s.lotteryReminderWeekday, s.lotteryReminderHour);
+  return d.getTime() < lottery.drawAt.getTime() ? d : null;
+}
+
+/** Date du dernier rappel (X heures avant le tirage), ou null. */
+export function lastCallDate(lottery: Pick<Lottery, 'createdAt' | 'drawAt'>, s: GuildSettings): Date | null {
+  if (s.lotteryLastCallHours < 1) return null;
+  const d = new Date(lottery.drawAt.getTime() - s.lotteryLastCallHours * 3_600_000);
+  return d.getTime() > lottery.createdAt.getTime() ? d : null;
+}
+
+/**
+ * Publie le tirage dans le salon configuré : nouveau message avec les boutons, épinglé.
+ * L'ancien message est désépinglé et perd ses boutons. Retourne le tirage mis à jour, ou null si la publication est impossible.
+ */
+export async function publishLottery(client: Client, lottery: Lottery, intro: string): Promise<Lottery | null> {
+  const s = await getSettings(lottery.guildId);
+  const guild = client.guilds.cache.get(lottery.guildId);
+  if (!guild || !s.lotteryChannelId) return null;
+  const channel = resolveLotteryChannel(guild, s.lotteryChannelId);
+  if (typeof channel === 'string') { log.warn(`Publication de la tombola impossible sur ${guild.name} : ${channel}`); return null; }
+
+  const fresh = await prisma.lottery.findUniqueOrThrow({ where: { id: lottery.id } });
+  const message = await channel.send({ content: intro, ...buildLotteryMessage(fresh, s) }).catch((err) => { log.warn('Publication de la tombola impossible', err); return null; });
+  if (!message) return null;
+
+  const canPin = channel.permissionsFor(guild.members.me!).has(PermissionFlagsBits.ManageMessages);
+  if (canPin) {
+    await retireMessage(client, fresh, { unpin: true });
+    await message.pin().catch((err) => log.warn('Épinglage impossible', err));
+  } else {
+    await retireMessage(client, fresh, { unpin: false });
+  }
+  return prisma.lottery.update({ where: { id: fresh.id }, data: { channelId: channel.id, messageId: message.id } });
+}
+
+/** Retire les boutons (et l'épingle) du message précédent d'un tirage. */
+async function retireMessage(client: Client, lottery: Pick<Lottery, 'channelId' | 'messageId'>, { unpin }: { unpin: boolean }) {
+  const old = await fetchLotteryMessage(client, lottery);
+  if (!old) return;
+  if (unpin && old.pinned) await old.unpin().catch(() => undefined);
+  await old.edit({ components: [] }).catch(() => undefined);
+}
+
+async function fetchLotteryMessage(client: Client, lottery: Pick<Lottery, 'channelId' | 'messageId'>) {
+  if (!lottery.channelId || !lottery.messageId) return null;
+  const channel = client.channels.cache.get(lottery.channelId);
+  if (!channel || !channel.isTextBased()) return null;
+  return channel.messages.fetch({ message: lottery.messageId }).catch(() => null);
+}
+
+/** Met à jour la cagnotte sur le message épinglé (après un achat depuis un autre message). */
+export async function refreshPublishedMessage(client: Client, lottery: Lottery, exceptMessageId?: string) {
+  if (!lottery.messageId || lottery.messageId === exceptMessageId) return;
+  const msg = await fetchLotteryMessage(client, lottery);
+  if (!msg) return;
+  const s = await getSettings(lottery.guildId);
+  await msg.edit(buildLotteryMessage(lottery, s)).catch(() => undefined);
 }
 
 /** Tirage ouvert du serveur, créé si besoin (avec amorce et report éventuel). */
@@ -116,8 +179,17 @@ export async function draw(client: Client, lotteryId: string): Promise<DrawResul
   if (guild && s.lotteryChannelId) {
     const channel = resolveLotteryChannel(guild, s.lotteryChannelId);
     if (typeof channel !== 'string') await channel.send(buildDrawAnnouncement(result, total, s)).catch((err) => log.warn('Annonce du tirage impossible', err));
+    await retireMessage(client, lottery, { unpin: true });
+    const published = await publishLottery(client, next, nextIntro(next, carryOver, s));
+    if (published) result.next = published;
   }
   return result;
+}
+
+function nextIntro(next: Lottery, carryOver: number, s: GuildSettings): string {
+  if (carryOver > 0) return `🎟️ **Nouvelle tombola !** La cagnotte repart avec les ${formatAmount(carryOver, s)} reportés. Tentez votre chance !`;
+  if (next.pot > 0) return `🎟️ **Nouvelle tombola !** La banque amorce la cagnotte avec ${formatAmount(next.pot, s)}. Tentez votre chance !`;
+  return '🎟️ **Nouvelle tombola !** La cagnotte est vide, à vous de la remplir. Tentez votre chance !';
 }
 
 /** Pointage : ouvre un tirage si nécessaire et tire ceux dont l'heure est passée. */
@@ -126,8 +198,26 @@ export async function tickLottery(client: Client) {
     const s = await getSettings(guildId);
     if (!s.lotteryChannelId) continue;
     const open = await getOrCreateOpenLottery(guildId);
-    if (open.drawAt.getTime() <= Date.now()) {
+    const now = Date.now();
+    if (open.drawAt.getTime() <= now) {
       await draw(client, open.id).catch((err) => log.error(`Tirage ${open.id} échoué`, err));
+      continue;
     }
+    await sendReminders(client, open, s, now);
+  }
+}
+
+/** Envoie le rappel de milieu de semaine puis le dernier rappel, une seule fois chacun (verrou par updateMany). */
+async function sendReminders(client: Client, open: Lottery, s: GuildSettings, now: number) {
+  const reminder = reminderDate(open, s);
+  if (reminder && !open.reminderSentAt && reminder.getTime() <= now) {
+    const { count } = await prisma.lottery.updateMany({ where: { id: open.id, reminderSentAt: null, state: 'OPEN' }, data: { reminderSentAt: new Date() } });
+    if (count) await publishLottery(client, open, `🎟️ **Rappel de Voltron !** Le tirage approche et la cagnotte grossit. Qui veut ses tickets ?`);
+    return;
+  }
+  const lastCall = lastCallDate(open, s);
+  if (lastCall && !open.lastCallSentAt && lastCall.getTime() <= now) {
+    const { count } = await prisma.lottery.updateMany({ where: { id: open.id, lastCallSentAt: null, state: 'OPEN' }, data: { lastCallSentAt: new Date() } });
+    if (count) await publishLottery(client, open, `🎟️ **Derniers tickets !** Voltron sort le chapeau dans ${s.lotteryLastCallHours} h. Après, c'est trop tard !`);
   }
 }

@@ -3,7 +3,7 @@ import { defineCommand } from '../types.js';
 import { registerButtonPrefix } from '../components.js';
 import { InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { formatAmount, getSettings } from '../../modules/settings/settings.service.js';
-import { buyTickets, getEntry, getOrCreateOpenLottery, LotteryError } from '../../modules/lottery/lottery.service.js';
+import { buyTickets, getEntry, getOrCreateOpenLottery, LotteryError, refreshPublishedMessage } from '../../modules/lottery/lottery.service.js';
 import { buildLotteryMessage, LOTTERY_BUY_PREFIX } from '../../modules/lottery/lottery.view.js';
 
 // Message public : chacun achète ses tickets avec sa bourse ; la confirmation est privée.
@@ -13,6 +13,7 @@ registerButtonPrefix(LOTTERY_BUY_PREFIX, async ({ interaction, member, arg }) =>
   try {
     const r = await buyTickets(member, count);
     await interaction.update(buildLotteryMessage(r.lottery, s));
+    await refreshPublishedMessage(interaction.client, r.lottery, interaction.message.id);
     await interaction.followUp({
       content: `🎟️ ${r.bought} ticket${r.bought > 1 ? 's' : ''} en poche ! Tu en as ${r.owned} pour ce tirage. Il te reste ${formatAmount(r.balanceAfter, s)}.`,
       flags: MessageFlags.Ephemeral,

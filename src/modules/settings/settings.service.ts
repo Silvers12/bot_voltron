@@ -104,7 +104,7 @@ export async function updateDuelLimits(guildId: string, duelMinStake: number, du
 
 export async function updateLotterySettings(
   guildId: string,
-  changes: Partial<Pick<GuildSettings, 'lotteryChannelId' | 'lotteryTicketPrice' | 'lotteryMaxTickets' | 'lotteryDrawWeekday' | 'lotteryDrawHour' | 'lotterySeed'>>,
+  changes: Partial<Pick<GuildSettings, 'lotteryChannelId' | 'lotteryTicketPrice' | 'lotteryMaxTickets' | 'lotteryDrawWeekday' | 'lotteryDrawHour' | 'lotterySeed' | 'lotteryReminderWeekday' | 'lotteryReminderHour' | 'lotteryLastCallHours'>>,
 ): Promise<GuildSettings> {
   const settings = await prisma.guildSettings.upsert({ where: { guildId }, create: { guildId, ...changes }, update: changes });
   cache.set(guildId, settings);

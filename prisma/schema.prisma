@@ -95,6 +95,11 @@ model GuildSettings {
   lotteryDrawHour  Int      @default(20)
   /// Amorce ajoutée par la banque à chaque nouveau tirage
   lotterySeed      Int      @default(0)
+  /// Rappel de milieu de semaine : jour ISO (0 = aucun) et heure locale
+  lotteryReminderWeekday Int @default(3)
+  lotteryReminderHour Int    @default(18)
+  /// Dernier rappel, en heures avant le tirage (0 = aucun)
+  lotteryLastCallHours Int   @default(2)
   /// Part de la cagnotte remportée par un triple autre que les loutres (en %)
   slotTriplePercent Int     @default(50)
   /// Montant de départ de la cagnotte après un jackpot
@@ -384,6 +389,11 @@ model Lottery {
   totalTickets  Int          @default(0)
   drawnAt       DateTime?
   createdAt     DateTime     @default(now())
+  /// Dernier message publié (épinglé) pour ce tirage
+  channelId     String?
+  messageId     String?
+  reminderSentAt DateTime?
+  lastCallSentAt DateTime?
   entries       LotteryEntry[]
 
   @@index([guildId, state])

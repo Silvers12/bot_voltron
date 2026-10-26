@@ -166,7 +166,9 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 - `/tombola` : message public avec cagnotte, prix du ticket, tickets vendus, date du tirage, boutons « 1 ticket » / « 5 tickets ». Chacun paie avec sa bourse, confirmation privée. Maximum de tickets par membre réglable (10 par défaut).
 - Tirage automatique chaque semaine (dimanche 20 h par défaut, fuseau du serveur), pondéré par le nombre de tickets, annoncé dans le salon configuré. Le gagnant rafle toute la cagnotte ; sans ticket, elle est reportée. Modèle fermé, amorce optionnelle de la banque.
-- `/admin tombola salon #x` active ; `regler prix max_tickets jour heure amorce`, `tirer`, `etat`.
+- Publication automatique : à l'activation et après chaque tirage, Voltron poste la tombola (boutons inclus) dans le salon configuré et l'épingle (permission « Gérer les messages » nécessaire ; sinon simple message). L'ancien message est désépinglé et perd ses boutons.
+- Rappels : mercredi 18 h (`rappel_jour`, `rappel_heure`, 0 = aucun) et dernier rappel 2 h avant le tirage (`dernier_rappel` en heures, 0 = aucun). Chaque rappel republie la cagnotte à jour avec les boutons et devient le message épinglé. Un achat depuis n'importe quel message met aussi à jour le message épinglé.
+- `/admin tombola salon #x` active ; `regler prix max_tickets jour heure amorce rappel_jour rappel_heure dernier_rappel`, `publier` (republie et épingle), `tirer`, `etat`.
 
 ## Commandes
 
@@ -187,5 +189,5 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin boutique ajouter|modifier|retirer|remettre|lister` (autocomplétion des noms d'articles)
 - `/admin calin ajouter-salon|retirer-salon|regler|lancer|etat`
 - `/admin niveaux ajouter-role|retirer-role|salon|courbe|recalculer|lister`
-- `/admin tombola salon|regler|tirer|etat`
+- `/admin tombola salon|regler|publier|tirer|etat`
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant` · `/admin duel min max`
