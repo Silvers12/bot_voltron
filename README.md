@@ -166,8 +166,8 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 - Nécessite l'intent privilégié **Message Content** (portail Discord → Bot → Privileged Gateway Intents). Le contenu n'est lu que dans le salon de comptage.
 - `/admin comptage salon salon:#compter` active ; `amende`, `reinitialiser`, `etat`. Aussi dans le panneau (module Salon de comptage).
-- Règle : chacun poste le nombre suivant (1, 2, 3…) ou une expression simple qui y mène (`2+2`, `6-1`, `(1+2)*3`, `2^3`). Bonne réponse : ✅. Les messages qui ne sont pas une expression sont ignorés (on peut discuter).
-- Erreur (mauvais nombre, résultat non entier, ou deux fois de suite par le même membre) : ❌, amende de 1 000 cœurs (plafonnée à la bourse), puis pile ou face annoncé par Voltron : on continue au dernier nombre valide, ou on repart à 1.
+- Règle : chacun poste le nombre suivant (1, 2, 3…) ou une expression simple qui y mène (`2+2`, `6-1`, `(1+2)*3`, `2^3`). Bonne réponse : ✅. Le salon ne sert qu'à compter : tout autre message est une erreur.
+- Erreur (mauvais nombre, texte, résultat non entier, ou deux fois de suite par le même membre) : ❌, amende de 1 000 cœurs (plafonnée à la bourse), puis pile ou face annoncé par Voltron : on continue au dernier nombre valide, ou on repart à 1.
 - Deux réponses simultanées : la première est acceptée, la seconde est évaluée contre le nouveau nombre.
 - Record et nombre d'erreurs conservés (`/admin comptage etat`).
 

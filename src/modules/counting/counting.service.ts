@@ -25,8 +25,8 @@ export async function resetCounting(guildId: string): Promise<Counting> {
 }
 
 /**
- * Traite un message du salon de comptage. Les messages qui ne sont pas une expression sont ignorés
- * (on peut discuter dans le salon). Une bonne réponse avance le compteur de façon atomique :
+ * Traite un message du salon de comptage. Tout message qui n'est pas le bon nombre (texte compris)
+ * est une erreur : le salon ne sert qu'à compter. Une bonne réponse avance le compteur de façon atomique :
  * si deux membres répondent en même temps, le second est évalué contre le nouveau nombre.
  */
 export async function handleCountingMessage(message: Message) {
@@ -35,16 +35,16 @@ export async function handleCountingMessage(message: Message) {
   if (!s.countingChannelId || message.channelId !== s.countingChannelId || !isFeatureEnabled(s, 'comptage')) return;
 
   const parsed = evaluateExpression(message.content);
-  if (parsed === null) return;
 
   const member = await ensureMember(message.member);
   const state = await getCounting(message.guildId);
   const expected = state.current + 1;
 
   let failure: string | null = null;
-  if (parsed.kind === 'not_integer') failure = 'ce n’est pas un nombre entier';
+  if (parsed === null) failure = 'ici on ne fait que compter';
+  else if (parsed.kind === 'not_integer') failure = 'ce n’est pas un nombre entier';
   else if (state.lastMemberId === member.id) failure = 'on ne compte pas deux fois de suite';
-  else if (parsed.value !== expected) failure = `il fallait **${expected}**`;
+  else if (parsed!.kind === 'integer' && parsed.value !== expected) failure = `il fallait **${expected}**`;
 
   if (!failure) {
     const { count } = await prisma.counting.updateMany({ where: { guildId: message.guildId, current: state.current }, data: { current: expected, lastMemberId: member.id, best: Math.max(state.best, expected) } });
