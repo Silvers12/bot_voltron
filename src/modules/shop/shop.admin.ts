@@ -22,7 +22,7 @@ export function buildShopAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
         .addBooleanOption((o) => o.setName('titre').setDescription('Article de type titre : le nom est affiché sur le profil de l’acheteur'))
         .addIntegerOption((o) => o.setName('stock').setDescription('Stock initial (vide = illimité)').setMinValue(0))
         .addIntegerOption((o) => o.setName('max_par_membre').setDescription('Exemplaires max par membre (vide = illimité)').setMinValue(1))
-        .addIntegerOption((o) => o.setName('ordre').setDescription('Ordre d’affichage (petit = en haut)')),
+        .addIntegerOption((o) => o.setName('ordre').setDescription('Départage entre articles au même prix (petit = en haut)')),
     )
     .addSubcommand((sub) =>
       sub
@@ -35,7 +35,7 @@ export function buildShopAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
         .addStringOption((o) => o.setName('emoji').setDescription('Nouvel emoji').setMaxLength(20))
         .addIntegerOption((o) => o.setName('stock').setDescription('Nouveau stock (-1 = illimité)').setMinValue(-1))
         .addIntegerOption((o) => o.setName('max_par_membre').setDescription('Nouvelle limite (-1 = illimitée)').setMinValue(-1))
-        .addIntegerOption((o) => o.setName('ordre').setDescription('Ordre d’affichage')),
+        .addIntegerOption((o) => o.setName('ordre').setDescription('Départage entre articles au même prix')),
     )
     .addSubcommand((sub) =>
       sub

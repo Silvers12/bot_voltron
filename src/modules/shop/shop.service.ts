@@ -28,7 +28,7 @@ export interface ItemInput {
 export function listItems(guildId: string, { includeInactive = false } = {}): Promise<ShopItem[]> {
   return prisma.shopItem.findMany({
     where: { guildId, ...(includeInactive ? {} : { active: true }) },
-    orderBy: [{ sortOrder: 'asc' }, { price: 'asc' }, { name: 'asc' }],
+    orderBy: [{ price: 'asc' }, { sortOrder: 'asc' }, { name: 'asc' }],
   });
 }
 

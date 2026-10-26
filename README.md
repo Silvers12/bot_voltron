@@ -120,7 +120,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 - Articles gérés par les admins : nom, description, emoji, prix, stock (optionnel), limite par membre (optionnelle).
 - Deux types : **collection** (simplement possédé) et **rôle** (attribue un rôle Discord à l'achat ; le bot doit avoir « Gérer les rôles » et être placé au-dessus du rôle vendu). Si Discord refuse l'attribution, l'achat est remboursé automatiquement.
-- Achat depuis `/profil` → Boutique → choix dans le menu → fiche → bouton Acheter. Débit, stock, limite et inventaire sont mis à jour dans une seule transaction.
+- Achat depuis `/profil` → Boutique → bouton d’achat de l’article. Débit, stock, limite et inventaire sont mis à jour dans une seule transaction.
 - Un article retiré reste en base : les exemplaires achetés restent visibles dans les inventaires.
 
 ## Expérience (XP)
@@ -195,7 +195,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Catalogue de boutique de départ
 
 - `content/boutique.json` : 28 articles au ton absurde (chaussette sale à 5 cœurs jusqu'à la couronne de la rivière à 100 000), objets de collection et titres, stocks limités pour les plus chers. Modifiable à la main.
-- Boutique en liste : chaque article sur une ligne (nom, description, stock, exemplaires possédés) avec son bouton d'achat à droite, prix dans le bouton (désactivé si épuisé, limite atteinte ou bourse insuffisante). Pages de 10 (Précédent/Suivant) ; après un achat, on reste sur la page de l'article.
+- Boutique en liste, triée par prix croissant (l’option `ordre` ne départage que les articles au même prix) : chaque article sur une ligne (nom, description, stock, exemplaires possédés) avec son bouton d'achat à droite, prix dans le bouton (désactivé si épuisé, limite atteinte ou bourse insuffisante). Pages de 10 (Précédent/Suivant) ; après un achat, on reste sur la page de l'article.
 - `/admin boutique importer` charge le fichier sur le serveur : les articles déjà présents (même nom) ne sont pas touchés, donc relançable après avoir ajouté des lignes.
 
 ## Titres
