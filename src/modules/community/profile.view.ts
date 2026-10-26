@@ -4,6 +4,7 @@ import type { DailyStatus } from '../economy/daily.service.js';
 import type { WeeklyStatus } from '../economy/weekly.service.js';
 import { formatAmount } from '../settings/settings.service.js';
 import { progressFor } from '../progression/levels.service.js';
+import { isFeatureEnabled } from '../features/features.js';
 
 export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
@@ -43,6 +44,53 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
         inline: true,
       },
       { name: 'Profil créé', value: time(member.createdAt, TimestampStyles.RelativeTime), inline: true },
+      ...rewardFields(daily, weekly, settings),
+    )
+    .setFooter({ text: FOOTER });
+  if (notice) embed.setDescription(notice);
+
+  const row = new ActionRowBuilder<ButtonBuilder>();
+  if (isFeatureEnabled(settings, 'quotidien')) {
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(PROFILE_DAILY_ID)
+        .setLabel(daily.claimedToday ? 'Récompense récupérée' : 'Récupérer ma récompense')
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('🎁')
+        .setDisabled(daily.claimedToday),
+    );
+  }
+  if (isFeatureEnabled(settings, 'hebdo')) {
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(PROFILE_WEEKLY_ID)
+        .setLabel(weekly.claimedThisWeek ? 'Hebdo récupérée' : 'Récupérer l’hebdo')
+        .setStyle(ButtonStyle.Success)
+        .setEmoji('🗓️')
+        .setDisabled(weekly.claimedThisWeek),
+    );
+  }
+  row.addComponents(
+    new ButtonBuilder().setCustomId(PROFILE_HISTORY_ID).setLabel('Historique').setStyle(ButtonStyle.Primary).setEmoji('📜'),
+    new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
+  );
+  const components = [row];
+  if (isFeatureEnabled(settings, 'boutique')) {
+    components.push(
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
+        new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
+      ),
+    );
+  }
+
+  return { embeds: [embed], components };
+}
+
+function rewardFields(daily: DailyStatus, weekly: WeeklyStatus, settings: GuildSettings) {
+  const fields = [];
+  if (isFeatureEnabled(settings, 'quotidien')) {
+    fields.push(
       {
         name: 'Récompense du jour',
         value: daily.claimedToday
@@ -57,38 +105,18 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
           : 'Aucune série en cours',
         inline: true,
       },
-      {
-        name: 'Récompense de la semaine',
-        value: weekly.claimedThisWeek
-          ? `Déjà récupérée. La prochaine arrive ${time(weekly.nextAt, TimestampStyles.RelativeTime)}.`
-          : `**${formatAmount(weekly.amount, settings)}** t’attendent !`,
-      },
-    )
-    .setFooter({ text: FOOTER });
-  if (notice) embed.setDescription(notice);
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder()
-      .setCustomId(PROFILE_DAILY_ID)
-      .setLabel(daily.claimedToday ? 'Récompense récupérée' : 'Récupérer ma récompense')
-      .setStyle(ButtonStyle.Success)
-      .setEmoji('🎁')
-      .setDisabled(daily.claimedToday),
-    new ButtonBuilder()
-      .setCustomId(PROFILE_WEEKLY_ID)
-      .setLabel(weekly.claimedThisWeek ? 'Hebdo récupérée' : 'Récupérer l’hebdo')
-      .setStyle(ButtonStyle.Success)
-      .setEmoji('🗓️')
-      .setDisabled(weekly.claimedThisWeek),
-    new ButtonBuilder().setCustomId(PROFILE_HISTORY_ID).setLabel('Historique').setStyle(ButtonStyle.Primary).setEmoji('📜'),
-    new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
-  );
-  const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
-    new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
-  );
-
-  return { embeds: [embed], components: [row, row2] };
+    );
+  }
+  if (isFeatureEnabled(settings, 'hebdo')) {
+    fields.push({
+      name: 'Récompense de la semaine',
+      value: weekly.claimedThisWeek
+        ? `Déjà récupérée. La prochaine arrive ${time(weekly.nextAt, TimestampStyles.RelativeTime)}.`
+        : `**${formatAmount(weekly.amount, settings)}** t’attendent !`,
+      inline: false,
+    });
+  }
+  return fields;
 }
 
 function levelLine(xp: number, settings: GuildSettings, rank: number): string {

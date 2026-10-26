@@ -7,6 +7,7 @@ import { nextLocalWeekdayTime } from '../../core/time.js';
 import type { GuildSettings, Lottery } from '../../generated/prisma/client.js';
 import { credit, debit } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
+import { isFeatureEnabled } from '../features/features.js';
 import { buildDrawAnnouncement, buildLotteryMessage } from './lottery.view.js';
 
 const log = createLogger('lottery');
@@ -196,7 +197,7 @@ function nextIntro(next: Lottery, carryOver: number, s: GuildSettings): string {
 export async function tickLottery(client: Client) {
   for (const guildId of config.discord.guildIds) {
     const s = await getSettings(guildId);
-    if (!s.lotteryChannelId) continue;
+    if (!s.lotteryChannelId || !isFeatureEnabled(s, 'tombola')) continue;
     const open = await getOrCreateOpenLottery(guildId);
     const now = Date.now();
     if (open.drawAt.getTime() <= now) {

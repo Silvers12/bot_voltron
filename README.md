@@ -162,6 +162,15 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Résolution par jets de d20 commentés (textes dans `content/duels.json`), relance en cas d'égalité. Un défi sans réponse expire après 2 min et rembourse ; les défis en attente survivent à un redémarrage.
 - Un seul défi en attente par défieur. Mises bornées par `/admin duel min max` (10 à 5 000 par défaut).
 
+## Panneau d'intendance et interrupteurs
+
+- `/admin panneau` : écran de contrôle privé (se ferme après 5 min d'inactivité). Accueil : membres, bourses, monnaie en circulation, cagnotte de la machine, tombola en cours, prochain câlin collectif, parties et duels en attente, état de chaque fonctionnalité.
+  - Menu « Cocher les fonctionnalités actives » : coche/décoche pour activer ou mettre en pause (quotidien, hebdo, câlins, boutique, XP et classement, compliments, insultes, blackjack, machine, duels, câlin collectif, tombola).
+  - Menu « Voir les réglages d'un module » : valeurs actuelles, commandes pour les modifier, boutons Activer/Désactiver du module.
+- `/admin fonction nom:… active:true|false` : même bascule en une commande.
+- Une fonctionnalité en pause : ses commandes et boutons répondent « en pause », ses boutons disparaissent du profil, ses automatismes s'arrêtent (XP non comptée, pas d'apparition de câlin collectif, ni rappel ni tirage de tombola). Les réglages sont conservés. Les câlins collectifs déjà lancés restent cliquables jusqu'à leur fin. Les sessions vocales reprennent à la réactivation de l'XP.
+- Registre des clés : `src/modules/features/features.ts` (`disabledFeatures` dans `GuildSettings`).
+
 ## Tombola
 
 - `/tombola` : message public avec cagnotte, prix du ticket, tickets vendus, date du tirage, boutons « 1 ticket » / « 5 tickets ». Chacun paie avec sa bourse, confirmation privée. Maximum de tickets par membre réglable (10 par défaut).
@@ -190,4 +199,5 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin calin ajouter-salon|retirer-salon|regler|lancer|etat`
 - `/admin niveaux ajouter-role|retirer-role|salon|courbe|recalculer|lister`
 - `/admin tombola salon|regler|publier|tirer|etat`
+- `/admin panneau`, `/admin fonction`
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant` · `/admin duel min max`

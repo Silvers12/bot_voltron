@@ -2,6 +2,7 @@ import type { Guild, Message, VoiceState } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
 import { isAllowedGuild } from '../../core/config.js';
+import { isFeatureEnabled, isFeatureEnabledFor } from '../features/features.js';
 import { getSettings } from '../settings/settings.service.js';
 import { ensureMember } from '../community/member.service.js';
 import { syncLevel } from './levels.service.js';
@@ -18,7 +19,7 @@ export async function handleMessage(message: Message) {
   if (message.author.bot || message.system || !message.member) return;
 
   const settings = await getSettings(message.guildId);
-  if (settings.xpPerMessage <= 0) return;
+  if (settings.xpPerMessage <= 0 || !isFeatureEnabled(settings, 'xp')) return;
 
   const member = await prisma.member.findUnique({
     where: { guildId_discordUserId: { guildId: message.guildId, discordUserId: message.author.id } },
@@ -90,6 +91,7 @@ export async function creditVoiceTime(memberId: string, guildId: string, until: 
 export async function handleVoiceStateUpdate(oldState: VoiceState, newState: VoiceState) {
   const guild = newState.guild;
   if (!isAllowedGuild(guild.id) || !newState.member || newState.member.user.bot) return;
+  if (!(await isFeatureEnabledFor(guild.id, 'xp'))) return;
 
   const wasCounted = isCountedChannel(guild, oldState.channelId);
   const isCounted = isCountedChannel(guild, newState.channelId);
@@ -104,6 +106,11 @@ export async function handleVoiceStateUpdate(oldState: VoiceState, newState: Voi
 
 /** Pointage périodique : crédite les sessions en cours sans attendre la sortie. */
 export async function tickVoiceSessions(guild: Guild) {
+  if (!(await isFeatureEnabledFor(guild.id, 'xp'))) {
+    // XP en pause : on oublie les sessions en cours sans les créditer ; reconcileVoiceSessions les rouvrira à la reprise.
+    await prisma.voiceSession.deleteMany({ where: { member: { guildId: guild.id } } });
+    return;
+  }
   const sessions = await prisma.voiceSession.findMany({ where: { member: { guildId: guild.id } }, include: { member: { select: { discordUserId: true } } } });
   const now = new Date();
   for (const session of sessions) {

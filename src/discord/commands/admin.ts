@@ -9,6 +9,8 @@ import { buildGroupHugAdminGroup, handleGroupHugAdmin } from '../../modules/even
 import { buildLevelsAdminGroup, handleLevelsAdmin } from '../../modules/progression/levels.admin.js';
 import { buildLotteryAdminGroup, handleLotteryAdmin } from '../../modules/lottery/lottery.admin.js';
 import { getJackpot } from '../../modules/casino/slots.service.js';
+import { openAdminPanel } from '../../modules/admin/panel.controller.js';
+import { FEATURES, featureInfo, isFeatureEnabled, setFeatureEnabled, type FeatureKey } from '../../modules/features/features.js';
 import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits, updateSlotLimits, updateDuelLimits } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
@@ -106,6 +108,14 @@ export default defineCommand({
         .addIntegerOption((o) => o.setName('max').setDescription('Mise maximale').setRequired(true).setMinValue(1)),
     )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
+    .addSubcommand((sub) => sub.setName('panneau').setDescription('Ouvre le panneau de contrôle complet (privé)'))
+    .addSubcommand((sub) =>
+      sub
+        .setName('fonction')
+        .setDescription('Active ou désactive une fonctionnalité')
+        .addStringOption((o) => o.setName('nom').setDescription('Fonctionnalité').setRequired(true).addChoices(...FEATURES.map((f) => ({ name: `${f.emoji} ${f.label}`, value: f.key }))))
+        .addBooleanOption((o) => o.setName('active').setDescription('true = active, false = en pause').setRequired(true)),
+    )
     .addSubcommandGroup((group) => buildShopAdminGroup(group))
     .addSubcommandGroup((group) => buildGroupHugAdminGroup(group))
     .addSubcommandGroup((group) => buildLevelsAdminGroup(group))
@@ -212,6 +222,16 @@ export default defineCommand({
       if (min > max) return void (await reply('La mise minimale doit être inférieure ou égale à la maximale.'));
       const updated = await updateDuelLimits(interaction.guildId, min, max);
       await reply(`Duel : mises de ${formatAmount(updated.duelMinStake, updated)} à ${formatAmount(updated.duelMaxStake, updated)}.`);
+      return;
+    }
+
+    if (sub === 'panneau') return openAdminPanel(interaction);
+
+    if (sub === 'fonction') {
+      const name = interaction.options.getString('nom', true) as FeatureKey;
+      const active = interaction.options.getBoolean('active', true);
+      const updated = await setFeatureEnabled(interaction.guildId, name, active);
+      await reply(`${isFeatureEnabled(updated, name) ? '🟢 Activé' : '⛔ En pause'} : ${featureInfo(name).label}.`);
       return;
     }
 

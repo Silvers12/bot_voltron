@@ -76,7 +76,7 @@ export async function handleLotteryAdmin(interaction: ChatInputCommandInteractio
         data: { drawAt: nextDrawDate(updated), ...(changes.lotteryTicketPrice !== undefined ? { ticketPrice: updated.lotteryTicketPrice } : {}) },
       });
     }
-    await reply(describe(updated, await prisma.lottery.findFirst({ where: { guildId, state: 'OPEN' } })));
+    await reply(describeLottery(updated, await prisma.lottery.findFirst({ where: { guildId, state: 'OPEN' } })));
     return;
   }
 
@@ -98,7 +98,7 @@ export async function handleLotteryAdmin(interaction: ChatInputCommandInteractio
   }
 
   if (sub === 'etat') {
-    await reply(describe(s, await prisma.lottery.findFirst({ where: { guildId, state: 'OPEN' } })));
+    await reply(describeLottery(s, await prisma.lottery.findFirst({ where: { guildId, state: 'OPEN' } })));
   }
 }
 
@@ -108,7 +108,7 @@ function pinWarning(interaction: ChatInputCommandInteraction<'cached'>, channelI
   return canPin ? '' : '\n⚠️ Le bot n’a pas « Gérer les messages » dans ce salon : la tombola ne sera pas épinglée.';
 }
 
-function describe(s: Awaited<ReturnType<typeof getSettings>>, open: { pot: number; totalTickets: number; drawAt: Date; createdAt: Date; reminderSentAt: Date | null; lastCallSentAt: Date | null } | null): string {
+export function describeLottery(s: Awaited<ReturnType<typeof getSettings>>, open: { pot: number; totalTickets: number; drawAt: Date; createdAt: Date; reminderSentAt: Date | null; lastCallSentAt: Date | null } | null): string {
   const lines = [
     `**Salon :** ${s.lotteryChannelId ? channelMention(s.lotteryChannelId) : '*aucun (désactivée)*'}`,
     `**Ticket :** ${formatAmount(s.lotteryTicketPrice, s)} · max ${s.lotteryMaxTickets || 'illimité'} par membre`,

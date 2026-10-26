@@ -4,6 +4,8 @@ import { isAllowedGuild } from '../../core/config.js';
 import { createLogger } from '../../core/logger.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { resolveButton, resolveSelect } from '../components.js';
+import { getSettings } from '../../modules/settings/settings.service.js';
+import { DISABLED_MESSAGE, featureForCommand, featureForComponent, isFeatureEnabled } from '../../modules/features/features.js';
 
 const log = createLogger('interactions');
 
@@ -11,6 +13,11 @@ async function replyError(interaction: RepliableInteraction, content: string) {
   const payload = { content, flags: MessageFlags.Ephemeral } as const;
   if (interaction.replied || interaction.deferred) await interaction.followUp(payload);
   else await interaction.reply(payload);
+}
+
+/** Fonctionnalité coupée par l'intendance ? (undefined = jamais gardée) */
+async function isDisabled(guildId: string, feature: ReturnType<typeof featureForCommand>): Promise<boolean> {
+  return feature !== undefined && !isFeatureEnabled(await getSettings(guildId), feature);
 }
 
 /** Refuse tout ce qui ne vient pas du serveur autorisé (bot privé). */
@@ -33,6 +40,7 @@ export default defineEvent({
           log.warn(`Commande inconnue : ${interaction.commandName}`);
           return;
         }
+        if (await isDisabled(interaction.guildId, featureForCommand(interaction.commandName))) return replyError(interaction, DISABLED_MESSAGE);
         const member = await ensureMember(interaction.member);
         await command.execute({ interaction, guildMember: interaction.member, member });
         return;
@@ -51,6 +59,7 @@ export default defineEvent({
           await replyError(interaction, 'Ce bouton n’est plus valide. Rouvre `/profil`.');
           return;
         }
+        if (await isDisabled(interaction.guildId, featureForComponent(interaction.customId))) return replyError(interaction, DISABLED_MESSAGE);
         const member = await ensureMember(interaction.member);
         await resolved.handler({ interaction, guildMember: interaction.member, member, arg: resolved.arg });
         return;
@@ -62,6 +71,7 @@ export default defineEvent({
           await replyError(interaction, 'Ce menu n’est plus valide. Rouvre `/profil`.');
           return;
         }
+        if (await isDisabled(interaction.guildId, featureForComponent(interaction.customId))) return replyError(interaction, DISABLED_MESSAGE);
         const member = await ensureMember(interaction.member);
         await handler({ interaction, guildMember: interaction.member, member, values: interaction.values });
         return;

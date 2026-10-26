@@ -5,6 +5,7 @@ import { createLogger } from '../../core/logger.js';
 import { config } from '../../core/config.js';
 import type { GroupHug } from '../../generated/prisma/client.js';
 import { credit } from '../economy/economy.service.js';
+import { isFeatureEnabled } from '../features/features.js';
 import { getSettings, updateGroupHugSettings } from '../settings/settings.service.js';
 import { buildHugClosedMessage, buildHugOpenMessage } from './grouphug.view.js';
 
@@ -136,7 +137,7 @@ export async function tickScheduler(client: Client) {
     const guild = client.guilds.cache.get(guildId);
     if (!guild) continue;
     const s = await getSettings(guildId);
-    if (!s.groupHugChannelIds.length) continue;
+    if (!s.groupHugChannelIds.length || !isFeatureEnabled(s, 'calin_collectif')) continue;
     if (!s.nextGroupHugAt) { await scheduleNext(guildId); continue; }
     if (s.nextGroupHugAt.getTime() > Date.now()) continue;
     if (await getOpenHug(guildId)) continue;

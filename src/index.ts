@@ -6,6 +6,7 @@ import { loadCommands, loadEvents } from './discord/loaders.js';
 import './modules/community/profile.controller.js';
 import './modules/shop/shop.controller.js';
 import './modules/events/grouphug.controller.js';
+import './modules/admin/panel.controller.js';
 import { loadBanter } from './modules/banter/banter.service.js';
 import { loadDuelTexts } from './modules/duel/duel.service.js';
 

@@ -119,6 +119,8 @@ model GuildSettings {
   levelStepXp      Int      @default(10)
   /// Salon des annonces de montée de niveau (null = pas d'annonce)
   levelUpChannelId String?
+  /// Fonctionnalités désactivées par l'intendance (clés du registre src/modules/features)
+  disabledFeatures String[] @default([])
   updatedAt        DateTime @updatedAt
 }
 
