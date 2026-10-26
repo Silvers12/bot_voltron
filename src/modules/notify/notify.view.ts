@@ -19,13 +19,13 @@ export function roleIdFor(s: GuildSettings, key: NotifyKey): string | null {
 const COLOR = 0x2e86c1;
 const BANNER_NAME = 'banniere';
 
-const DEFAULT_INTRO = 'Je suis **Voltron**, loutre paladin et gardien de la rivière. Ici, on gagne des cœurs en participant, on les dépense, on les parie, et on se fait des câlins. Par mon bouclier et mes moustaches, bienvenue dans la compagnie !';
+const DEFAULT_INTRO = 'Moi, c’est **Voltron**, loutre paladin et gardien de la rivière : j’anime la compagnie. Ici, on gagne des cœurs en participant, on les dépense, on les parie, et on se fait des câlins. Par mon bouclier et mes moustaches, fais comme chez toi !';
 
 /**
  * Page d'accueil : bannière (si fournie), présentation en blocs, puis le bloc des notifications
  * avec ses boutons. La bannière est jointe au message et référencée par `attachment://`.
  */
-export function buildWelcomeMessage(s: GuildSettings) {
+export function buildWelcomeMessage(s: GuildSettings, guildName: string) {
   const embeds: EmbedBuilder[] = [];
   const files: AttachmentBuilder[] = [];
 
@@ -35,7 +35,7 @@ export function buildWelcomeMessage(s: GuildSettings) {
 
   const intro = new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('🦦 Bienvenue chez Voltron')
+    .setTitle(`Bienvenue sur ${guildName} !`)
     .setDescription((s.welcomeText ?? DEFAULT_INTRO).replaceAll('\\n', '\n'));
   if (s.welcomeBanner) intro.setImage(`attachment://${bannerFile}`);
   embeds.push(intro);

@@ -62,7 +62,7 @@ export async function publishWelcome(guild: Guild): Promise<string> {
   const perms = channel.permissionsFor(guild.members.me!);
   if (!perms.has(PermissionFlagsBits.ViewChannel) || !perms.has(PermissionFlagsBits.SendMessages)) throw new NotifyError('Le bot ne peut pas écrire dans le salon d’accueil.');
 
-  const payload = buildWelcomeMessage(s);
+  const payload = buildWelcomeMessage(s, guild.name);
   const existing = s.welcomeMessageId ? await channel.messages.fetch(s.welcomeMessageId).catch(() => null) : null;
   if (existing) { await existing.edit({ ...payload, attachments: [] }); return 'mise à jour'; } // attachments: [] remplace l'ancienne bannière
   const message = await channel.send(payload);
