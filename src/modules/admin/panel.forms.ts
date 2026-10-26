@@ -1,10 +1,11 @@
-import { ActionRowBuilder, ChannelType, channelMention, ModalBuilder, TextInputBuilder, TextInputStyle, type Guild } from 'discord.js';
+import { ActionRowBuilder, ChannelType, channelMention, ModalBuilder, roleMention, TextInputBuilder, TextInputStyle, type Guild } from 'discord.js';
+import { roleAssignabilityProblem } from '../../core/roles.js';
 import type { GuildSettings } from '../../generated/prisma/client.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { formatAmount, updateSettings } from '../settings/settings.service.js';
 import { resolveHugChannel, scheduleNext } from '../events/grouphug.service.js';
 import { nextDrawDate, publishLottery, resolveLotteryChannel } from '../lottery/lottery.service.js';
-import { resyncAllLevels } from '../progression/levels.service.js';
+import { listLevelRoles, resyncAllLevels } from '../progression/levels.service.js';
 import type { Client } from 'discord.js';
 import type { ModuleKey } from './panel.view.js';
 
@@ -18,7 +19,9 @@ type FieldKind =
   | { kind: 'text'; maxLength: number; required: boolean }
   | { kind: 'channel'; required: boolean }
   | { kind: 'channels' }
-  | { kind: 'weekday'; allowNone: boolean };
+  | { kind: 'weekday'; allowNone: boolean }
+  /** Paragraphe : une ligne par palier « niveau rôle » ; valeur = tableau [{ level, roleId }] */
+  | { kind: 'tiers' };
 
 interface Field {
   id: string;
@@ -28,7 +31,8 @@ interface Field {
   current(s: GuildSettings): string;
 }
 
-type Values = Record<string, number | string | string[] | null>;
+type Tier = { level: number; roleId: string };
+type Values = Record<string, number | string | string[] | Tier[] | null>;
 
 export interface Form {
   key: string;
@@ -36,6 +40,8 @@ export interface Form {
   title: string;
   button: string;
   fields: Field[];
+  /** Valeurs courantes calculées hors réglages (ex. paliers en base), par champ. */
+  load?(guild: Guild): Promise<Record<string, string>>;
   /** Applique les valeurs validées ; retourne un message pour le panneau. */
   apply(ctx: { guild: Guild; client: Client; before: GuildSettings; values: Values }): Promise<string>;
 }
@@ -97,6 +103,29 @@ export const FORMS: Form[] = [
         return `Courbe enregistrée, niveaux recalculés : ${n} membre(s) ont changé de niveau.`;
       }
       return 'Réglages des niveaux enregistrés.';
+    },
+  },
+  {
+    key: 'paliers', module: 'progression', title: 'Rôles de palier', button: 'Paliers',
+    fields: [
+      { id: 'tiers', label: 'Un palier par ligne : niveau puis rôle', help: '5 @Recrue\n10 @Vétéran (vide = aucun palier)', type: { kind: 'tiers' }, current: () => '' },
+    ],
+    async load(guild) {
+      const tiers = await listLevelRoles(guild.id);
+      return { tiers: tiers.map((t) => `${t.level} ${roleMention(t.roleId)}`).join('\n') };
+    },
+    async apply({ guild, values }) {
+      const tiers = values.tiers as Tier[];
+      for (const t of tiers) {
+        const problem = roleAssignabilityProblem(guild, t.roleId);
+        if (problem) throw new FormError(`${roleMention(t.roleId)} : ${problem}`);
+      }
+      await prisma.$transaction([
+        prisma.levelRole.deleteMany({ where: { guildId: guild.id } }),
+        ...tiers.map((t) => prisma.levelRole.create({ data: { guildId: guild.id, level: t.level, roleId: t.roleId } })),
+      ]);
+      const n = await resyncAllLevels(guild);
+      return tiers.length ? `${tiers.length} palier(s) enregistré(s), rôles resynchronisés (${n} membre(s) ajustés).` : 'Plus aucun palier, rôles retirés.';
     },
   },
   {
@@ -241,11 +270,12 @@ export function findForm(key: string): Form | undefined {
 }
 
 /** Construit la modale pré-remplie avec les valeurs actuelles. */
-export function buildFormModal(form: Form, s: GuildSettings): ModalBuilder {
+export function buildFormModal(form: Form, s: GuildSettings, loaded: Record<string, string> = {}): ModalBuilder {
   const modal = new ModalBuilder().setCustomId(`${ADMIN_FORM_PREFIX}${form.key}`).setTitle(form.title.slice(0, 45));
   for (const f of form.fields) {
-    const input = new TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(TextInputStyle.Short).setMaxLength(200);
-    const current = f.current(s);
+    const paragraph = f.type.kind === 'tiers';
+    const input = new TextInputBuilder().setCustomId(f.id).setLabel(f.label.slice(0, 45)).setStyle(paragraph ? TextInputStyle.Paragraph : TextInputStyle.Short).setMaxLength(paragraph ? 1000 : 200);
+    const current = loaded[f.id] ?? f.current(s);
     if (current) input.setValue(current); // Discord refuse une valeur pré-remplie vide
     const required = f.type.kind === 'int' || f.type.kind === 'weekday' || (f.type.kind === 'text' && f.type.required) || (f.type.kind === 'channel' && f.type.required);
     input.setRequired(required);
@@ -291,6 +321,21 @@ export function parseForm(form: Form, guild: Guild, raw: (id: string) => string)
         values[f.id] = ids;
         break;
       }
+      case 'tiers': {
+        const tiers: Tier[] = [];
+        for (const line of input.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)) {
+          const m = /^(\d{1,4})\s*[:=→>-]?\s*(.+)$/.exec(line);
+          const roleId = m ? resolveRoleId(guild, m[2]!.trim()) : null;
+          if (!m || !roleId) { errors.push(`**${f.label}** : ligne « ${line} » incomprise (attendu : niveau puis rôle, ex. \`5 @Recrue\`).`); continue; }
+          const level = Number(m[1]);
+          if (level < 1) { errors.push(`**${f.label}** : le niveau doit être au moins 1 (« ${line} »).`); continue; }
+          if (tiers.some((x) => x.level === level)) errors.push(`**${f.label}** : niveau ${level} en double.`);
+          else if (tiers.some((x) => x.roleId === roleId)) errors.push(`**${f.label}** : ${roleMention(roleId)} utilisé pour deux paliers.`);
+          else tiers.push({ level, roleId });
+        }
+        values[f.id] = tiers.sort((a, b) => a.level - b.level);
+        break;
+      }
       case 'weekday': {
         const d = parseWeekday(input, t.allowNone);
         if (d === null) errors.push(`**${f.label}** : jour attendu (lundi … dimanche${t.allowNone ? ', ou aucun' : ''}).`);
@@ -307,6 +352,12 @@ function resolveChannelId(guild: Guild, input: string): string | null {
   const candidate = m ? guild.channels.cache.get(m[1]!) : guild.channels.cache.find((c) => c.name.toLowerCase() === input.replace(/^#/, '').toLowerCase());
   if (!candidate || (candidate.type !== ChannelType.GuildText && candidate.type !== ChannelType.GuildAnnouncement)) return null;
   return candidate.id;
+}
+
+function resolveRoleId(guild: Guild, input: string): string | null {
+  const m = /^<@&(\d+)>$/.exec(input) ?? /^(\d{15,22})$/.exec(input);
+  const role = m ? guild.roles.cache.get(m[1]!) : guild.roles.cache.find((r) => r.name.toLowerCase() === input.replace(/^@/, '').toLowerCase());
+  return role && role.id !== guild.id ? role.id : null;
 }
 
 function parseWeekday(input: string, allowNone: boolean): number | null {

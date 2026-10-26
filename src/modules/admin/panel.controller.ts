@@ -223,7 +223,8 @@ registerButtonPrefix(ADMIN_TOGGLE_PREFIX, guarded(async ({ interaction, arg }) =
 registerButtonPrefix(ADMIN_EDIT_PREFIX, guarded(async ({ interaction, arg }) => {
   const form = findForm(arg);
   if (!form) return void (await interaction.update(await renderHome(interaction.guildId)));
-  await interaction.showModal(buildFormModal(form, await getSettings(interaction.guildId)));
+  const loaded = form.load ? await form.load(interaction.guild) : {};
+  await interaction.showModal(buildFormModal(form, await getSettings(interaction.guildId), loaded));
 }, { touch: false }));
 
 registerModalPrefix(ADMIN_FORM_PREFIX, guarded(async ({ interaction, arg }) => {
