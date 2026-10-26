@@ -126,7 +126,7 @@ docker compose logs -f bot
 
 ## Machine à sous
 
-- `/machine` : un tour à prix fixe (50 cœurs par défaut), trois rouleaux (🦦 ❤️ 🛡️ 🐟 🌊 🪨) révélés un par un, bouton Rejouer. Partie privée. Le prix est fixe car la chance de rafler la cagnotte ne dépend pas de la mise.
+- `/machine` : affiche la machine (cagnotte, prix, bourse) avec un bouton Lancer ; rien n'est débité avant d'appuyer. Un tour à prix fixe (50 cœurs par défaut), trois rouleaux (🦦 ❤️ 🛡️ 🐟 🌊 🪨) révélés un par un, bouton Rejouer. Partie privée. Le prix est fixe car la chance de rafler la cagnotte ne dépend pas de la mise.
 - **Modèle fermé** : chaque mise entre intégralement dans la cagnotte du serveur, chaque gain en sort. Trois loutres raflent toute la cagnotte (annonce publique), qui repart du montant de départ (1 000, amorcé par la banque). La banque couvre un gain supérieur à la cagnotte ; sinon elle ne crée ni ne détruit de cœurs.
 - Table : triples ×30 / ×15 / ×10 / ×7 / ×6 (❤️ 🛡️ 🐟 🌊 🪨), deux loutres ×6, loutre + paire ×4, paire ×2, une loutre = mise rendue. Les petits gains représentent ~92 % des mises en moyenne, le reste gonfle la cagnotte jusqu'au jackpot.
 - `/admin machine [prix] [cagnotte_depart]` (sans option : affiche l'état et le dernier jackpot).
