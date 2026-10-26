@@ -13,6 +13,7 @@ import { buildCountingAdminGroup, handleCountingAdmin } from '../../modules/coun
 import { buildMessagesAdminGroup, handleMessagesAdmin } from '../../modules/moderation/messages.admin.js';
 import { buildCommandsAdminGroup, handleCommandsAdmin } from '../../modules/settings/commands.admin.js';
 import { buildWelcomeAdminGroup, handleWelcomeAdmin } from '../../modules/notify/notify.admin.js';
+import { handleInstall } from '../../modules/admin/install.js';
 import { getJackpot } from '../../modules/casino/slots.service.js';
 import { openAdminPanel } from '../../modules/admin/panel.controller.js';
 import { FEATURES, featureInfo, isFeatureEnabled, setFeatureEnabled, type FeatureKey } from '../../modules/features/features.js';
@@ -115,6 +116,12 @@ export default defineCommand({
     )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
     .addSubcommand((sub) => sub.setName('panneau').setDescription('Ouvre le panneau de contrôle complet (privé)'))
+    .addSubcommand((sub) =>
+      sub
+        .setName('installer')
+        .setDescription('Installe Voltron : catégorie, salons, rôles, réglages, page d’accueil (relançable)')
+        .addStringOption((o) => o.setName('categorie').setDescription('Nom de la catégorie (défaut : 🦦 Voltron)').setMaxLength(60)),
+    )
     .addSubcommand((sub) =>
       sub
         .setName('message')
@@ -250,6 +257,7 @@ export default defineCommand({
     }
 
     if (sub === 'panneau') return openAdminPanel(interaction);
+    if (sub === 'installer') return handleInstall(interaction);
 
     if (sub === 'message') {
       const text = interaction.options.getString('texte', true).replaceAll('\\n', '\n').trim();

@@ -84,6 +84,10 @@ docker compose ps               # état des conteneurs
 
 Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hôte, avec `npm install` fait).
 
+### Installation en une commande
+
+`/admin installer [categorie]` sur un serveur fraîchement invité (le bot doit avoir « Gérer les salons » et « Gérer les rôles ») : crée la catégorie « 🦦 Voltron » et cinq salons (accueil en lecture seule, commandes, jeux, comptage, annonces en lecture seule) avec les permissions du bot, règle les salons des commandes (commandes + jeux), des câlins collectifs et de la tombola (jeux), du comptage, des annonces de niveaux et de succès, crée les rôles de notification, publie la page d'accueil et la première tombola, programme le premier câlin collectif. Relançable : conserve les salons et réglages existants. Reste ensuite : `/admin succes recalculer`, montants et horaires via `/admin panneau`, boutique, rôles de palier.
+
 ### Déploiement rapide
 
 `./scripts/deploy.sh [id_serveur…] [--no-build]` (ou `npm run redeploy`) : ajoute les serveurs donnés à `DISCORD_GUILD_IDS` s'ils n'y sont pas, reconstruit et relance le conteneur, enregistre les commandes sur tous les serveurs autorisés, affiche les journaux et confirme la connexion. `--no-build` relance sans reconstruire (changement de `.env` seul).
@@ -256,6 +260,7 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin tombola salon|regler|publier|tirer|etat`
 - `/admin succes recalculer|liste`
 - `/admin comptage salon|amende|reinitialiser|etat`
+- `/admin installer [categorie]`
 - `/admin panneau`, `/admin fonction`
 - `/admin accueil installer|roles|banniere|texte|publier|etat`
 - `/admin commandes ajouter-salon|retirer-salon|partout|liste`
