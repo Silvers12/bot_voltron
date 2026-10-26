@@ -28,6 +28,7 @@ src/
   modules/progression/     # XP messages/vocal, classement
   modules/banter/          # compliments et insultes (textes dans content/)
   modules/casino/          # blackjack
+  modules/events/          # câlin collectif (apparitions planifiées)
 content/                   # textes éditables (compliments, insultes)
   modules/settings/        # réglages du serveur (monnaie, bienvenue)
 prisma/schema.prisma       # modèle de données
@@ -109,6 +110,13 @@ docker compose logs -f bot
 - Sans action pendant 2 min, ou après un redémarrage du bot, la partie est réglée comme si le joueur restait.
 - Mises bornées par `/admin blackjack min max` (10 à 2 000 par défaut).
 
+## Câlin collectif
+
+- Voltron apparaît à des moments aléatoires dans l'un des salons configurés, avec un bouton **CÂLIN** ouvert pendant 60 s (réglable).
+- À la clôture, chaque participant reçoit `récompense × nombre de participants` (200 par défaut : à 5, 1 000 chacun). Un clic par membre.
+- Intervalle aléatoire entre deux apparitions : 3 h à 8 h par défaut. La prochaine date est persistée ; un câlin en cours survit à un redémarrage.
+- `/admin calin ajouter-salon #salon` active la fonction ; `retirer-salon`, `regler`, `lancer` (manuel), `etat`.
+
 ## Commandes
 
 Membres :
@@ -123,4 +131,5 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
 - `/admin solde membre` · `/admin stats`
 - `/admin boutique ajouter|modifier|retirer|remettre|lister` (autocomplétion des noms d'articles)
+- `/admin calin ajouter-salon|retirer-salon|regler|lancer|etat`
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant`

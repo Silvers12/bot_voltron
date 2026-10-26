@@ -34,6 +34,7 @@ model Member {
   lastMessageXpAt DateTime?
   voiceSession  VoiceSession?
   blackjackGames BlackjackGame[]
+  groupHugs     GroupHugParticipant[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   account       Account?
@@ -74,6 +75,16 @@ model GuildSettings {
   /// Mises autorisées au blackjack
   blackjackMinBet  Int      @default(10)
   blackjackMaxBet  Int      @default(2000)
+  /// Câlin collectif : salons d'apparition, tirés au hasard (vide = désactivé)
+  groupHugChannelIds String[] @default([])
+  /// Cœurs par câlineur, multipliés par le nombre de câlineurs
+  groupHugReward   Int      @default(200)
+  groupHugDurationSeconds Int @default(60)
+  /// Intervalle aléatoire entre deux apparitions, en minutes
+  groupHugMinIntervalMinutes Int @default(180)
+  groupHugMaxIntervalMinutes Int @default(480)
+  /// Prochaine apparition programmée (persistée pour survivre aux redémarrages)
+  nextGroupHugAt   DateTime?
   updatedAt        DateTime @updatedAt
 }
 
@@ -96,6 +107,7 @@ enum TransactionType {
   REFUND
   BET
   BET_WIN
+  GROUP_HUG
   ADMIN_CREDIT
   ADMIN_DEBIT
   HUG_SENT
@@ -233,4 +245,36 @@ model BlackjackGame {
   updatedAt      DateTime       @updatedAt
 
   @@index([memberId, createdAt(sort: Desc)])
+}
+
+enum GroupHugState {
+  OPEN
+  CLOSED
+}
+
+/// Un câlin collectif lancé par Voltron dans un salon.
+model GroupHug {
+  id              String        @id @default(cuid())
+  guildId         String
+  channelId       String
+  messageId       String?
+  rewardPerHugger Int
+  startedAt       DateTime      @default(now())
+  endsAt          DateTime
+  state           GroupHugState @default(OPEN)
+  /// Récompense versée à chacun (fixée à la clôture)
+  rewardEach      Int           @default(0)
+  participants    GroupHugParticipant[]
+
+  @@index([guildId, state])
+}
+
+model GroupHugParticipant {
+  hugId    String
+  hug      GroupHug @relation(fields: [hugId], references: [id])
+  memberId String
+  member   Member   @relation(fields: [memberId], references: [id])
+  joinedAt DateTime @default(now())
+
+  @@id([hugId, memberId])
 }

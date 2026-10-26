@@ -5,6 +5,7 @@ import { createClient } from './discord/client.js';
 import { loadCommands, loadEvents } from './discord/loaders.js';
 import './modules/community/profile.controller.js';
 import './modules/shop/shop.controller.js';
+import './modules/events/grouphug.controller.js';
 import { loadBanter } from './modules/banter/banter.service.js';
 
 const log = createLogger('app');

@@ -5,6 +5,7 @@ import { isBotAdmin } from '../../core/permissions.js';
 import { ensureMember } from '../../modules/community/member.service.js';
 import { credit, debit, getBalance, InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../../modules/shop/shop.admin.js';
+import { buildGroupHugAdminGroup, handleGroupHugAdmin } from '../../modules/events/grouphug.admin.js';
 import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits } from '../../modules/settings/settings.service.js';
 
 const MAX_AMOUNT = 1_000_000;
@@ -87,7 +88,8 @@ export default defineCommand({
         .addIntegerOption((o) => o.setName('max').setDescription('Mise maximale').setRequired(true).setMinValue(1)),
     )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
-    .addSubcommandGroup((group) => buildShopAdminGroup(group)),
+    .addSubcommandGroup((group) => buildShopAdminGroup(group))
+    .addSubcommandGroup((group) => buildGroupHugAdminGroup(group)),
 
   async autocomplete(interaction) {
     if (!isBotAdmin(interaction.member)) return void (await interaction.respond([]));
@@ -103,6 +105,7 @@ export default defineCommand({
     }
 
     if (interaction.options.getSubcommandGroup(false) === 'boutique') return handleShopAdmin(interaction);
+    if (interaction.options.getSubcommandGroup(false) === 'calin') return handleGroupHugAdmin(interaction);
 
     const sub = interaction.options.getSubcommand(true);
     const settings = await getSettings(interaction.guildId);

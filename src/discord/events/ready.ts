@@ -5,6 +5,7 @@ import { createLogger } from '../../core/logger.js';
 import { syncGuildMembers } from '../../modules/community/member.service.js';
 import { reconcileVoiceSessions, tickVoiceSessions } from '../../modules/progression/xp.service.js';
 import { settleAbandonedGames } from '../../modules/casino/blackjack.service.js';
+import { reconcileHugs, tickScheduler } from '../../modules/events/grouphug.service.js';
 
 const log = createLogger('ready');
 
@@ -29,6 +30,8 @@ export default defineEvent({
       await reconcileVoiceSessions(guild);
     }
     await settleAbandonedGames();
+    await reconcileHugs(client);
+    setInterval(() => void tickScheduler(client).catch((err) => log.error('Planificateur de câlins échoué', err)), 30_000);
     setInterval(() => {
       for (const guild of guilds) void tickVoiceSessions(guild).catch((err) => log.error(`Pointage vocal échoué (${guild.name})`, err));
     }, 60_000);
