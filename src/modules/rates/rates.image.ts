@@ -36,6 +36,18 @@ async function circleAvatar(avatarPng: Buffer): Promise<Buffer> {
   return sharp(avatarPng).resize(AVATAR, AVATAR).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer();
 }
 
+/** Coupe un texte en lignes d'au plus `max` caractères, sur les espaces. */
+function wrap(textToWrap: string, max: number): string[] {
+  const lines: string[] = [];
+  let current = '';
+  for (const word of textToWrap.split(' ')) {
+    if ((current + ' ' + word).trim().length > max && current) { lines.push(current); current = word; }
+    else current = (current + ' ' + word).trim();
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
 export interface RateCard {
   displayName: string;
   avatarPng: Buffer;
@@ -59,7 +71,7 @@ export async function renderRateCard({ displayName, avatarPng, rate, percent, co
     <text x="${barX}" y="245" font-family="${FONT}" font-size="76" font-weight="bold" fill="#fff">${percent} %</text>
     <rect x="${barX}" y="${barY}" width="${barW}" height="28" rx="14" fill="#ffffff" opacity="0.22"/>
     <rect x="${barX}" y="${barY}" width="${Math.max(28, Math.round((barW * percent) / 100))}" height="28" rx="14" fill="${rate.color}"/>
-    <text x="${barX}" y="340" font-family="${FONT}" font-size="26" fill="#eef3f7">${esc(comment)}</text>
+    ${wrap(comment, 44).slice(0, 2).map((line, i) => `<text x="${barX}" y="${332 + i * 32}" font-family="${FONT}" font-size="24" fill="#eef3f7">${esc(line)}</text>`).join('')}
   </svg>`;
   const [avatar, icon] = await Promise.all([circleAvatar(avatarPng), filledIcon(rate, percent)]);
   return sharp(Buffer.from(bg))
