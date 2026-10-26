@@ -28,6 +28,19 @@ export async function ensureNotifyRoles(guild: Guild): Promise<GuildSettings> {
   return s;
 }
 
+const MAX_BANNER_BYTES = 8 * 1024 * 1024;
+
+/** Télécharge et enregistre la bannière (image, 8 Mo max) ; `null` la retire. */
+export async function setWelcomeBanner(guildId: string, attachment: { url: string; contentType: string | null; size: number } | null): Promise<void> {
+  if (!attachment) { await updateSettings(guildId, { welcomeBanner: null, welcomeBannerType: null }); return; }
+  if (!attachment.contentType?.startsWith('image/')) throw new NotifyError('Le fichier doit être une image (PNG, JPG, GIF ou WebP).');
+  if (attachment.size > MAX_BANNER_BYTES) throw new NotifyError('Image trop lourde : 8 Mo maximum.');
+  const res = await fetch(attachment.url);
+  if (!res.ok) throw new NotifyError('Téléchargement de l’image impossible.');
+  const bytes = Buffer.from(await res.arrayBuffer());
+  await updateSettings(guildId, { welcomeBanner: bytes, welcomeBannerType: attachment.contentType });
+}
+
 /** Prend ou retire le rôle ; retourne true s'il est désormais porté. */
 export async function toggleNotifyRole(member: GuildMember, key: NotifyKey): Promise<boolean> {
   const s = await getSettings(member.guild.id);
@@ -51,7 +64,7 @@ export async function publishWelcome(guild: Guild): Promise<string> {
 
   const payload = buildWelcomeMessage(s);
   const existing = s.welcomeMessageId ? await channel.messages.fetch(s.welcomeMessageId).catch(() => null) : null;
-  if (existing) { await existing.edit(payload); return 'mise à jour'; }
+  if (existing) { await existing.edit({ ...payload, attachments: [] }); return 'mise à jour'; } // attachments: [] remplace l'ancienne bannière
   const message = await channel.send(payload);
   if (perms.has(PermissionFlagsBits.ManageMessages)) await message.pin().catch(() => undefined);
   await updateSettings(guild.id, { welcomeMessageId: message.id });

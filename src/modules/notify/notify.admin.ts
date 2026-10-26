@@ -1,7 +1,7 @@
 import { channelMention, ChannelType, MessageFlags, roleMention, type ChatInputCommandInteraction, type SlashCommandSubcommandGroupBuilder } from 'discord.js';
 import { getSettings, updateSettings } from '../settings/settings.service.js';
 import { roleAssignabilityProblem } from '../../core/roles.js';
-import { ensureNotifyRoles, NotifyError, publishWelcome } from './notify.service.js';
+import { ensureNotifyRoles, NotifyError, publishWelcome, setWelcomeBanner } from './notify.service.js';
 import { NOTIFY_ROLES } from './notify.view.js';
 
 export function buildWelcomeAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
@@ -21,6 +21,18 @@ export function buildWelcomeAdminGroup(group: SlashCommandSubcommandGroupBuilder
         .addRoleOption((o) => o.setName('calin').setDescription('Rôle « câlins collectifs »'))
         .addRoleOption((o) => o.setName('tombola').setDescription('Rôle « tombola »'))
         .addRoleOption((o) => o.setName('duel').setDescription('Rôle « duels »')),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('banniere')
+        .setDescription('Image en haut de la page d’accueil (sans image : la retire)')
+        .addAttachmentOption((o) => o.setName('image').setDescription('PNG, JPG, GIF ou WebP, 8 Mo max')),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('texte')
+        .setDescription('Texte d’introduction de la page (sans texte : celui par défaut)')
+        .addStringOption((o) => o.setName('texte').setDescription('Texte (\\n pour un retour à la ligne)').setMaxLength(1500)),
     )
     .addSubcommand((sub) => sub.setName('publier').setDescription('Republie ou met à jour la page d’accueil'))
     .addSubcommand((sub) => sub.setName('etat').setDescription('Salon et rôles configurés'));
@@ -54,6 +66,22 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
       await reply(describeWelcome(s));
       return;
     }
+    if (sub === 'banniere') {
+      const image = interaction.options.getAttachment('image');
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+      await setWelcomeBanner(guildId, image ? { url: image.url, contentType: image.contentType, size: image.size } : null);
+      const s = await getSettings(guildId);
+      const outcome = s.welcomeChannelId ? ` Page ${await publishWelcome(interaction.guild)}.` : '';
+      await interaction.editReply(image ? `Bannière enregistrée.${outcome}` : `Bannière retirée.${outcome}`);
+      return;
+    }
+    if (sub === 'texte') {
+      const text = interaction.options.getString('texte')?.trim() || null;
+      const s = await updateSettings(guildId, { welcomeText: text });
+      const outcome = s.welcomeChannelId ? ` Page ${await publishWelcome(interaction.guild)}.` : '';
+      await reply(text ? `Texte d’introduction enregistré.${outcome}` : `Texte par défaut rétabli.${outcome}`);
+      return;
+    }
     if (sub === 'publier') {
       const outcome = await publishWelcome(interaction.guild);
       await reply(`Page d’accueil ${outcome}.`);
@@ -61,14 +89,17 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
     }
     await reply(describeWelcome(await getSettings(guildId)));
   } catch (err) {
-    if (err instanceof NotifyError) return void (await reply(err.message));
+    if (err instanceof NotifyError) {
+      if (interaction.deferred) return void (await interaction.editReply(err.message));
+      return void (await reply(err.message));
+    }
     throw err;
   }
 }
 
 export function describeWelcome(s: Awaited<ReturnType<typeof getSettings>>): string {
   return [
-    `**Salon d’accueil :** ${s.welcomeChannelId ? channelMention(s.welcomeChannelId) : '*aucun*'}`,
+    `**Salon d’accueil :** ${s.welcomeChannelId ? channelMention(s.welcomeChannelId) : '*aucun*'}` + (s.welcomeBanner ? ' · bannière ✅' : ' · sans bannière') + (s.welcomeText ? ' · texte personnalisé' : ''),
     ...NOTIFY_ROLES.map((r) => `**${r.emoji} ${r.label} :** ${s[r.field] ? roleMention(s[r.field]!) : '*non configuré*'}`),
   ].join('\n');
 }

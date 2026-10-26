@@ -129,6 +129,10 @@ model GuildSettings {
   /// Page d'accueil (message avec les boutons de rôles) et rôles de notification
   welcomeChannelId String?
   welcomeMessageId String?
+  /// Bannière (image) et texte d'intro de la page d'accueil
+  welcomeBanner    Bytes?
+  welcomeBannerType String?
+  welcomeText      String?
   notifyHugRoleId  String?
   notifyLotteryRoleId String?
   notifyDuelRoleId String?
