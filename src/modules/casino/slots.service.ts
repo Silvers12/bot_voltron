@@ -29,11 +29,9 @@ export async function getJackpot(guildId: string) {
  * Trois loutres raflent tout ce qu'elle contient. La banque n'intervient que pour l'amorcer
  * (montant de départ) et pour couvrir un gain plus grand que la cagnotte.
  */
-export async function playSlots(member: { id: string; guildId: string; discordUserId: string }, bet: number): Promise<SpinResult> {
+export async function playSlots(member: { id: string; guildId: string; discordUserId: string }): Promise<SpinResult> {
   const s = await getSettings(member.guildId);
-  if (!Number.isInteger(bet) || bet < s.slotMinBet || bet > s.slotMaxBet) {
-    throw new SlotsError(`La mise doit être comprise entre ${s.slotMinBet} et ${s.slotMaxBet}.`);
-  }
+  const bet = s.slotBet;
 
   const debited = await debit({ memberId: member.id, amount: bet, type: 'BET', actorDiscordId: member.discordUserId, reason: 'Machine à sous : mise' });
   await getJackpot(member.guildId);

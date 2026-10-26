@@ -93,8 +93,7 @@ export default defineCommand({
       sub
         .setName('machine')
         .setDescription('Règle la machine à sous (sans option : affiche)')
-        .addIntegerOption((o) => o.setName('min').setDescription('Mise minimale').setMinValue(1))
-        .addIntegerOption((o) => o.setName('max').setDescription('Mise maximale').setMinValue(1))
+        .addIntegerOption((o) => o.setName('prix').setDescription('Prix fixe d’un tour').setMinValue(1).setMaxValue(100000))
         .addIntegerOption((o) => o.setName('cagnotte_depart').setDescription('Cagnotte de départ après un jackpot').setMinValue(0).setMaxValue(1000000)),
     )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
@@ -179,16 +178,14 @@ export default defineCommand({
 
     if (sub === 'machine') {
       const changes = {
-        slotMinBet: interaction.options.getInteger('min') ?? undefined,
-        slotMaxBet: interaction.options.getInteger('max') ?? undefined,
+        slotBet: interaction.options.getInteger('prix') ?? undefined,
         slotJackpotSeed: interaction.options.getInteger('cagnotte_depart') ?? undefined,
       };
-      if ((changes.slotMinBet ?? settings.slotMinBet) > (changes.slotMaxBet ?? settings.slotMaxBet)) return void (await reply('La mise minimale doit être inférieure ou égale à la maximale.'));
       const updated = Object.values(changes).some((v) => v !== undefined) ? await updateSlotLimits(interaction.guildId, changes) : settings;
       const jackpot = await getJackpot(interaction.guildId);
       await reply(
         [
-          `**Mises :** de ${formatAmount(updated.slotMinBet, updated)} à ${formatAmount(updated.slotMaxBet, updated)}`,
+          `**Prix du tour :** ${formatAmount(updated.slotBet, updated)}`,
           `**Cagnotte :** ${formatAmount(jackpot.pool, updated)} actuellement (toutes les mises y entrent, tous les gains en sortent) · repart à ${formatAmount(updated.slotJackpotSeed, updated)}`,
           jackpot.lastWinnerDiscordId ? `**Dernier jackpot :** ${formatAmount(jackpot.lastWonAmount ?? 0, updated)} par <@${jackpot.lastWinnerDiscordId}>` : '',
         ].filter(Boolean).join('\n'),

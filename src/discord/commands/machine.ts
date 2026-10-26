@@ -1,14 +1,14 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, SlashCommandBuilder, userMention, type RepliableInteraction } from 'discord.js';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { defineCommand } from '../types.js';
-import { registerButtonPrefix } from '../components.js';
+import { registerButton } from '../components.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import type { GuildSettings, Member } from '../../generated/prisma/client.js';
 import { InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { formatAmount, getSettings } from '../../modules/settings/settings.service.js';
 import { getJackpot, playSlots, SlotsError, type SpinResult } from '../../modules/casino/slots.service.js';
 
-const AGAIN_PREFIX = 'slots:again:';
+const AGAIN_ID = 'slots:again';
 
 function frame(reels: string[], bet: number, s: GuildSettings, pool: number, result?: SpinResult) {
   const net = result ? result.payout - result.bet : 0;
@@ -26,19 +26,20 @@ function frame(reels: string[], bet: number, s: GuildSettings, pool: number, res
     embed.setFooter({ text: 'Les rouleaux tournent…' });
   }
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(`${AGAIN_PREFIX}${bet}`).setLabel(`Rejouer (${formatAmount(bet, s)})`).setStyle(ButtonStyle.Primary).setEmoji('🎰').setDisabled(!result || result.balanceAfter < bet),
+    new ButtonBuilder().setCustomId(AGAIN_ID).setLabel(`Rejouer (${formatAmount(bet, s)})`).setStyle(ButtonStyle.Primary).setEmoji('🎰').setDisabled(!result || result.balanceAfter < bet),
   );
   return { embeds: [embed], components: [row] };
 }
 
-async function play(interaction: RepliableInteraction, member: Member, bet: number, mode: 'reply' | 'update') {
+async function play(interaction: RepliableInteraction, member: Member, mode: 'reply' | 'update') {
   const s = await getSettings(member.guildId);
+  const bet = s.slotBet;
   const fail = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
   let result: SpinResult;
   try {
-    result = await playSlots(member, bet);
+    result = await playSlots(member);
   } catch (err) {
-    if (err instanceof InsufficientFundsError) return void (await fail(`Il te faut ${formatAmount(bet, s)} pour jouer, et tu n’as que ${formatAmount(err.balance, s)}.`));
+    if (err instanceof InsufficientFundsError) return void (await fail(`Un tour coûte ${formatAmount(bet, s)}, et tu n’as que ${formatAmount(err.balance, s)}.`));
     if (err instanceof SlotsError) return void (await fail(err.message));
     throw err;
   }
@@ -63,17 +64,16 @@ async function play(interaction: RepliableInteraction, member: Member, bet: numb
   }
 }
 
-registerButtonPrefix(AGAIN_PREFIX, async ({ interaction, member, arg }) => {
+registerButton(AGAIN_ID, async ({ interaction, member }) => {
   const fresh = await prisma.member.findUniqueOrThrow({ where: { id: member.id } });
-  await play(interaction, fresh, Number(arg) || 0, 'update');
+  await play(interaction, fresh, 'update');
 });
 
 export default defineCommand({
   data: new SlashCommandBuilder()
     .setName('machine')
-    .setDescription('Tente ta chance à la machine à sous de Voltron')
-    .addIntegerOption((o) => o.setName('mise').setDescription('Mise en cœurs').setRequired(true).setMinValue(1)),
+    .setDescription('Tente ta chance à la machine à sous de Voltron (prix fixe par tour)'),
   async execute({ interaction, member }) {
-    await play(interaction, member, interaction.options.getInteger('mise', true), 'reply');
+    await play(interaction, member, 'reply');
   },
 });
