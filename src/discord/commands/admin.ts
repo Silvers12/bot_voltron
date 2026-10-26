@@ -10,6 +10,7 @@ import { buildLevelsAdminGroup, handleLevelsAdmin } from '../../modules/progress
 import { buildLotteryAdminGroup, handleLotteryAdmin } from '../../modules/lottery/lottery.admin.js';
 import { buildAchievementsAdminGroup, handleAchievementsAdmin } from '../../modules/achievements/achievements.admin.js';
 import { buildCountingAdminGroup, handleCountingAdmin } from '../../modules/counting/counting.admin.js';
+import { buildMessagesAdminGroup, handleMessagesAdmin } from '../../modules/moderation/messages.admin.js';
 import { getJackpot } from '../../modules/casino/slots.service.js';
 import { openAdminPanel } from '../../modules/admin/panel.controller.js';
 import { FEATURES, featureInfo, isFeatureEnabled, setFeatureEnabled, type FeatureKey } from '../../modules/features/features.js';
@@ -132,7 +133,8 @@ export default defineCommand({
     .addSubcommandGroup((group) => buildLevelsAdminGroup(group))
     .addSubcommandGroup((group) => buildLotteryAdminGroup(group))
     .addSubcommandGroup((group) => buildAchievementsAdminGroup(group))
-    .addSubcommandGroup((group) => buildCountingAdminGroup(group)),
+    .addSubcommandGroup((group) => buildCountingAdminGroup(group))
+    .addSubcommandGroup((group) => buildMessagesAdminGroup(group)),
 
   async autocomplete(interaction) {
     if (!isBotAdmin(interaction.member)) return void (await interaction.respond([]));
@@ -153,6 +155,7 @@ export default defineCommand({
     if (interaction.options.getSubcommandGroup(false) === 'tombola') return handleLotteryAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'succes') return handleAchievementsAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'comptage') return handleCountingAdmin(interaction);
+    if (interaction.options.getSubcommandGroup(false) === 'messages') return handleMessagesAdmin(interaction);
 
     const sub = interaction.options.getSubcommand(true);
     const settings = await getSettings(interaction.guildId);
