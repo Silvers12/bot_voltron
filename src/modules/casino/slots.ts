@@ -7,7 +7,7 @@ export type Symbol = (typeof SYMBOLS)[number];
 const WEIGHTS: Record<Symbol, number> = { '🦦': 1, '❤️': 2, '🛡️': 3, '🐟': 4, '🌊': 5, '🪨': 5 };
 
 /** Multiplicateur de la mise pour trois symboles identiques. */
-const TRIPLE: Record<Symbol, number> = { '🦦': 100, '❤️': 30, '🛡️': 15, '🐟': 10, '🌊': 7, '🪨': 6 };
+const TRIPLE: Record<Symbol, number> = { '🦦': 10, '❤️': 30, '🛡️': 15, '🐟': 10, '🌊': 7, '🪨': 6 };
 
 const reel: Symbol[] = SYMBOLS.flatMap((s) => Array<Symbol>(WEIGHTS[s]).fill(s));
 
@@ -20,6 +20,8 @@ export interface SpinOutcome {
   /** Multiplicateur de la mise (0 = perdu, 1 = mise rendue) */
   multiplier: number;
   label: string;
+  /** Trois loutres : la cagnotte est remportée en plus du multiplicateur */
+  jackpot?: boolean;
 }
 
 /** Table des gains, par priorité décroissante. */
@@ -27,7 +29,7 @@ export function evaluate(reels: [Symbol, Symbol, Symbol]): SpinOutcome {
   const [a, b, c] = reels;
   const otters = reels.filter((s) => s === '🦦').length;
 
-  if (a === b && b === c) return { reels, multiplier: TRIPLE[a], label: a === '🦦' ? 'JACKPOT : trois loutres !' : `Trois ${a} !` };
+  if (a === b && b === c) return { reels, multiplier: TRIPLE[a], label: a === '🦦' ? 'JACKPOT : trois loutres !' : `Trois ${a} !`, jackpot: a === '🦦' };
   if (otters === 2) return { reels, multiplier: 6, label: 'Deux loutres !' };
 
   const others = reels.filter((s) => s !== '🦦');

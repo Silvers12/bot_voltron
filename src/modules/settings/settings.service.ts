@@ -87,8 +87,11 @@ export async function updateLevelSettings(
   return settings;
 }
 
-export async function updateSlotLimits(guildId: string, slotMinBet: number, slotMaxBet: number): Promise<GuildSettings> {
-  const settings = await prisma.guildSettings.upsert({ where: { guildId }, create: { guildId, slotMinBet, slotMaxBet }, update: { slotMinBet, slotMaxBet } });
+export async function updateSlotLimits(
+  guildId: string,
+  changes: Partial<Pick<GuildSettings, 'slotMinBet' | 'slotMaxBet' | 'slotJackpotSeed'>>,
+): Promise<GuildSettings> {
+  const settings = await prisma.guildSettings.upsert({ where: { guildId }, create: { guildId, ...changes }, update: changes });
   cache.set(guildId, settings);
   return settings;
 }

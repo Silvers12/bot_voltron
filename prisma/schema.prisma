@@ -80,6 +80,10 @@ model GuildSettings {
   /// Mises autorisées à la machine à sous
   slotMinBet       Int      @default(10)
   slotMaxBet       Int      @default(1000)
+  /// Part de chaque mise versée à la cagnotte (en %)
+  slotJackpotContributionPercent Int @default(5)
+  /// Montant de départ de la cagnotte après un jackpot
+  slotJackpotSeed  Int      @default(1000)
   /// Câlin collectif : salons d'apparition, tirés au hasard (vide = désactivé)
   groupHugChannelIds String[] @default([])
   /// Cœurs par câlineur, multipliés par le nombre de câlineurs
@@ -298,4 +302,15 @@ model LevelRole {
 
   @@unique([guildId, level])
   @@unique([guildId, roleId])
+}
+
+/// Cagnotte progressive de la machine à sous, par serveur.
+model SlotJackpot {
+  guildId   String   @id
+  pool      Int
+  /// Dernier gagnant et date, pour l'affichage
+  lastWinnerDiscordId String?
+  lastWonAmount Int?
+  lastWonAt DateTime?
+  updatedAt DateTime @updatedAt
 }
