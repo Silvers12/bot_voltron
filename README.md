@@ -176,7 +176,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 - `/taux type:… [membre]` : chance, choupitude, suspicion, criminalité, loutritude, flemme, sagesse, chaos. Le taux est aléatoire mais fixe pour un membre, un taux et un jour civil (hachage, aucun stockage) ; il change à minuit dans le fuseau du serveur.
 - Réponse publique avec une bannière 1200 × 400 générée par `sharp` : avatar à gauche, nom, taux, barre et commentaire au centre, icône du taux à droite grisée et remplie par le bas selon le pourcentage.
-- Icônes : PNG à fond transparent dans `content/taux/<clé>.png` (voir `content/taux/README.md`) ; sans fichier, icône vectorielle de secours. Textes et couleurs dans `src/modules/rates/rates.catalog.ts`. Le conteneur installe `ttf-dejavu` pour le texte des images.
+- Icônes : PNG à fond transparent dans `content/taux/<clé>.png` (voir `content/taux/README.md`) ; sans fichier, icône vectorielle de secours. Textes et couleurs dans `src/modules/rates/rates.catalog.ts`. Le conteneur installe `ttf-dejavu` et `font-noto-emoji` (emojis des pseudos, rendus en monochrome) pour le texte des images.
 
 ## Statistiques
 

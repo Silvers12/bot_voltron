@@ -12,7 +12,7 @@ FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 # Polices pour le texte des images générées (sharp/librsvg)
-RUN apk add --no-cache fontconfig ttf-dejavu
+RUN apk add --no-cache fontconfig ttf-dejavu font-noto-emoji
 COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
 RUN npm ci --omit=dev
