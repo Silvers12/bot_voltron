@@ -189,8 +189,8 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Page d'accueil et rôles de notification
 
 - `/admin accueil installer salon:#accueil` : crée les rôles « Câlins collectifs », « Tombola » et « Duels » s'ils manquent (mentionnables, sans permission), publie la page d'accueil (présentation de Voltron + trois boutons) et l'épingle. Le rôle de Voltron doit être au-dessus de ces rôles.
-- Page en trois blocs : intro (texte personnalisable avec `/admin accueil texte`, bannière avec `/admin accueil banniere image:` — PNG/JPG/GIF/WebP 8 Mo, stockée en base), « Ce qui t'attend » (seules les fonctionnalités actives apparaissent), « Être prévenu » avec les boutons.
-- Un clic sur un bouton prend le rôle, un second le retire (confirmation privée). `/admin accueil roles` pour utiliser des rôles existants, `publier` pour mettre à jour la page, `etat`. Toute modification republie la page automatiquement.
+- Page en « composants V2 » (conteneur coloré, titres, séparateurs, galerie pour la bannière, menu déroulant). Intro (texte personnalisable avec `/admin accueil texte`, bannière avec `/admin accueil banniere image:` — PNG/JPG/GIF/WebP 8 Mo, stockée en base), « Ce qui t'attend » (seules les fonctionnalités actives apparaissent), « Être prévenu » avec un menu déroulant à choix multiples.
+- Le menu applique exactement la sélection : rôles cochés ajoutés, décochés retirés (confirmation privée). `/admin accueil roles` pour utiliser des rôles existants, `publier` pour mettre à jour la page, `etat`. Toute modification republie la page automatiquement.
 - Pings : le rôle est mentionné à l'apparition d'un câlin collectif, à chaque publication ou rappel de tombola, et quand un duel est lancé (le défié est toujours mentionné).
 
 ## Salons des commandes

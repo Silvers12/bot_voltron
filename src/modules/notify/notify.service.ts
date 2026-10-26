@@ -41,6 +41,24 @@ export async function setWelcomeBanner(guildId: string, attachment: { url: strin
   await updateSettings(guildId, { welcomeBanner: bytes, welcomeBannerType: attachment.contentType });
 }
 
+/** Applique exactement l'ensemble choisi dans le menu : ajoute les rôles cochés, retire les autres. */
+export async function applyNotifySelection(member: GuildMember, selected: NotifyKey[]): Promise<{ on: NotifyKey[]; off: NotifyKey[] }> {
+  const s = await getSettings(member.guild.id);
+  const on: NotifyKey[] = [];
+  const off: NotifyKey[] = [];
+  for (const r of NOTIFY_ROLES) {
+    const roleId = s[r.field];
+    if (!roleId) continue;
+    const problem = roleAssignabilityProblem(member.guild, roleId);
+    if (problem) throw new NotifyError(problem);
+    const wanted = selected.includes(r.key);
+    const has = member.roles.cache.has(roleId);
+    if (wanted && !has) { await member.roles.add(roleId, 'Notification choisie'); on.push(r.key); }
+    if (!wanted && has) { await member.roles.remove(roleId, 'Notification retirée'); off.push(r.key); }
+  }
+  return { on, off };
+}
+
 /** Prend ou retire le rôle ; retourne true s'il est désormais porté. */
 export async function toggleNotifyRole(member: GuildMember, key: NotifyKey): Promise<boolean> {
   const s = await getSettings(member.guild.id);
@@ -64,7 +82,12 @@ export async function publishWelcome(guild: Guild): Promise<string> {
 
   const payload = buildWelcomeMessage(s, guild.name);
   const existing = s.welcomeMessageId ? await channel.messages.fetch(s.welcomeMessageId).catch(() => null) : null;
-  if (existing) { await existing.edit({ ...payload, attachments: [] }); return 'mise à jour'; } // attachments: [] remplace l'ancienne bannière
+  if (existing) {
+    // attachments: [] remplace l'ancienne bannière ; content/embeds vidés pour passer en composants V2 si besoin
+    const edited = await existing.edit({ ...payload, content: '', embeds: [], attachments: [] }).then(() => true).catch(() => false);
+    if (edited) return 'mise à jour';
+    await existing.delete().catch(() => undefined);
+  }
   const message = await channel.send(payload);
   if (perms.has(PermissionFlagsBits.ManageMessages)) await message.pin().catch(() => undefined);
   await updateSettings(guild.id, { welcomeMessageId: message.id });
