@@ -5,7 +5,7 @@ import { getSettings, updateDisabledFeatures } from '../settings/settings.servic
 export type FeatureKey =
   | 'quotidien' | 'hebdo' | 'calin' | 'boutique' | 'xp'
   | 'compliments' | 'insultes' | 'blackjack' | 'machine' | 'duel'
-  | 'calin_collectif' | 'tombola' | 'succes' | 'comptage';
+  | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'taux';
 
 export interface FeatureInfo {
   key: FeatureKey;
@@ -29,6 +29,7 @@ export const FEATURES: FeatureInfo[] = [
   { key: 'tombola', label: 'Tombola', emoji: '🎟️', description: '/tombola, rappels et tirages' },
   { key: 'succes', label: 'Succès et badges', emoji: '🏅', description: 'Déblocages, annonces et /succes' },
   { key: 'comptage', label: 'Salon de comptage', emoji: '🔢', description: 'Compter à la suite, amende en cas d’erreur' },
+  { key: 'taux', label: 'Taux du jour', emoji: '🧸', description: '/taux : chance, choupitude, suspicion…' },
 ];
 
 export const FEATURE_KEYS = FEATURES.map((f) => f.key);
@@ -60,7 +61,7 @@ export async function setFeatureEnabled(guildId: string, key: FeatureKey, enable
 
 const COMMAND_FEATURES: Record<string, FeatureKey> = {
   calin: 'calin', hebdo: 'hebdo', classement: 'xp', compliment: 'compliments', insulte: 'insultes',
-  blackjack: 'blackjack', machine: 'machine', duel: 'duel', tombola: 'tombola', succes: 'succes',
+  blackjack: 'blackjack', machine: 'machine', duel: 'duel', tombola: 'tombola', succes: 'succes', taux: 'taux',
 };
 
 /** Préfixes de customId des composants gardés. Les câlins collectifs déjà lancés restent cliquables. */

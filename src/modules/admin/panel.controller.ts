@@ -156,7 +156,7 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
       return { lines: describeWelcome(s).split('\n'), commands: ['/admin accueil installer · roles · publier · etat'] };
     case 'textes':
       return {
-        lines: ['Textes dans `content/compliments.json` et `content/insultes.json` (rechargés au redémarrage)'],
+        lines: ['Textes dans `content/compliments.json` et `content/insultes.json` (rechargés au redémarrage)', 'Taux : icônes PNG optionnelles dans `content/taux/<clé>.png` (chance, choupitude, suspicion, criminalite, loutritude, flemme, sagesse, chaos)'],
         commands: ['Modifier les fichiers puis redémarrer le bot'],
       };
   }

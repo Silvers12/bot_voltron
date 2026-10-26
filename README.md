@@ -172,6 +172,12 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Deux réponses simultanées : la première est acceptée, la seconde est évaluée contre le nouveau nombre.
 - Record et nombre d'erreurs conservés (`/admin comptage etat`).
 
+## Taux du jour
+
+- `/taux type:… [membre]` : chance, choupitude, suspicion, criminalité, loutritude, flemme, sagesse, chaos. Le taux est aléatoire mais fixe pour un membre, un taux et un jour civil (hachage, aucun stockage) ; il change à minuit dans le fuseau du serveur.
+- Réponse publique avec une bannière 1200 × 400 générée par `sharp` : avatar à gauche, nom, taux, barre et commentaire au centre, icône du taux à droite grisée et remplie par le bas selon le pourcentage.
+- Icônes : PNG à fond transparent dans `content/taux/<clé>.png` (voir `content/taux/README.md`) ; sans fichier, icône vectorielle de secours. Textes et couleurs dans `src/modules/rates/rates.catalog.ts`. Le conteneur installe `ttf-dejavu` pour le texte des images.
+
 ## Statistiques
 
 - `/stats [membre]` : activité (messages, vocal, niveau, meilleure série), câlins donnés et reçus, blackjack, machine à sous, duels, tombola, câlins collectifs, comptage, chacun avec son bilan net en cœurs. Seules les fonctionnalités actives apparaissent. Public.
@@ -235,6 +241,7 @@ Membres :
 - `/tombola` : tombola hebdomadaire (public).
 - `/succes [membre]` : badges d'un membre (public).
 - `/stats [membre]` : statistiques de jeu (public).
+- `/taux type [membre]` : taux du jour avec bannière (public).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`

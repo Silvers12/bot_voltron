@@ -11,6 +11,8 @@ RUN npm run build
 FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
+# Polices pour le texte des images générées (sharp/librsvg)
+RUN apk add --no-cache fontconfig ttf-dejavu
 COPY package.json package-lock.json prisma.config.ts ./
 COPY prisma ./prisma
 RUN npm ci --omit=dev
