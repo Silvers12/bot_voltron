@@ -1,4 +1,4 @@
-import { MessageFlags, PermissionFlagsBits, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
+import { ChannelType, channelMention, MessageFlags, PermissionFlagsBits, SlashCommandBuilder, type ChatInputCommandInteraction } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { isBotAdmin } from '../../core/permissions.js';
@@ -112,6 +112,14 @@ export default defineCommand({
     )
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
     .addSubcommand((sub) => sub.setName('panneau').setDescription('Ouvre le panneau de contrôle complet (privé)'))
+    .addSubcommand((sub) =>
+      sub
+        .setName('message')
+        .setDescription('Écrit un message en tant que Voltron')
+        .addStringOption((o) => o.setName('texte').setDescription('Texte (\\n pour un retour à la ligne)').setRequired(true).setMaxLength(2000))
+        .addChannelOption((o) => o.setName('salon').setDescription('Salon (par défaut : celui-ci)').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.PublicThread, ChannelType.PrivateThread))
+        .addStringOption((o) => o.setName('repondre_a').setDescription('ID d’un message du salon auquel répondre')),
+    )
     .addSubcommand((sub) =>
       sub
         .setName('fonction')
@@ -233,6 +241,24 @@ export default defineCommand({
     }
 
     if (sub === 'panneau') return openAdminPanel(interaction);
+
+    if (sub === 'message') {
+      const text = interaction.options.getString('texte', true).replaceAll('\\n', '\n').trim();
+      const target = interaction.options.getChannel('salon') ?? interaction.channel;
+      const channel = target && interaction.guild.channels.cache.get(target.id);
+      if (!channel || !channel.isTextBased() || !channel.isSendable()) return void (await reply('Je ne peux pas écrire dans ce salon.'));
+      const perms = channel.permissionsFor(interaction.guild.members.me!);
+      if (!perms.has(PermissionFlagsBits.ViewChannel) || !perms.has(PermissionFlagsBits.SendMessages)) return void (await reply(`Je n’ai pas le droit d’écrire dans ${channelMention(channel.id)}.`));
+      const replyTo = interaction.options.getString('repondre_a')?.trim();
+      try {
+        await channel.send({ content: text, allowedMentions: { parse: ['users', 'roles'] }, ...(replyTo ? { reply: { messageReference: replyTo, failIfNotExists: true } } : {}) });
+      } catch (err) {
+        if (replyTo) return void (await reply('Message introuvable dans ce salon : vérifie l’identifiant (clic droit → Copier l’identifiant du message).'));
+        throw err;
+      }
+      await reply(`Message envoyé dans ${channelMention(channel.id)}.`);
+      return;
+    }
 
     if (sub === 'fonction') {
       const name = interaction.options.getString('nom', true) as FeatureKey;
