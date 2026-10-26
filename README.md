@@ -114,7 +114,7 @@ docker compose logs -f bot
 
 - Voltron apparaît à des moments aléatoires dans l'un des salons configurés, avec un bouton **CÂLIN** ouvert pendant 60 s (réglable).
 - À la clôture, chaque participant reçoit `récompense × nombre de participants` (200 par défaut : à 5, 1 000 chacun). Un clic par membre.
-- Intervalle aléatoire entre deux apparitions : 3 h à 8 h par défaut. La prochaine date est persistée ; un câlin en cours survit à un redémarrage.
+- Intervalle aléatoire entre deux apparitions : 1 h à 6 h par défaut. La prochaine date est persistée ; un câlin en cours survit à un redémarrage.
 - `/admin calin ajouter-salon #salon` active la fonction ; `retirer-salon`, `regler`, `lancer` (manuel), `etat`.
 
 ## Commandes

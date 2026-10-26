@@ -81,8 +81,8 @@ model GuildSettings {
   groupHugReward   Int      @default(200)
   groupHugDurationSeconds Int @default(60)
   /// Intervalle aléatoire entre deux apparitions, en minutes
-  groupHugMinIntervalMinutes Int @default(180)
-  groupHugMaxIntervalMinutes Int @default(480)
+  groupHugMinIntervalMinutes Int @default(60)
+  groupHugMaxIntervalMinutes Int @default(360)
   /// Prochaine apparition programmée (persistée pour survivre aux redémarrages)
   nextGroupHugAt   DateTime?
   updatedAt        DateTime @updatedAt
