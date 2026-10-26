@@ -218,7 +218,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Commandes
 
 Membres :
-- Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, fiche article, inventaire. Assistants dans `src/discord/v2.ts`.
+- Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, fiche article, inventaire, tombola, tirage, câlin collectif, duel, machine à sous, page d'accueil. Assistants dans `src/discord/v2.ts`. Les messages publiés avant cette version restent en ancien format : `/admin tombola publier` et `/admin accueil publier` les remplacent.
 - `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour, Hebdo, Historique, Boutique et Inventaire. Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/hebdo` : récompense de la semaine (réponse privée).

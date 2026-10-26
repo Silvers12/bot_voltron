@@ -62,25 +62,25 @@ export async function publishLottery(client: Client, lottery: Lottery, intro: st
   if (typeof channel === 'string') { log.warn(`Publication de la tombola impossible sur ${guild.name} : ${channel}`); return null; }
 
   const fresh = await prisma.lottery.findUniqueOrThrow({ where: { id: lottery.id } });
-  const message = await channel.send({ content: `${notifyMention(s, 'lottery')}${intro}`, allowedMentions: { parse: ['roles' as const] }, ...buildLotteryMessage(fresh, s) }).catch((err) => { log.warn('Publication de la tombola impossible', err); return null; });
+  const message = await channel.send({ ...buildLotteryMessage(fresh, s, `${notifyMention(s, 'lottery')}${intro}`), allowedMentions: { parse: ['roles' as const] } }).catch((err) => { log.warn('Publication de la tombola impossible', err); return null; });
   if (!message) return null;
 
   const canPin = channel.permissionsFor(guild.members.me!).has(PermissionFlagsBits.ManageMessages);
   if (canPin) {
-    await retireMessage(client, fresh, { unpin: true });
+    await retireMessage(client, fresh, s, { unpin: true });
     await message.pin().catch((err) => log.warn('Épinglage impossible', err));
   } else {
-    await retireMessage(client, fresh, { unpin: false });
+    await retireMessage(client, fresh, s, { unpin: false });
   }
   return prisma.lottery.update({ where: { id: fresh.id }, data: { channelId: channel.id, messageId: message.id } });
 }
 
 /** Retire les boutons (et l'épingle) du message précédent d'un tirage. */
-async function retireMessage(client: Client, lottery: Pick<Lottery, 'channelId' | 'messageId'>, { unpin }: { unpin: boolean }) {
+async function retireMessage(client: Client, lottery: Lottery, s: GuildSettings, { unpin }: { unpin: boolean }) {
   const old = await fetchLotteryMessage(client, lottery);
   if (!old) return;
   if (unpin && old.pinned) await old.unpin().catch(() => undefined);
-  await old.edit({ components: [] }).catch(() => undefined);
+  await old.edit(buildLotteryMessage(lottery, s, undefined, { buttons: false })).catch(() => undefined);
 }
 
 async function fetchLotteryMessage(client: Client, lottery: Pick<Lottery, 'channelId' | 'messageId'>) {
@@ -194,7 +194,7 @@ export async function draw(client: Client, lotteryId: string): Promise<DrawResul
   if (guild && s.lotteryChannelId) {
     const channel = resolveLotteryChannel(guild, s.lotteryChannelId);
     if (typeof channel !== 'string') await channel.send(buildDrawAnnouncement(result, total, s)).catch((err) => log.warn('Annonce du tirage impossible', err));
-    await retireMessage(client, lottery, { unpin: true });
+    await retireMessage(client, lottery, s, { unpin: true });
     const published = await publishLottery(client, next, nextIntro(next, carryOver, s));
     if (published) result.next = published;
   }

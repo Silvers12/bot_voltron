@@ -9,7 +9,6 @@ import { isFeatureEnabled } from '../features/features.js';
 import { trackAchievements } from '../achievements/achievements.service.js';
 import { getSettings, updateGroupHugSettings } from '../settings/settings.service.js';
 import { buildHugClosedMessage, buildHugOpenMessage } from './grouphug.view.js';
-import { notifyMention } from '../notify/notify.service.js';
 
 const log = createLogger('grouphug');
 
@@ -63,8 +62,7 @@ export async function launchHug(guild: Guild, channelId?: string): Promise<Group
   const hug = await prisma.groupHug.create({
     data: { guildId: guild.id, channelId: channel.id, rewardPerHugger: s.groupHugReward, endsAt },
   });
-  const ping = notifyMention(s, 'hug');
-  const message = await channel.send({ ...(ping ? { content: ping.trim(), allowedMentions: { parse: ['roles' as const] } } : {}), ...buildHugOpenMessage(hug, 0, s) });
+  const message = await channel.send({ ...buildHugOpenMessage(hug, 0, s), allowedMentions: { parse: ['roles' as const] } });
   const saved = await prisma.groupHug.update({ where: { id: hug.id }, data: { messageId: message.id } });
   armCloseTimer(guild.client, saved);
   log.info(`Câlin collectif ${hug.id} lancé dans #${channel.name}`);

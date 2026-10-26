@@ -1,4 +1,5 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, SlashCommandBuilder, userMention, type ButtonInteraction } from 'discord.js';
+import { card, divider, screen, text } from '../v2.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, type MessageActionRowComponentBuilder, MessageFlags, SlashCommandBuilder, userMention, type ButtonInteraction } from 'discord.js';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { defineCommand } from '../types.js';
 import { registerButton } from '../components.js';
@@ -25,32 +26,29 @@ interface FrameOptions {
 }
 
 function frame({ reels, s, pool, playerId, result, busy }: FrameOptions) {
-  const embed = new EmbedBuilder()
-    .setColor(!result ? 0x2e86c1 : result.kind === 'jackpot' ? 0xf1c40f : result.kind === 'triple' ? 0x2ecc71 : 0xe74c3c)
-    .setTitle('🎰 La machine de Voltron')
-    .setDescription(`# ${reels.join(' │ ')}`)
-    .addFields(
-      { name: '🦦🦦🦦 Cagnotte', value: `**${formatAmount(pool, s)}**`, inline: true },
-      { name: 'Prix du tour', value: formatAmount(s.slotBet, s), inline: true },
-    );
-
+  const c = card(!result ? 0x2e86c1 : result.kind === 'jackpot' ? 0xf1c40f : result.kind === 'triple' ? 0x2ecc71 : 0xe74c3c);
+  c.addTextDisplayComponents(text(`# 🎰 La machine de Voltron\n# ${reels.join(' │ ')}`));
+  c.addSeparatorComponents(divider(true));
+  c.addTextDisplayComponents(text(`🦦🦦🦦 **Cagnotte** · **${formatAmount(pool, s)}** · 🎟️ **Prix du tour** · ${formatAmount(s.slotBet, s)}`));
   if (result && playerId) {
     const net = result.payout - result.bet;
-    const text = result.kind === 'jackpot'
+    const line = result.kind === 'jackpot'
       ? `${result.label} ${userMention(playerId)} rafle toute la cagnotte : **${formatAmount(result.payout, s)}** !`
       : result.kind === 'triple'
         ? `${result.label} ${userMention(playerId)} emporte ${s.slotTriplePercent} % de la cagnotte : **${formatAmount(result.payout, s)}** !`
         : `${userMention(playerId)} : ${result.label}`;
-    embed.addFields({ name: 'Dernier tour', value: `${text}\nBilan du tour : **${net >= 0 ? '+' : ''}${formatAmount(net, s)}**` });
+    c.addSeparatorComponents(divider());
+    c.addTextDisplayComponents(text(`**Dernier tour**\n${line}\nBilan du tour : **${net >= 0 ? '+' : ''}${formatAmount(net, s)}**`));
   } else if (playerId) {
-    embed.addFields({ name: 'En cours', value: `${userMention(playerId)} lance les rouleaux…` });
+    c.addSeparatorComponents(divider());
+    c.addTextDisplayComponents(text(`**En cours** · ${userMention(playerId)} lance les rouleaux…`));
   }
-  embed.setFooter({ text: 'Trois symboles identiques gagnent. Trois loutres raflent toute la cagnotte ! Chacun joue avec sa bourse.' });
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+  c.addSeparatorComponents(divider());
+  c.addTextDisplayComponents(text('-# Trois symboles identiques gagnent. Trois loutres raflent toute la cagnotte ! Chacun joue avec sa bourse.'));
+  const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
     new ButtonBuilder().setCustomId(SPIN_ID).setLabel(`Lancer (${formatAmount(s.slotBet, s)})`).setStyle(ButtonStyle.Primary).setEmoji('🎰').setDisabled(busy === true),
   );
-  return { embeds: [embed], components: [row], allowedMentions: { parse: [] as [] } };
+  return { ...screen(c, [row]), allowedMentions: { parse: [] as [] } };
 }
 
 async function spin(interaction: ButtonInteraction<'cached'>, memberId: string) {
