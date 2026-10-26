@@ -11,7 +11,8 @@ export const profileSessionKey = (guildId: string, userId: string) => `profil:${
 export async function openProfile(ctx: { interaction: ChatInputCommandInteraction<'cached'>; member: Member; guildMember: GuildMember }) {
   const key = profileSessionKey(ctx.interaction.guildId, ctx.interaction.user.id);
   await closeSession(key);
-  await ctx.interaction.reply({ ...(await renderProfile(ctx.member, ctx.guildMember)), flags: MessageFlags.Ephemeral });
+  const view = await renderProfile(ctx.member, ctx.guildMember);
+  await ctx.interaction.reply({ ...view, flags: view.flags | MessageFlags.Ephemeral });
   await openSession(key, ctx.interaction, PROFILE_SESSION_TTL_MS);
 }
 

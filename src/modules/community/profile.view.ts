@@ -1,12 +1,12 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, time, TimestampStyles, userMention, type GuildMember } from 'discord.js';
-import type { GuildSettings, Member, Transaction } from '../../generated/prisma/client.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SectionBuilder, ThumbnailBuilder, time, TimestampStyles, userMention, type GuildMember, type MessageActionRowComponentBuilder } from 'discord.js';
+import type { GuildSettings, Member, MemberAchievement, ShopItem, Transaction } from '../../generated/prisma/client.js';
 import type { DailyStatus } from '../economy/daily.service.js';
 import type { WeeklyStatus } from '../economy/weekly.service.js';
 import { formatAmount } from '../settings/settings.service.js';
 import { progressFor } from '../progression/levels.service.js';
 import { isFeatureEnabled } from '../features/features.js';
 import { badgeLine, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
-import type { MemberAchievement, ShopItem } from '../../generated/prisma/client.js';
+import { card, clampLines, divider, screen, text } from '../../discord/v2.js';
 
 export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
@@ -16,8 +16,7 @@ export const PROFILE_WEEKLY_ID = 'profil:weekly';
 export const SHOP_OPEN_ID = 'shop:open';
 export const INVENTORY_OPEN_ID = 'shop:inventory';
 
-const VOLTRON_COLOR = 0x2e86c1;
-const FOOTER = 'Voltron, loutre paladin · Par mon bouclier et mes moustaches !';
+const SIGNATURE = '-# Voltron, loutre paladin · Par mon bouclier et mes moustaches !';
 
 export interface ProfileData {
   member: Member;
@@ -33,106 +32,71 @@ export interface ProfileData {
   notice?: string;
 }
 
-/** Écran principal du profil : embed + boutons. */
+/** Écran principal du profil. */
 export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, title, notice }: ProfileData) {
-  const embed = new EmbedBuilder()
-    .setColor(VOLTRON_COLOR)
-    .setAuthor({ name: `Profil de ${member.displayName}`, iconURL: guildMember.displayAvatarURL({ size: 128 }) })
-    .setThumbnail(guildMember.displayAvatarURL({ size: 256 }))
-    .setTitle(title ? `${title.emoji ? title.emoji + ' ' : '🏷️ '}${title.name}` : null)
-    .addFields(
-      { name: 'Bourse', value: `**${formatAmount(balance, settings)}**`, inline: true },
-      { name: 'Niveau', value: levelLine(member.xp, settings, rank), inline: true },
-      {
-        name: 'Dans la compagnie depuis',
-        value: member.joinedAt ? time(member.joinedAt, TimestampStyles.LongDate) : 'Inconnu',
-        inline: true,
-      },
-      { name: 'Profil créé', value: time(member.createdAt, TimestampStyles.RelativeTime), inline: true },
-      ...rewardFields(daily, weekly, settings),
-      ...(isFeatureEnabled(settings, 'succes') ? [{ name: 'Badges', value: badgeLine(achievements), inline: false }] : []),
-    )
-    .setFooter({ text: FOOTER });
-  if (notice) embed.setDescription(notice);
+  const c = card();
+  const header = [
+    `# ${member.displayName}`,
+    title ? `${title.emoji ? title.emoji + ' ' : '🏷️ '}**${title.name}**` : '',
+    `Dans la compagnie depuis ${member.joinedAt ? time(member.joinedAt, TimestampStyles.LongDate) : 'un moment'} · profil créé ${time(member.createdAt, TimestampStyles.RelativeTime)}`,
+  ].filter(Boolean).join('\n');
+  c.addSectionComponents(new SectionBuilder().addTextDisplayComponents(text(header)).setThumbnailAccessory(new ThumbnailBuilder().setURL(guildMember.displayAvatarURL({ size: 256 }))));
+  if (notice) c.addTextDisplayComponents(text(`> ${notice}`));
+  c.addSeparatorComponents(divider(true));
 
-  const row = new ActionRowBuilder<ButtonBuilder>();
+  c.addTextDisplayComponents(text(`💰 **Bourse** · **${formatAmount(balance, settings)}**\n${levelLine(member.xp, settings, rank)}`));
+
+  const rewards: string[] = [];
   if (isFeatureEnabled(settings, 'quotidien')) {
-    row.addComponents(
-      new ButtonBuilder()
-        .setCustomId(PROFILE_DAILY_ID)
-        .setLabel(daily.claimedToday ? 'Récompense récupérée' : 'Récupérer ma récompense')
-        .setStyle(ButtonStyle.Success)
-        .setEmoji('🎁')
-        .setDisabled(daily.claimedToday),
+    rewards.push(
+      daily.claimedToday
+        ? `🎁 **Récompense du jour** · déjà récupérée, la prochaine (**${formatAmount(daily.nextAmount, settings)}**) arrive ${time(daily.nextAt, TimestampStyles.RelativeTime)}`
+        : `🎁 **Récompense du jour** · **${formatAmount(daily.nextAmount, settings)}** t’attendent !`,
+      daily.streak > 0 ? `🔥 Série de **${daily.streak} jour${daily.streak > 1 ? 's' : ''}** (+${settings.dailyStreakBonusPercent} % par jour)` : '🔥 Aucune série en cours',
     );
   }
   if (isFeatureEnabled(settings, 'hebdo')) {
-    row.addComponents(
-      new ButtonBuilder()
-        .setCustomId(PROFILE_WEEKLY_ID)
-        .setLabel(weekly.claimedThisWeek ? 'Hebdo récupérée' : 'Récupérer l’hebdo')
-        .setStyle(ButtonStyle.Success)
-        .setEmoji('🗓️')
-        .setDisabled(weekly.claimedThisWeek),
+    rewards.push(
+      weekly.claimedThisWeek
+        ? `🗓️ **Récompense de la semaine** · déjà récupérée, la prochaine arrive ${time(weekly.nextAt, TimestampStyles.RelativeTime)}`
+        : `🗓️ **Récompense de la semaine** · **${formatAmount(weekly.amount, settings)}** t’attendent !`,
     );
+  }
+  if (rewards.length) { c.addSeparatorComponents(divider()); c.addTextDisplayComponents(text(rewards.join('\n'))); }
+  if (isFeatureEnabled(settings, 'succes')) { c.addSeparatorComponents(divider()); c.addTextDisplayComponents(text(`🏅 **Badges** · ${badgeLine(achievements)}`)); }
+
+  const row = new ActionRowBuilder<MessageActionRowComponentBuilder>();
+  if (isFeatureEnabled(settings, 'quotidien')) {
+    row.addComponents(new ButtonBuilder().setCustomId(PROFILE_DAILY_ID).setLabel(daily.claimedToday ? 'Récompense récupérée' : 'Récupérer ma récompense').setStyle(ButtonStyle.Success).setEmoji('🎁').setDisabled(daily.claimedToday));
+  }
+  if (isFeatureEnabled(settings, 'hebdo')) {
+    row.addComponents(new ButtonBuilder().setCustomId(PROFILE_WEEKLY_ID).setLabel(weekly.claimedThisWeek ? 'Hebdo récupérée' : 'Récupérer l’hebdo').setStyle(ButtonStyle.Success).setEmoji('🗓️').setDisabled(weekly.claimedThisWeek));
   }
   row.addComponents(
     new ButtonBuilder().setCustomId(PROFILE_HISTORY_ID).setLabel('Historique').setStyle(ButtonStyle.Primary).setEmoji('📜'),
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Rafraîchir').setStyle(ButtonStyle.Secondary).setEmoji('🔄'),
   );
-  const components = [row];
-  const row2 = new ActionRowBuilder<ButtonBuilder>();
+  const rows = [row];
+  const row2 = new ActionRowBuilder<MessageActionRowComponentBuilder>();
   if (isFeatureEnabled(settings, 'boutique')) {
     row2.addComponents(
       new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
       new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
     );
   }
-  if (isFeatureEnabled(settings, 'succes')) {
-    row2.addComponents(new ButtonBuilder().setCustomId(PROFILE_ACHIEVEMENTS_ID).setLabel('Succès').setStyle(ButtonStyle.Primary).setEmoji('🏅'));
-  }
-  if (row2.components.length) components.push(row2);
+  if (isFeatureEnabled(settings, 'succes')) row2.addComponents(new ButtonBuilder().setCustomId(PROFILE_ACHIEVEMENTS_ID).setLabel('Succès').setStyle(ButtonStyle.Primary).setEmoji('🏅'));
+  if (row2.components.length) rows.push(row2);
 
-  return { embeds: [embed], components };
-}
-
-function rewardFields(daily: DailyStatus, weekly: WeeklyStatus, settings: GuildSettings) {
-  const fields = [];
-  if (isFeatureEnabled(settings, 'quotidien')) {
-    fields.push(
-      {
-        name: 'Récompense du jour',
-        value: daily.claimedToday
-          ? `Déjà récupérée. La prochaine (**${formatAmount(daily.nextAmount, settings)}**) arrive ${time(daily.nextAt, TimestampStyles.RelativeTime)}.`
-          : `**${formatAmount(daily.nextAmount, settings)}** t’attendent !`,
-        inline: true,
-      },
-      {
-        name: 'Série',
-        value: daily.streak > 0
-          ? `🔥 ${daily.streak} jour${daily.streak > 1 ? 's' : ''} d’affilée (+${settings.dailyStreakBonusPercent}% par jour)`
-          : 'Aucune série en cours',
-        inline: true,
-      },
-    );
-  }
-  if (isFeatureEnabled(settings, 'hebdo')) {
-    fields.push({
-      name: 'Récompense de la semaine',
-      value: weekly.claimedThisWeek
-        ? `Déjà récupérée. La prochaine arrive ${time(weekly.nextAt, TimestampStyles.RelativeTime)}.`
-        : `**${formatAmount(weekly.amount, settings)}** t’attendent !`,
-      inline: false,
-    });
-  }
-  return fields;
+  c.addSeparatorComponents(divider());
+  c.addTextDisplayComponents(text(SIGNATURE));
+  return screen(c, rows);
 }
 
 function levelLine(xp: number, settings: GuildSettings, rank: number): string {
   const p = progressFor(xp, settings);
   const filled = Math.round((p.current / p.needed) * 10);
   const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
-  return `**Niveau ${p.level}** · ${rank}ᵉ de la compagnie\n${bar} ${p.current}/${p.needed} XP`;
+  return `⭐ **Niveau ${p.level}** · ${rank}ᵉ de la compagnie\n\`${bar}\` ${p.current}/${p.needed} XP`;
 }
 
 function describeTransaction(t: Transaction): string {
@@ -166,17 +130,17 @@ export function buildHistoryView(member: Member, transactions: Transaction[], ba
     const reason = t.reason && !['WELCOME', 'DAILY', 'WEEKLY'].includes(t.type) ? ` · ${t.reason}` : '';
     return `${time(t.createdAt, TimestampStyles.ShortDateTime)} — **${formatAmount(t.delta, settings, { signed: true })}** ${label}${reason}`;
   });
+  const c = card();
+  c.addTextDisplayComponents(text(`# 📜 Historique de ${member.displayName}`));
+  c.addSeparatorComponents(divider(true));
+  c.addTextDisplayComponents(text(lines.length ? clampLines(lines) : 'Aucun mouvement pour le moment. Ta bourse attend sa première pièce !'));
+  c.addSeparatorComponents(divider());
+  c.addTextDisplayComponents(text(`💰 **Solde actuel** · **${formatAmount(balance, settings)}**`));
+  return screen(c, [backRow()]);
+}
 
-  const embed = new EmbedBuilder()
-    .setColor(VOLTRON_COLOR)
-    .setTitle(`Historique de ${member.displayName}`)
-    .setDescription(lines.length ? lines.join('\n') : 'Aucun mouvement pour le moment. Ta bourse attend sa première pièce !')
-    .addFields({ name: 'Solde actuel', value: `**${formatAmount(balance, settings)}**` })
-    .setFooter({ text: FOOTER });
-
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+export function backRow() {
+  return new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Retour au profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
   );
-
-  return { embeds: [embed], components: [row] };
 }
