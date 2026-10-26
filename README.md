@@ -29,6 +29,7 @@ src/
   modules/banter/          # compliments et insultes (textes dans content/)
   modules/casino/          # blackjack, machine à sous
   modules/duel/            # duels entre membres (textes dans content/)
+  modules/lottery/         # tombola hebdomadaire
   modules/events/          # câlin collectif (apparitions planifiées)
 content/                   # textes éditables (compliments, insultes)
   modules/settings/        # réglages du serveur (monnaie, bienvenue)
@@ -161,6 +162,12 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Résolution par jets de d20 commentés (textes dans `content/duels.json`), relance en cas d'égalité. Un défi sans réponse expire après 2 min et rembourse ; les défis en attente survivent à un redémarrage.
 - Un seul défi en attente par défieur. Mises bornées par `/admin duel min max` (10 à 5 000 par défaut).
 
+## Tombola
+
+- `/tombola` : message public avec cagnotte, prix du ticket, tickets vendus, date du tirage, boutons « 1 ticket » / « 5 tickets ». Chacun paie avec sa bourse, confirmation privée. Maximum de tickets par membre réglable (10 par défaut).
+- Tirage automatique chaque semaine (dimanche 20 h par défaut, fuseau du serveur), pondéré par le nombre de tickets, annoncé dans le salon configuré. Le gagnant rafle toute la cagnotte ; sans ticket, elle est reportée. Modèle fermé, amorce optionnelle de la banque.
+- `/admin tombola salon #x` active ; `regler prix max_tickets jour heure amorce`, `tirer`, `etat`.
+
 ## Commandes
 
 Membres :
@@ -172,6 +179,7 @@ Membres :
 - `/blackjack mise` : blackjack contre la banque (privé).
 - `/machine` : machine à sous publique à cagnotte progressive, prix fixe.
 - `/duel membre mise` : duel entre membres (public).
+- `/tombola` : tombola hebdomadaire (public).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
@@ -179,4 +187,5 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin boutique ajouter|modifier|retirer|remettre|lister` (autocomplétion des noms d'articles)
 - `/admin calin ajouter-salon|retirer-salon|regler|lancer|etat`
 - `/admin niveaux ajouter-role|retirer-role|salon|courbe|recalculer|lister`
+- `/admin tombola salon|regler|tirer|etat`
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant` · `/admin duel min max`

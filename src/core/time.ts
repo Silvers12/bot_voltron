@@ -69,3 +69,22 @@ export function nextMidnight(date: Date, timeZone: string): Date {
 export function nextMonday(date: Date, timeZone: string): Date {
   return localMidnightAfter(date, timeZone, 8 - isoWeekday(date, timeZone));
 }
+
+/**
+ * Prochaine occurrence (strictement future) d'un jour ISO et d'une heure locale dans le fuseau.
+ * Ex. nextLocalWeekdayTime(now, 'Europe/Paris', 7, 20) = dimanche prochain 20 h 00 heure de Paris.
+ */
+export function nextLocalWeekdayTime(date: Date, timeZone: string, isoWeekdayWanted: number, hour: number, minute = 0): Date {
+  const today = isoWeekday(date, timeZone);
+  let daysAhead = (isoWeekdayWanted - today + 7) % 7;
+  const candidate = () => {
+    const p = partsIn(date, timeZone);
+    const naive = Date.UTC(p.year, p.month - 1, p.day + daysAhead, hour, minute, 0);
+    let guess = new Date(naive - offsetMs(date, timeZone));
+    guess = new Date(naive - offsetMs(guess, timeZone));
+    return guess;
+  };
+  let next = candidate();
+  if (next.getTime() <= date.getTime()) { daysAhead += 7; next = candidate(); }
+  return next;
+}

@@ -7,6 +7,7 @@ import { credit, debit, getBalance, InsufficientFundsError } from '../../modules
 import { autocompleteShopItem, buildShopAdminGroup, handleShopAdmin } from '../../modules/shop/shop.admin.js';
 import { buildGroupHugAdminGroup, handleGroupHugAdmin } from '../../modules/events/grouphug.admin.js';
 import { buildLevelsAdminGroup, handleLevelsAdmin } from '../../modules/progression/levels.admin.js';
+import { buildLotteryAdminGroup, handleLotteryAdmin } from '../../modules/lottery/lottery.admin.js';
 import { getJackpot } from '../../modules/casino/slots.service.js';
 import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits, updateSlotLimits, updateDuelLimits } from '../../modules/settings/settings.service.js';
 
@@ -107,7 +108,8 @@ export default defineCommand({
     .addSubcommand((sub) => sub.setName('stats').setDescription('Vue d’ensemble de l’économie du serveur'))
     .addSubcommandGroup((group) => buildShopAdminGroup(group))
     .addSubcommandGroup((group) => buildGroupHugAdminGroup(group))
-    .addSubcommandGroup((group) => buildLevelsAdminGroup(group)),
+    .addSubcommandGroup((group) => buildLevelsAdminGroup(group))
+    .addSubcommandGroup((group) => buildLotteryAdminGroup(group)),
 
   async autocomplete(interaction) {
     if (!isBotAdmin(interaction.member)) return void (await interaction.respond([]));
@@ -125,6 +127,7 @@ export default defineCommand({
     if (interaction.options.getSubcommandGroup(false) === 'boutique') return handleShopAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'calin') return handleGroupHugAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'niveaux') return handleLevelsAdmin(interaction);
+    if (interaction.options.getSubcommandGroup(false) === 'tombola') return handleLotteryAdmin(interaction);
 
     const sub = interaction.options.getSubcommand(true);
     const settings = await getSettings(interaction.guildId);

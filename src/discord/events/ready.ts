@@ -7,6 +7,7 @@ import { reconcileVoiceSessions, tickVoiceSessions } from '../../modules/progres
 import { settleAbandonedGames } from '../../modules/casino/blackjack.service.js';
 import { reconcileHugs, tickScheduler } from '../../modules/events/grouphug.service.js';
 import { reconcileDuels } from '../../modules/duel/duel.service.js';
+import { tickLottery } from '../../modules/lottery/lottery.service.js';
 import { armDuelExpiry } from '../commands/duel.js';
 
 const log = createLogger('ready');
@@ -35,6 +36,8 @@ export default defineEvent({
     await reconcileHugs(client);
     for (const duel of await reconcileDuels()) armDuelExpiry(client, duel);
     setInterval(() => void tickScheduler(client).catch((err) => log.error('Planificateur de câlins échoué', err)), 30_000);
+    setInterval(() => void tickLottery(client).catch((err) => log.error('Tombola : pointage échoué', err)), 60_000);
+    void tickLottery(client).catch((err) => log.error('Tombola : pointage initial échoué', err));
     setInterval(() => {
       for (const guild of guilds) void tickVoiceSessions(guild).catch((err) => log.error(`Pointage vocal échoué (${guild.name})`, err));
     }, 60_000);

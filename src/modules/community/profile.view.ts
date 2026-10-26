@@ -111,6 +111,8 @@ function describeTransaction(t: Transaction): string {
     case 'DUEL_STAKE': return '⚔️ mise de duel';
     case 'DUEL_WIN': return '⚔️ duel gagné';
     case 'DUEL_REFUND': return '⚔️ mise rendue';
+    case 'LOTTERY_TICKET': return '🎟️ tickets de tombola';
+    case 'LOTTERY_WIN': return '🎟️ tombola gagnée';
     case 'HUG_SENT': return `🤗 câlin à ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'HUG_RECEIVED': return `🤗 câlin de ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'ADMIN_CREDIT': return '🛡️ offert par l’intendance';

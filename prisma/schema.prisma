@@ -39,6 +39,7 @@ model Member {
   groupHugs     GroupHugParticipant[]
   duelsSent     Duel[]    @relation("DuelChallenger")
   duelsReceived Duel[]    @relation("DuelOpponent")
+  lotteryEntries LotteryEntry[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   account       Account?
@@ -84,6 +85,16 @@ model GuildSettings {
   /// Mises autorisées en duel
   duelMinStake     Int      @default(10)
   duelMaxStake     Int      @default(5000)
+  /// Tombola : salon d'annonce du tirage (null = désactivée)
+  lotteryChannelId String?
+  lotteryTicketPrice Int    @default(100)
+  /// Tickets maximum par membre et par tirage (0 = illimité)
+  lotteryMaxTickets Int     @default(10)
+  /// Jour ISO (1 = lundi … 7 = dimanche) et heure locale du tirage
+  lotteryDrawWeekday Int    @default(7)
+  lotteryDrawHour  Int      @default(20)
+  /// Amorce ajoutée par la banque à chaque nouveau tirage
+  lotterySeed      Int      @default(0)
   /// Part de la cagnotte remportée par un triple autre que les loutres (en %)
   slotTriplePercent Int     @default(50)
   /// Montant de départ de la cagnotte après un jackpot
@@ -129,6 +140,8 @@ enum TransactionType {
   DUEL_STAKE
   DUEL_WIN
   DUEL_REFUND
+  LOTTERY_TICKET
+  LOTTERY_WIN
   ADMIN_CREDIT
   ADMIN_DEBIT
   HUG_SENT
@@ -351,4 +364,37 @@ model Duel {
 
   @@index([guildId, state])
   @@index([challengerId, state])
+}
+
+enum LotteryState {
+  OPEN
+  DRAWN
+}
+
+/// Un tirage de tombola. La cagnotte = amorce + report éventuel + tickets vendus.
+model Lottery {
+  id            String       @id @default(cuid())
+  guildId       String
+  drawAt        DateTime
+  state         LotteryState @default(OPEN)
+  pot           Int          @default(0)
+  ticketPrice   Int
+  winnerMemberId String?
+  winnerTickets Int?
+  totalTickets  Int          @default(0)
+  drawnAt       DateTime?
+  createdAt     DateTime     @default(now())
+  entries       LotteryEntry[]
+
+  @@index([guildId, state])
+}
+
+model LotteryEntry {
+  lotteryId String
+  lottery   Lottery @relation(fields: [lotteryId], references: [id])
+  memberId  String
+  member    Member  @relation(fields: [memberId], references: [id])
+  tickets   Int     @default(0)
+
+  @@id([lotteryId, memberId])
 }
