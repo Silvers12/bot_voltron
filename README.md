@@ -147,10 +147,15 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 ## Compliments et insultes
 
+<img width="600" height="222" alt="image" src="https://github.com/user-attachments/assets/d1453715-e411-48c4-afe9-ed71653f072c" />
+<img width="595" height="217" alt="image" src="https://github.com/user-attachments/assets/56ad8ae0-03b0-4b3d-bdcb-559241aafa1c" />
+
 - `/compliment membre` et `/insulte membre` : message public avec un texte tiré au sort. Second degré, bienveillant.
 - Textes dans `content/compliments.json` et `content/insultes.json` : 3 catégories (10 classiques, 5 rares, 5 épiques) et poids de tirage (80 / 15 / 5 par défaut). Modifiables sans toucher au code ; rechargés au démarrage du bot. Variables : `{cible}`, `{auteur}`.
 
 ## Blackjack
+
+<img width="541" height="327" alt="image" src="https://github.com/user-attachments/assets/bc66ad4d-3380-4437-a41f-717af180e4f3" />
 
 - `/blackjack mise` : partie privée contre la banque (Voltron). Boutons Tirer / Rester / Doubler, puis Rejouer.
 - Règles : banque tire jusqu'à 17 (reste sur 17 souple), blackjack naturel payé 3:2, double sur les deux premières cartes, pas de split ni d'assurance.
@@ -159,6 +164,9 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Mises bornées par `/admin blackjack min max` (10 à 2 000 par défaut).
 
 ## Câlin collectif
+
+<img width="445" height="282" alt="image" src="https://github.com/user-attachments/assets/cbece039-6f61-41cb-a518-478ca1403095" />
+<img width="675" height="228" alt="image" src="https://github.com/user-attachments/assets/e66b0488-6d49-45ce-863b-a14cce904394" />
 
 - Voltron apparaît à des moments aléatoires dans l'un des salons configurés, avec un bouton **CÂLIN** ouvert pendant 60 s (réglable).
 - À la clôture, chaque participant reçoit `récompense × nombre de participants` (200 par défaut : à 5, 1 000 chacun). Un clic par membre.
@@ -173,6 +181,8 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - `/admin niveaux ajouter-role niveau role`, `retirer-role`, `salon`, `courbe base pas`, `recalculer`, `lister`.
 
 ## Machine à sous
+
+<img width="656" height="410" alt="image" src="https://github.com/user-attachments/assets/3e1fec8a-fcfc-4422-966b-78996244a59e" />
 
 - `/machine` : installe la machine **publiquement** dans le salon (cagnotte, prix, bouton Lancer). N'importe qui appuie et joue avec sa propre bourse ; tout le monde voit les rouleaux (🦦 ❤️ 🛡️ 🐟 🌊 🪨) tourner et la cagnotte évoluer. Un seul tour à la fois par machine. Le solde du joueur lui est envoyé en privé. Prix fixe (50 par défaut) car la chance de rafler la cagnotte ne dépend pas de la mise.
 - **Modèle fermé** : chaque mise entre intégralement dans la cagnotte du serveur, chaque gain en sort. Trois loutres raflent toute la cagnotte (annonce publique), qui repart du montant de départ (1 000, amorcé par la banque). La banque ne crée ni ne détruit de cœurs en dehors de l'amorce.
@@ -202,6 +212,8 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Record et nombre d'erreurs conservés (`/admin comptage etat`).
 
 ## Taux du jour
+
+<img width="682" height="359" alt="image" src="https://github.com/user-attachments/assets/828556b6-9ade-40d8-9529-8cc461f85f37" />
 
 - `/taux type:… [membre]` : chance, choupitude, suspicion, criminalité, loutritude, flemme, sagesse, chaos. Le taux est aléatoire mais fixe pour un membre, un taux et un jour civil (hachage, aucun stockage) ; il change à minuit dans le fuseau du serveur.
 - Réponse publique avec une bannière 1200 × 400 générée par `sharp` : avatar à gauche, nom, taux, barre et commentaire au centre, icône du taux à droite grisée et remplie par le bas selon le pourcentage.
@@ -255,6 +267,8 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Registre des clés : `src/modules/features/features.ts` (`disabledFeatures` dans `GuildSettings`).
 
 ## Tombola
+
+<img width="591" height="323" alt="image" src="https://github.com/user-attachments/assets/0bc5517b-7aa1-4e78-9f4c-cf9433142662" />
 
 - `/tombola` : message public avec cagnotte, prix du ticket, tickets vendus, date du tirage, boutons « 1 ticket » / « 5 tickets ». Chacun paie avec sa bourse, confirmation privée. Maximum de tickets par membre réglable (10 par défaut).
 - Tirage automatique chaque semaine (dimanche 20 h par défaut, fuseau du serveur), pondéré par le nombre de tickets, annoncé dans le salon configuré. Le gagnant rafle toute la cagnotte ; sans ticket, elle est reportée. Modèle fermé, amorce optionnelle de la banque.
