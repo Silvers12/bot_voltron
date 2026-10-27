@@ -60,7 +60,7 @@ export async function setFeatureEnabled(guildId: string, key: FeatureKey, enable
 }
 
 const COMMAND_FEATURES: Record<string, FeatureKey> = {
-  calin: 'calin', hebdo: 'hebdo', classement: 'xp', compliment: 'compliments', insulte: 'insultes',
+  calin: 'calin', don: 'boutique', hebdo: 'hebdo', classement: 'xp', compliment: 'compliments', insulte: 'insultes',
   blackjack: 'blackjack', machine: 'machine', duel: 'duel', tombola: 'tombola', succes: 'succes', taux: 'taux', duo: 'taux',
 };
 

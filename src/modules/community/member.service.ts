@@ -25,6 +25,11 @@ export async function ensureMember(member: GuildMember) {
   });
 }
 
+/** Membre en base pour un utilisateur Discord (null s'il n'est pas encore connu). */
+export function findMember(guildId: string, discordUserId: string) {
+  return prisma.member.findUnique({ where: { guildId_discordUserId: { guildId, discordUserId } } });
+}
+
 /** Marque un membre comme parti ; son profil est conservé pour un éventuel retour. */
 export async function markMemberLeft(member: GuildMember | PartialGuildMember) {
   await prisma.member.updateMany({

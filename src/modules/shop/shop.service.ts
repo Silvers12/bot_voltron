@@ -197,3 +197,48 @@ async function refundPurchase(item: ShopItem, member: { id: string; discordUserI
   });
   await credit({ memberId: member.id, amount: item.price, type: 'REFUND', actorDiscordId: 'voltron', reason: `Remboursement : ${item.name}` });
 }
+
+export interface GiftResult {
+  item: ShopItem;
+  /** Exemplaires restants chez le donateur. */
+  leftForGiver: number;
+  /** Exemplaires possédés par le receveur après le don. */
+  quantityForReceiver: number;
+}
+
+/**
+ * Donne des exemplaires d'un objet de collection à un autre membre, dans une seule transaction :
+ * retrait conditionnel chez le donateur, ajout chez le receveur, limite par membre respectée.
+ * Les titres et les articles-rôles ne se donnent pas (ils sont personnels).
+ */
+export async function giftItem(fromMemberId: string, toMemberId: string, itemId: string, quantity: number): Promise<GiftResult> {
+  if (!Number.isInteger(quantity) || quantity < 1) throw new PurchaseError('unavailable', 'La quantité doit être d’au moins 1.');
+  if (fromMemberId === toMemberId) throw new PurchaseError('unavailable', 'Se faire un don à soi-même ne change rien.');
+  const item = await getItem(itemId);
+  if (!item) throw new PurchaseError('unavailable', 'Cet article n’existe pas.');
+  if (item.kind !== 'COLLECTIBLE') throw new PurchaseError('unavailable', 'Les titres et les rôles sont personnels : ils ne se donnent pas.');
+
+  return prisma.$transaction(async (db) => {
+    const { count } = await db.inventoryItem.updateMany({
+      where: { memberId: fromMemberId, itemId, quantity: { gte: quantity } },
+      data: { quantity: { decrement: quantity } },
+    });
+    if (count === 0) {
+      const owned = await db.inventoryItem.findUnique({ where: { memberId_itemId: { memberId: fromMemberId, itemId } } });
+      const have = owned?.quantity ?? 0;
+      throw new PurchaseError('unavailable', have === 0 ? `Tu ne possèdes pas « ${item.name} ».` : `Tu n’en as que ${have} exemplaire(s).`);
+    }
+    const giver = await db.inventoryItem.findUniqueOrThrow({ where: { memberId_itemId: { memberId: fromMemberId, itemId } } });
+    const receiver = await db.inventoryItem.upsert({
+      where: { memberId_itemId: { memberId: toMemberId, itemId } },
+      create: { memberId: toMemberId, itemId, quantity },
+      update: { quantity: { increment: quantity } },
+    });
+    if (item.maxPerMember !== null && receiver.quantity > item.maxPerMember) {
+      throw new PurchaseError('limit_reached', item.maxPerMember === 1
+        ? 'Ce membre possède déjà cet article (limite d’un exemplaire).'
+        : `Ce membre dépasserait la limite de ${item.maxPerMember} exemplaires.`);
+    }
+    return { item, leftForGiver: giver.quantity, quantityForReceiver: receiver.quantity };
+  });
+}

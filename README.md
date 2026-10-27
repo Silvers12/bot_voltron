@@ -247,6 +247,7 @@ Membres :
 - Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, fiche article, inventaire, tombola, tirage, câlin collectif, duel, machine à sous, page d'accueil. Assistants dans `src/discord/v2.ts`. Les messages publiés avant cette version restent en ancien format : `/admin tombola publier` et `/admin accueil publier` les remplacent.
 - `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour, Hebdo, Historique, Boutique et Inventaire. Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
+- `/don membre article [quantite] [message]` : donne un objet de collection de son inventaire à un membre (autocomplétion sur ses propres objets, annonce publique). Transfert atomique ; la limite par membre du receveur est respectée. Les titres et les rôles ne se donnent pas. Suit l'interrupteur « boutique ».
 - `/hebdo` : récompense de la semaine (réponse privée).
 - `/classement` : classement d'XP paginé (privé, se ferme après 2 min sans clic).
 - `/compliment membre` · `/insulte membre` : textes aléatoires par rareté (public).
