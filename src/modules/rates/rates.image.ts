@@ -96,7 +96,7 @@ export interface DuoCard {
 /** Bannière à deux : avatar gauche, icône remplie et taux au centre, avatar droite, commentaire en bas. */
 export async function renderDuoCard({ leftName, leftAvatarPng, rightName, rightAvatarPng, rate, percent, comment }: DuoCard): Promise<Buffer> {
   const short = (n: string) => esc(n.length > 12 ? `${n.slice(0, 11)}…` : n);
-  const cx = W / 2, cy = 150, iconSize = 168, iconTop = 60;
+  const cx = W / 2, cy = 150, iconSize = 250, iconTop = 42;
   const lx = 60 + AVATAR / 2, rx = W - 60 - AVATAR / 2;
   const bg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs>
@@ -107,9 +107,9 @@ export async function renderDuoCard({ leftName, leftAvatarPng, rightName, rightA
     <circle cx="${rx}" cy="${cy}" r="${AVATAR / 2 + 8}" fill="${rate.color}" opacity="0.9"/>
     <text x="${lx}" y="330" text-anchor="middle" font-family="${FONT}" font-size="30" font-weight="bold" fill="#fff">${short(leftName)}</text>
     <text x="${rx}" y="330" text-anchor="middle" font-family="${FONT}" font-size="30" font-weight="bold" fill="#fff">${short(rightName)}</text>
-    <text x="${cx}" y="46" text-anchor="middle" font-family="${FONT}" font-size="30" fill="#dfe6ee">Taux ${/^[aeiouy]/i.test(rate.of) ? 'd’' : 'de '}${esc(rate.of)}</text>
-    <text x="${cx}" y="292" text-anchor="middle" font-family="${FONT}" font-size="60" font-weight="bold" fill="#fff">${percent} %</text>
-    ${wrap(comment, 36).slice(0, 2).map((line, i) => `<text x="${cx}" y="${338 + i * 28}" text-anchor="middle" font-family="${FONT}" font-size="22" fill="#eef3f7">${esc(line)}</text>`).join('')}
+    <text x="${cx}" y="34" text-anchor="middle" font-family="${FONT}" font-size="26" fill="#dfe6ee">Taux ${/^[aeiouy]/i.test(rate.of) ? 'd’' : 'de '}${esc(rate.of)}</text>
+    <text x="${cx}" y="342" text-anchor="middle" font-family="${FONT}" font-size="54" font-weight="bold" fill="#fff">${percent} %</text>
+    <text x="${cx}" y="380" text-anchor="middle" font-family="${FONT}" font-size="${comment.length > 48 ? 18 : 20}" fill="#eef3f7">${esc(comment)}</text>
   </svg>`;
   const [left, right, icon] = await Promise.all([circleAvatar(leftAvatarPng), circleAvatar(rightAvatarPng), filledIcon(rate, percent)]);
   const iconResized = await sharp(icon).resize(iconSize, iconSize, { fit: 'inside' }).png().toBuffer();
