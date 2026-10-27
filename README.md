@@ -22,17 +22,28 @@ src/
     deploy-commands.ts     # enregistre les slash commands sur le serveur
     commands/              # une slash command par fichier
     events/                # un événement Discord par fichier
-  modules/community/       # membres et profil
+    v2.ts                  # assistants « composants V2 » (écrans)
+  modules/community/       # membres, profil et son menu Explorer
   modules/economy/         # bourses, câlins, récompenses, historique
-  modules/shop/            # boutique, inventaire, administration des articles
+  modules/shop/            # boutique, inventaire, titres, dons, administration des articles
   modules/progression/     # XP messages/vocal, classement, niveaux et paliers
   modules/banter/          # compliments et insultes (textes dans content/)
   modules/casino/          # blackjack, machine à sous
   modules/duel/            # duels entre membres (textes dans content/)
-  modules/lottery/         # tombola hebdomadaire
+  modules/theft/           # vol de cœurs (textes dans content/)
+  modules/lottery/         # tombola hebdomadaire, rappels
   modules/events/          # câlin collectif (apparitions planifiées)
-content/                   # textes éditables (compliments, insultes)
-  modules/settings/        # réglages du serveur (monnaie, bienvenue)
+  modules/counting/        # salon de comptage
+  modules/achievements/    # succès et badges
+  modules/stats/           # statistiques de jeu
+  modules/rates/           # taux du jour et duo (bannières générées)
+  modules/notify/          # page d'accueil et rôles de notification
+  modules/features/        # interrupteurs de fonctionnalités
+  modules/admin/           # panneau d'intendance, formulaires, /admin installer
+  modules/moderation/      # /admin messages (suppression)
+  modules/settings/        # réglages du serveur, salons des commandes
+content/                   # textes et catalogue éditables (compliments, insultes, duels, vols, boutique, icônes de taux)
+scripts/                   # deploy.sh, backup.sh, restore.sh
 prisma/schema.prisma       # modèle de données
 prisma/migrations/         # migrations versionnées
 ```
@@ -109,7 +120,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 2. Ajouter l'identifiant du serveur à `DISCORD_GUILD_IDS` dans `.env`.
 3. `docker compose restart bot` puis `npm run deploy`.
 4. Sur le serveur : Intégrations → Voltron → `/admin` réservé aux intendants.
-5. Configurer : `/admin calin ajouter-salon`, `/admin niveaux salon`, `/admin boutique ajouter`, etc. Chaque serveur a ses propres réglages.
+5. `/admin installer` crée salons, rôles et réglages de base (voir ci-dessous), puis `/admin boutique importer` et `/admin succes recalculer`. Le reste se règle dans `/admin panneau`. Chaque serveur a ses propres réglages.
 
 ## Économie
 
@@ -123,13 +134,13 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Boutique
 
 - Articles gérés par les admins : nom, description, emoji, prix, stock (optionnel), limite par membre (optionnelle).
-- Deux types : **collection** (simplement possédé) et **rôle** (attribue un rôle Discord à l'achat ; le bot doit avoir « Gérer les rôles » et être placé au-dessus du rôle vendu). Si Discord refuse l'attribution, l'achat est remboursé automatiquement.
+- Trois types : **collection** (simplement possédé, et transmissible par `/don`), **titre** (voir section Titres) et **rôle** (attribue un rôle Discord à l'achat ; le bot doit avoir « Gérer les rôles » et être placé au-dessus du rôle vendu). Si Discord refuse l'attribution, l'achat est remboursé automatiquement.
 - Achat depuis `/profil` → Boutique → bouton d’achat de l’article. Débit, stock, limite et inventaire sont mis à jour dans une seule transaction.
 - Un article retiré reste en base : les exemplaires achetés restent visibles dans les inventaires.
 
 ## Expérience (XP)
 
-- +1 XP par message, dans tout salon visible par le bot (le contenu n'est pas lu : intent `GuildMessages` seulement). Au plus un message compté par minute (anti-spam, réglable).
+- +1 XP par message, dans tout salon visible par le bot (le contenu n'est lu que dans le salon de comptage). Au plus un message compté par minute (anti-spam, réglable : `delai_message`, 0 = tous).
 - +1 XP par tranche de 30 min en vocal, hors salon AFK. Les sessions sont persistées (`VoiceSession`) et pointées chaque minute : un redémarrage du bot ne perd pas le temps déjà crédité.
 - `/classement` : 10 membres par page avec boutons, rang du demandeur en pied de page. L'XP et le rang figurent aussi sur `/profil`.
 - Réglages : `/admin xp` (sans option : affiche ; avec options : modifie).
@@ -199,7 +210,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 ## Statistiques
 
-- `/stats [membre]` : activité (messages, vocal, niveau, meilleure série), câlins donnés et reçus, blackjack, machine à sous, duels, tombola, câlins collectifs, comptage, chacun avec son bilan net en cœurs. Seules les fonctionnalités actives apparaissent. Public.
+- `/stats [membre]` : activité (messages, vocal, niveau, meilleure série), câlins donnés et reçus, blackjack, machine à sous, duels, vols, tombola, câlins collectifs, comptage, chacun avec son bilan net en cœurs. Seules les fonctionnalités actives apparaissent. Public.
 - Même écran depuis le profil, via le menu « Explorer… » qui remplace les boutons Boutique/Inventaire/Succès : Historique, Boutique, Inventaire, Succès, Statistiques.
 
 ## Catalogue de boutique de départ
@@ -224,7 +235,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 ## Page d'accueil et rôles de notification
 
-- `/admin accueil installer salon:#accueil` : crée les rôles « Câlins collectifs », « Tombola » et « Duels » s'ils manquent (mentionnables, sans permission), publie la page d'accueil (présentation de Voltron + trois boutons) et l'épingle. Le rôle de Voltron doit être au-dessus de ces rôles.
+- `/admin accueil installer salon:#accueil` : crée les rôles « Câlins collectifs », « Tombola » et « Duels » s'ils manquent (mentionnables, sans permission), publie la page d'accueil (présentation du serveur, fonctionnalités actives, menu de notifications) et l'épingle. Le rôle de Voltron doit être au-dessus de ces rôles.
 - Page en « composants V2 » (conteneur coloré, titres, séparateurs, galerie pour la bannière, menu déroulant). Intro (texte personnalisable avec `/admin accueil texte`, bannière avec `/admin accueil banniere image:` — PNG/JPG/GIF/WebP 8 Mo, stockée en base), « Ce qui t'attend » (seules les fonctionnalités actives apparaissent), « Être prévenu » avec un menu déroulant à choix multiples.
 - Le menu applique exactement la sélection : rôles cochés ajoutés, décochés retirés (confirmation privée). `/admin accueil roles` pour utiliser des rôles existants, `publier` pour mettre à jour la page, `etat`. Toute modification republie la page automatiquement.
 - Pings : le rôle est mentionné à l'apparition d'un câlin collectif, à chaque publication ou rappel de tombola, et quand un duel est lancé (le défié est toujours mentionné).
@@ -238,7 +249,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 - `/admin panneau` : écran de contrôle privé (se ferme après 5 min d'inactivité). Accueil : membres, bourses, monnaie en circulation, cagnotte de la machine, tombola en cours, prochain câlin collectif, parties et duels en attente, état de chaque fonctionnalité.
   - Menu « Cocher les fonctionnalités actives » : coche/décoche pour activer ou mettre en pause (quotidien, hebdo, câlins, boutique, XP et classement, compliments, insultes, blackjack, machine, duels, vol, câlin collectif, tombola).
-  - Menu « Voir les réglages d'un module » : valeurs actuelles, boutons Activer/Désactiver du module, et boutons « Modifier : … » qui ouvrent un formulaire pré-rempli (monnaie, montants, XP, niveaux, blackjack, machine, duels, câlin collectif, tombola tirage/rappels). Les salons se saisissent par `#mention` ou nom, les jours par leur nom. Une saisie invalide n'enregistre rien et liste les erreurs. Changer la courbe des niveaux recalcule les niveaux ; activer la tombola la publie ; changer l'intervalle des câlins reprogramme la prochaine apparition. Les rôles de palier se règlent aussi par formulaire (module XP et niveaux, bouton Paliers : une ligne par palier, `5 @Recrue`), avec resynchronisation immédiate. Les articles de boutique restent gérés par commandes. Définitions : `src/modules/admin/panel.forms.ts`.
+  - Menu « Voir les réglages d'un module » : valeurs actuelles, boutons Activer/Désactiver du module, et boutons « Modifier : … » qui ouvrent un formulaire pré-rempli (monnaie, montants, XP, niveaux, paliers, blackjack, machine, duels, vol, câlin collectif, succès, comptage, salons des commandes, tombola tirage/rappels). Les salons se saisissent par `#mention` ou nom, les jours par leur nom. Une saisie invalide n'enregistre rien et liste les erreurs. Changer la courbe des niveaux recalcule les niveaux ; activer la tombola la publie ; changer l'intervalle des câlins reprogramme la prochaine apparition. Les rôles de palier se règlent aussi par formulaire (module XP et niveaux, bouton Paliers : une ligne par palier, `5 @Recrue`), avec resynchronisation immédiate. Les articles de boutique restent gérés par commandes. Définitions : `src/modules/admin/panel.forms.ts`.
 - `/admin fonction nom:… active:true|false` : même bascule en une commande.
 - Une fonctionnalité en pause : ses commandes et boutons répondent « en pause », ses boutons disparaissent du profil, ses automatismes s'arrêtent (XP non comptée, pas d'apparition de câlin collectif, ni rappel ni tirage de tombola). Les réglages sont conservés. Les câlins collectifs déjà lancés restent cliquables jusqu'à leur fin. Les sessions vocales reprennent à la réactivation de l'XP.
 - Registre des clés : `src/modules/features/features.ts` (`disabledFeatures` dans `GuildSettings`).
@@ -254,8 +265,8 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Commandes
 
 Membres :
-- Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, fiche article, inventaire, tombola, tirage, câlin collectif, duel, machine à sous, page d'accueil. Assistants dans `src/discord/v2.ts`. Les messages publiés avant cette version restent en ancien format : `/admin tombola publier` et `/admin accueil publier` les remplacent.
-- `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour, Hebdo, Historique, Boutique et Inventaire. Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
+- Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, inventaire, statistiques, tombola, tirage, câlin collectif, duel, machine à sous, page d'accueil. Assistants dans `src/discord/v2.ts`. Les messages publiés avant cette version restent en ancien format : `/admin tombola publier` et `/admin accueil publier` les remplacent.
+- `/profil` : espace personnel (privé) : bourse, titre porté, badges, niveau, ancienneté, boutons Récompense du jour, Hebdo et Rafraîchir, menu « Explorer… » (Historique, Boutique, Inventaire, Succès, Statistiques). Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/vol membre` : tentative de vol de cœurs (voir section dédiée).
 - `/don membre article [quantite] [message]` : donne un objet de collection de son inventaire à un membre (autocomplétion sur ses propres objets, annonce publique). Transfert atomique ; la limite par membre du receveur est respectée. Les titres et les rôles ne se donnent pas. Suit l'interrupteur « boutique ».
@@ -274,7 +285,7 @@ Membres :
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
 - `/admin solde membre` · `/admin stats`
-- `/admin boutique ajouter|modifier|retirer|remettre|lister` (autocomplétion des noms d'articles)
+- `/admin boutique ajouter|modifier|retirer|remettre|lister|importer` (autocomplétion des noms d'articles)
 - `/admin calin ajouter-salon|retirer-salon|regler|lancer|etat`
 - `/admin niveaux ajouter-role|retirer-role|salon|courbe|recalculer|lister`
 - `/admin tombola salon|regler|publier|tirer|etat`
@@ -286,7 +297,8 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin commandes ajouter-salon|retirer-salon|partout|liste`
 - `/admin messages supprimer id:… [salon]` : supprime un message · `depuis id:… [salon]` : supprime ce message et tous ceux postés après · `vider [salon]` : supprime tout le salon. Les deux derniers demandent une confirmation (bouton, 1 min). Les messages de moins de 14 jours partent par lots, les plus anciens un par un (plus lent). Le bot doit avoir « Gérer les messages » et « Lire l’historique » dans le salon.
 - `/admin message texte:… [salon] [repondre_a]` : écrit en tant que Voltron (`\n` pour un retour à la ligne, mentions de membres et de rôles autorisées, pas de @everyone)
-- `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant` · `/admin duel min max`
+- `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant`
+- `/admin xp [par_message] [delai_message] [par_tranche_vocal] [tranche_vocal]` · `/admin blackjack min max` · `/admin machine [prix] [part_triple] [cagnotte_depart]` · `/admin duel min max` (le vol se règle dans le panneau)
 
 ## Licence
 
