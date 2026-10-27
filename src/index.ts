@@ -11,6 +11,7 @@ import './modules/notify/notify.controller.js';
 import './modules/community/profile.nav.js';
 import { loadBanter } from './modules/banter/banter.service.js';
 import { loadDuelTexts } from './modules/duel/duel.service.js';
+import { loadTheftTexts } from './modules/theft/theft.service.js';
 
 const log = createLogger('app');
 
@@ -19,6 +20,7 @@ log.info('Base de données connectée');
 
 await loadBanter();
 await loadDuelTexts();
+await loadTheftTexts();
 
 const client = createClient();
 

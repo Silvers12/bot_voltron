@@ -15,7 +15,7 @@ export const ADMIN_MODULE_PREFIX = 'admin:open:';
 const COLOR = 0xc0392b;
 const FOOTER = 'Intendance de Voltron · panneau réservé, se ferme après 5 min d’inactivité';
 
-export type ModuleKey = 'economie' | 'progression' | 'boutique' | 'casino' | 'duel' | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'commandes' | 'accueil' | 'textes';
+export type ModuleKey = 'economie' | 'progression' | 'boutique' | 'casino' | 'duel' | 'vol' | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'commandes' | 'accueil' | 'textes';
 
 export interface ModuleInfo {
   key: ModuleKey;
@@ -30,6 +30,7 @@ export const MODULES: ModuleInfo[] = [
   { key: 'boutique', label: 'Boutique', emoji: '🛒', features: ['boutique'] },
   { key: 'casino', label: 'Casino', emoji: '🎰', features: ['blackjack', 'machine'] },
   { key: 'duel', label: 'Duels', emoji: '⚔️', features: ['duel'] },
+  { key: 'vol', label: 'Vol de cœurs', emoji: '🥷', features: ['vol'] },
   { key: 'calin_collectif', label: 'Câlin collectif', emoji: '🫂', features: ['calin_collectif'] },
   { key: 'tombola', label: 'Tombola', emoji: '🎟️', features: ['tombola'] },
   { key: 'succes', label: 'Succès et badges', emoji: '🏅', features: ['succes'] },

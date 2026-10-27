@@ -1,0 +1,22 @@
+{
+  "reussites": [
+    "{v} se glisse derrière {c} avec la discrétion d'une loutre en chaussettes et repart avec {m}.",
+    "{v} distrait {c} avec un faux poisson et lui fait les poches : {m} envolés.",
+    "{v} remplace le portefeuille de {c} par un caillou. {c} ne remarquera rien avant demain. Butin : {m}.",
+    "Pendant que {c} admirait la rivière, {v} a admiré sa bourse. {m} changent de propriétaire.",
+    "{v} se fait passer pour un contrôleur de bourses et confisque {m} à {c} pour « vérification ».",
+    "{c} a laissé sa bourse ouverte « juste deux secondes ». {v} n'en avait besoin que d'une. {m} dérobés."
+  ],
+  "echecs": [
+    "{v} trébuche sur sa propre queue en approchant de {c}. Flagrant délit : {v} verse {m} de dédommagement.",
+    "{v} avait tout prévu, sauf que {c} ne dormait pas. Amende de {m} pour {v}.",
+    "La chaussette-cagoule de {v} glisse en plein larcin. Humilié devant {c}, {v} paie {m}.",
+    "{v} tend la patte vers la bourse de {c}… et serre la main de Voltron. Dédommagement : {m}.",
+    "Un canard en plastique a couiné sous la patte de {v}. {c} se réveille, {v} s'excuse avec {m}.",
+    "{v} s'est trompé de poche et a volé un ticket de caisse illisible. {c} réclame {m} pour le dérangement."
+  ],
+  "echecs_fauches": [
+    "{v} se fait prendre la patte dans la bourse de {c}… mais n'a pas un cœur pour payer. {c} le laisse partir par pitié.",
+    "{v} rate son coup et fouille ses propres poches pour dédommager {c} : rien, pas même un caillou."
+  ]
+}

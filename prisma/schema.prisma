@@ -54,6 +54,8 @@ model Member {
   title         ShopItem? @relation("MemberTitle", fields: [titleItemId], references: [id])
   slotSpins     Int       @default(0)
   slotJackpots  Int       @default(0)
+  /// Dernière tentative de vol (délai entre deux tentatives)
+  lastTheftAt   DateTime?
 
   @@unique([guildId, discordUserId])
   @@index([guildId, leftAt])
@@ -92,6 +94,10 @@ model GuildSettings {
   /// Mises autorisées en duel
   duelMinStake     Int      @default(10)
   duelMaxStake     Int      @default(5000)
+  /// Vol de cœurs : part maximale de la bourse de la cible (en %), chance de réussite (en %) et délai entre deux tentatives
+  theftMaxPercent     Int @default(10)
+  theftSuccessPercent Int @default(50)
+  theftCooldownHours  Int @default(24)
   /// Tombola : salon d'annonce du tirage (null = désactivée)
   lotteryChannelId String?
   lotteryTicketPrice Int    @default(100)
@@ -179,6 +185,10 @@ enum TransactionType {
   HUG_RECEIVED
   ACHIEVEMENT
   COUNTING_FINE
+  THEFT_GAIN
+  THEFT_LOSS
+  THEFT_FINE
+  THEFT_COMPENSATION
 }
 
 /// Mouvement sur un compte : montant signé, solde résultant, auteur et motif.

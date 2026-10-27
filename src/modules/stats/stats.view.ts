@@ -24,6 +24,7 @@ export function buildStatsView(displayName: string, st: GameStats, s: GuildSetti
     [on('blackjack'), `## 🃏 Blackjack\n${plural(st.blackjackGames, 'partie')} · **${plural(st.blackjackWins, 'victoire')}** · ${plural(st.blackjackNaturals, 'blackjack naturel', 'blackjacks naturels')} · ${net(st.blackjackNet, s)}`],
     [on('machine'), `## 🎰 Machine à sous\n${plural(st.slotSpins, 'tour')} · **${plural(st.jackpots, 'jackpot')}** · ${net(st.slotsNet, s)}`],
     [on('duel'), `## ⚔️ Duels\n**${plural(st.duelWins, 'victoire')}** · ${net(st.duelNet, s)}`],
+    [on('vol'), `## 🥷 Vols\n${plural(st.thefts, 'tentative')} · **${plural(st.theftSuccesses, 'réussite')}** · ${net(st.theftNet, s)}`],
     [on('tombola'), `## 🎟️ Tombola\n${plural(st.lotteryTickets, 'ticket')} · **${plural(st.lotteryWins, 'tombola gagnée', 'tombolas gagnées')}** · ${net(st.lotteryNet, s)}`],
     [on('calin_collectif'), `## 🫂 Câlins collectifs\n${plural(st.groupHugs, 'participation')} · **${formatAmount(st.groupHugEarned, s)}** récoltés`],
     [on('comptage') && st.countingFines > 0, `## 🔢 Comptage\n${plural(st.countingFines, 'erreur')} · ${formatAmount(st.countingFineTotal, s)} d’amendes`],

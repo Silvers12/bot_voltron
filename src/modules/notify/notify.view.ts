@@ -46,7 +46,7 @@ export function buildWelcomeMessage(s: GuildSettings, guildName: string) {
   const blocks: Array<{ name: string; value: string; show: boolean }> = [
     { name: '💰 Ta bourse', value: `**${formatAmount(s.dailyAmount, s)}** chaque jour sur \`/profil\`, bonus de série, et **${formatAmount(s.weeklyAmount, s)}** par semaine. Offre des ${s.currencyPlural} avec \`/calin\`.`, show: on('quotidien') || on('hebdo') || on('calin') },
     { name: '🛒 Boutique', value: 'Objets, rôles et **titres** à porter sur ton profil, depuis `/profil`.', show: on('boutique') },
-    { name: '🎲 Jeux', value: [on('blackjack') && '`/blackjack`', on('machine') && '`/machine`', on('duel') && '`/duel`', on('tombola') && '`/tombola`'].filter(Boolean).join(' · '), show: on('blackjack') || on('machine') || on('duel') || on('tombola') },
+    { name: '🎲 Jeux', value: [on('blackjack') && '`/blackjack`', on('machine') && '`/machine`', on('duel') && '`/duel`', on('vol') && '`/vol`', on('tombola') && '`/tombola`'].filter(Boolean).join(' · '), show: on('blackjack') || on('machine') || on('duel') || on('vol') || on('tombola') },
     { name: '⭐ Progression', value: 'De l’XP en discutant et en vocal, des niveaux, `/classement`, et des **succès** à débloquer (`/succes`).', show: on('xp') || on('succes') },
     { name: '🤗 Câlins collectifs', value: 'Voltron surgit à l’improviste : cliquez **CÂLIN**, plus vous êtes nombreux, plus ça rapporte.', show: on('calin_collectif') && s.groupHugChannelIds.length > 0 },
     { name: '🔢 Comptage', value: `Dans <#${s.countingChannelId}>, on compte à la suite. Une erreur coûte ${formatAmount(s.countingFine, s)} !`, show: on('comptage') && !!s.countingChannelId },

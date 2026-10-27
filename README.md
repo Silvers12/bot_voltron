@@ -170,6 +170,12 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Résolution par jets de d20 commentés (textes dans `content/duels.json`), relance en cas d'égalité. Un défi sans réponse expire après 2 min et rembourse ; les défis en attente survivent à un redémarrage.
 - Un seul défi en attente par défieur. Mises bornées par `/admin duel min max` (10 à 5 000 par défaut).
 
+## Vol de cœurs
+
+- `/vol membre` : tentative de larcin publique. Une chance sur deux de réussir (réglable) ; en cas de réussite, le voleur empoche entre 10 et 100 % (tirés au sort) d'un plafond fixé à 10 % de la bourse de la cible (réglable), donc jamais de quoi la ruiner. En cas d'échec, le voleur verse à la cible une amende calculée de la même façon sur sa propre bourse (0 s'il est fauché).
+- Un vol par membre et par délai (24 h par défaut), verrou atomique. Une cible dont 10 % de la bourse vaut moins d'un cœur n'est pas volable. Textes dans `content/vols.json`.
+- Réglages dans `/admin panneau` → module « Vol de cœurs » (part maximale, chance de réussite, délai). Interrupteur « vol ». Bilan dans `/stats` et l'historique de la bourse.
+
 ## Salon de comptage
 
 - Nécessite l'intent privilégié **Message Content** (portail Discord → Bot → Privileged Gateway Intents). Le contenu n'est lu que dans le salon de comptage.
@@ -227,7 +233,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Panneau d'intendance et interrupteurs
 
 - `/admin panneau` : écran de contrôle privé (se ferme après 5 min d'inactivité). Accueil : membres, bourses, monnaie en circulation, cagnotte de la machine, tombola en cours, prochain câlin collectif, parties et duels en attente, état de chaque fonctionnalité.
-  - Menu « Cocher les fonctionnalités actives » : coche/décoche pour activer ou mettre en pause (quotidien, hebdo, câlins, boutique, XP et classement, compliments, insultes, blackjack, machine, duels, câlin collectif, tombola).
+  - Menu « Cocher les fonctionnalités actives » : coche/décoche pour activer ou mettre en pause (quotidien, hebdo, câlins, boutique, XP et classement, compliments, insultes, blackjack, machine, duels, vol, câlin collectif, tombola).
   - Menu « Voir les réglages d'un module » : valeurs actuelles, boutons Activer/Désactiver du module, et boutons « Modifier : … » qui ouvrent un formulaire pré-rempli (monnaie, montants, XP, niveaux, blackjack, machine, duels, câlin collectif, tombola tirage/rappels). Les salons se saisissent par `#mention` ou nom, les jours par leur nom. Une saisie invalide n'enregistre rien et liste les erreurs. Changer la courbe des niveaux recalcule les niveaux ; activer la tombola la publie ; changer l'intervalle des câlins reprogramme la prochaine apparition. Les rôles de palier se règlent aussi par formulaire (module XP et niveaux, bouton Paliers : une ligne par palier, `5 @Recrue`), avec resynchronisation immédiate. Les articles de boutique restent gérés par commandes. Définitions : `src/modules/admin/panel.forms.ts`.
 - `/admin fonction nom:… active:true|false` : même bascule en une commande.
 - Une fonctionnalité en pause : ses commandes et boutons répondent « en pause », ses boutons disparaissent du profil, ses automatismes s'arrêtent (XP non comptée, pas d'apparition de câlin collectif, ni rappel ni tirage de tombola). Les réglages sont conservés. Les câlins collectifs déjà lancés restent cliquables jusqu'à leur fin. Les sessions vocales reprennent à la réactivation de l'XP.
@@ -247,6 +253,7 @@ Membres :
 - Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, fiche article, inventaire, tombola, tirage, câlin collectif, duel, machine à sous, page d'accueil. Assistants dans `src/discord/v2.ts`. Les messages publiés avant cette version restent en ancien format : `/admin tombola publier` et `/admin accueil publier` les remplacent.
 - `/profil` : espace personnel (privé) : bourse, ancienneté, boutons Récompense du jour, Hebdo, Historique, Boutique et Inventaire. Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
+- `/vol membre` : tentative de vol de cœurs (voir section dédiée).
 - `/don membre article [quantite] [message]` : donne un objet de collection de son inventaire à un membre (autocomplétion sur ses propres objets, annonce publique). Transfert atomique ; la limite par membre du receveur est respectée. Les titres et les rôles ne se donnent pas. Suit l'interrupteur « boutique ».
 - `/hebdo` : récompense de la semaine (réponse privée).
 - `/classement` : classement d'XP paginé (privé, se ferme après 2 min sans clic).

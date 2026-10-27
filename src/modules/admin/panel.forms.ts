@@ -165,6 +165,18 @@ export const FORMS: Form[] = [
     },
   },
   {
+    key: 'vol', module: 'vol', title: 'Vol de cœurs', button: 'Réglages',
+    fields: [
+      { id: 'theftMaxPercent', label: 'Part maximale de la bourse de la cible (%)', type: int(1, 100), current: (s) => `${s.theftMaxPercent}` },
+      { id: 'theftSuccessPercent', label: 'Chance de réussite (%)', type: int(0, 100), current: (s) => `${s.theftSuccessPercent}` },
+      { id: 'theftCooldownHours', label: 'Délai entre deux tentatives (heures)', type: int(0, 720), current: (s) => `${s.theftCooldownHours}` },
+    ],
+    async apply({ guild, values }) {
+      await updateSettings(guild.id, values as Partial<GuildSettings>);
+      return 'Réglages du vol enregistrés.';
+    },
+  },
+  {
     key: 'calin_collectif', module: 'calin_collectif', title: 'Câlin collectif', button: 'Réglages',
     fields: [
       { id: 'groupHugChannelIds', label: 'Salons (vide = inactif)', help: '#salon1 #salon2…', type: { kind: 'channels' }, current: (s) => s.groupHugChannelIds.map((id) => channelMention(id)).join(' ') },

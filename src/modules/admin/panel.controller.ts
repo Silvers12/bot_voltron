@@ -120,6 +120,15 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
     }
     case 'duel':
       return { lines: [`Mises de ${formatAmount(s.duelMinStake, s)} à ${formatAmount(s.duelMaxStake, s)}`], commands: ['/admin duel'] };
+    case 'vol':
+      return {
+        lines: [
+          `Butin maximal : **${s.theftMaxPercent} %** de la bourse de la cible (tiré au sort entre 10 et 100 % de ce plafond)`,
+          `Chance de réussite : **${s.theftSuccessPercent} %** · en cas d’échec, amende du même ordre versée à la cible`,
+          `Délai entre deux tentatives : **${s.theftCooldownHours} h**`,
+        ],
+        commands: ['/vol'],
+      };
     case 'calin_collectif':
       return {
         lines: [
