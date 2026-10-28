@@ -1,6 +1,7 @@
 import { AttachmentBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, SlashCommandBuilder, userMention } from 'discord.js';
 import { defineCommand } from '../types.js';
-import { flipCoin, loadVisual, type CoinSide } from '../../modules/dice/dice.service.js';
+import { flipCoin, type CoinSide } from '../../modules/dice/dice.service.js';
+import { renderCoinCard } from '../../modules/dice/dice.image.js';
 import { card, screen, text } from '../v2.js';
 
 export default defineCommand({
@@ -11,16 +12,15 @@ export default defineCommand({
   async execute({ interaction, guildMember }) {
     const bet = interaction.options.getString('choix') as CoinSide | null;
     const side = flipCoin();
-    const png = await loadVisual(side);
+
+    await interaction.deferReply();
+    const avatarPng = Buffer.from(await (await fetch(guildMember.displayAvatarURL({ extension: 'png', size: 256 }))).arrayBuffer());
+    const image = await renderCoinCard(guildMember.displayName, avatarPng, side, bet);
 
     const c = card(0xf1c40f);
-    const files: AttachmentBuilder[] = [];
-    if (png) {
-      files.push(new AttachmentBuilder(png, { name: `${side}.png` }));
-      c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(`attachment://${side}.png`).setDescription(side === 'pile' ? 'Pile' : 'Face')));
-    }
+    c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://piece.png')));
     const verdict = bet ? (bet === side ? ' Bien vu !' : ` Raté, tu avais dit ${bet}.`) : '';
     c.addTextDisplayComponents(text(`🪙 ${userMention(guildMember.id)} lance la pièce… **${side === 'pile' ? 'Pile' : 'Face'}** !${verdict}`));
-    await interaction.reply({ ...screen(c), files, allowedMentions: { parse: [] } });
+    await interaction.editReply({ ...screen(c), files: [new AttachmentBuilder(image, { name: 'piece.png' })], allowedMentions: { parse: [] } });
   },
 });

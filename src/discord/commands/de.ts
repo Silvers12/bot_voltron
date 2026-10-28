@@ -1,9 +1,8 @@
 import { AttachmentBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, SlashCommandBuilder, userMention } from 'discord.js';
 import { defineCommand } from '../types.js';
-import { loadVisual, rollDie } from '../../modules/dice/dice.service.js';
+import { rollDie } from '../../modules/dice/dice.service.js';
+import { renderDiceCard } from '../../modules/dice/dice.image.js';
 import { card, screen, text } from '../v2.js';
-
-const FACES = ['', '⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
 export default defineCommand({
   data: new SlashCommandBuilder()
@@ -15,19 +14,14 @@ export default defineCommand({
     const rolls = Array.from({ length: count }, rollDie);
     const total = rolls.reduce((a, b) => a + b, 0);
 
-    const files: AttachmentBuilder[] = [];
-    const gallery = new MediaGalleryBuilder();
-    for (const [i, value] of rolls.entries()) {
-      const png = await loadVisual(`de_${value}`);
-      if (!png) continue;
-      files.push(new AttachmentBuilder(png, { name: `de_${i}.png` }));
-      gallery.addItems(new MediaGalleryItemBuilder().setURL(`attachment://de_${i}.png`).setDescription(`Dé ${i + 1} : ${value}`));
-    }
+    await interaction.deferReply();
+    const avatarPng = Buffer.from(await (await fetch(guildMember.displayAvatarURL({ extension: 'png', size: 256 }))).arrayBuffer());
+    const image = await renderDiceCard(guildMember.displayName, avatarPng, rolls);
 
     const c = card(0xe74c3c);
-    if (files.length) c.addMediaGalleryComponents(gallery);
-    const detail = count === 1 ? `**${rolls[0]}**` : `${rolls.map((v) => FACES[v]).join(' ')} → **${total}** (${rolls.join(' + ')})`;
+    c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://de.png')));
+    const detail = count === 1 ? `**${rolls[0]}**` : `**${total}** (${rolls.join(' + ')})`;
     c.addTextDisplayComponents(text(`🎲 ${userMention(guildMember.id)} lance ${count === 1 ? 'le dé' : `${count} dés`} : ${detail}`));
-    await interaction.reply({ ...screen(c), files, allowedMentions: { parse: [] } });
+    await interaction.editReply({ ...screen(c), files: [new AttachmentBuilder(image, { name: 'de.png' })], allowedMentions: { parse: [] } });
   },
 });

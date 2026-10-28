@@ -2,13 +2,10 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import sharp from 'sharp';
 import { contentDir } from '../../core/paths.js';
+import { AVATAR, BANNER_H as H, BANNER_W as W, circleAvatar, esc, FONT, wrap } from '../../core/image.js';
 import type { Rate } from './rates.catalog.js';
 
-const W = 1200, H = 400;
-const AVATAR = 260, ICON = 260;
-
-const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
-const FONT = 'DejaVu Sans, Noto Sans, Arial, sans-serif';
+const ICON = 260;
 
 /** Icône du taux : PNG fourni dans content/taux/<key>.png, sinon l'icône vectorielle de secours. */
 async function loadIcon(rate: Rate): Promise<Buffer> {
@@ -29,23 +26,6 @@ async function filledIcon(rate: Rate, percent: number): Promise<Buffer> {
   if (fillHeight === 0) return grey;
   const colored = await icon.clone().extract({ left: 0, top: height - fillHeight, width, height: fillHeight }).png().toBuffer();
   return sharp(grey).composite([{ input: colored, top: height - fillHeight, left: 0 }]).png().toBuffer();
-}
-
-async function circleAvatar(avatarPng: Buffer): Promise<Buffer> {
-  const mask = Buffer.from(`<svg width="${AVATAR}" height="${AVATAR}"><circle cx="${AVATAR / 2}" cy="${AVATAR / 2}" r="${AVATAR / 2}" fill="#fff"/></svg>`);
-  return sharp(avatarPng).resize(AVATAR, AVATAR).composite([{ input: mask, blend: 'dest-in' }]).png().toBuffer();
-}
-
-/** Coupe un texte en lignes d'au plus `max` caractères, sur les espaces. */
-function wrap(textToWrap: string, max: number): string[] {
-  const lines: string[] = [];
-  let current = '';
-  for (const word of textToWrap.split(' ')) {
-    if ((current + ' ' + word).trim().length > max && current) { lines.push(current); current = word; }
-    else current = (current + ' ' + word).trim();
-  }
-  if (current) lines.push(current);
-  return lines;
 }
 
 export interface RateCard {
