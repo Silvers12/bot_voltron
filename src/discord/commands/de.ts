@@ -1,8 +1,8 @@
-import { AttachmentBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, SlashCommandBuilder, userMention } from 'discord.js';
+import { AttachmentBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, SlashCommandBuilder } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { rollDie } from '../../modules/dice/dice.service.js';
 import { renderDiceCard } from '../../modules/dice/dice.image.js';
-import { card, screen, text } from '../v2.js';
+import { card, screen } from '../v2.js';
 
 export default defineCommand({
   data: new SlashCommandBuilder()
@@ -12,16 +12,13 @@ export default defineCommand({
   async execute({ interaction, guildMember }) {
     const count = interaction.options.getInteger('nombre') ?? 1;
     const rolls = Array.from({ length: count }, rollDie);
-    const total = rolls.reduce((a, b) => a + b, 0);
 
     await interaction.deferReply();
     const avatarPng = Buffer.from(await (await fetch(guildMember.displayAvatarURL({ extension: 'png', size: 256 }))).arrayBuffer());
     const image = await renderDiceCard(guildMember.displayName, avatarPng, rolls);
 
     const c = card(0xe74c3c);
-    c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://de.png')));
-    const detail = count === 1 ? `**${rolls[0]}**` : `**${total}** (${rolls.join(' + ')})`;
-    c.addTextDisplayComponents(text(`🎲 ${userMention(guildMember.id)} lance ${count === 1 ? 'le dé' : `${count} dés`} : ${detail}`));
-    await interaction.editReply({ ...screen(c), files: [new AttachmentBuilder(image, { name: 'de.png' })], allowedMentions: { parse: [] } });
+    c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://de.png').setDescription(`${guildMember.displayName} : ${rolls.join(' + ')}`)));
+    await interaction.editReply({ ...screen(c), files: [new AttachmentBuilder(image, { name: 'de.png' })] });
   },
 });
