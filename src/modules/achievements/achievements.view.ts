@@ -1,6 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, time, TimestampStyles, userMention, type MessageActionRowComponentBuilder } from 'discord.js';
-import { card, divider, imageScreen, screen, text } from '../../discord/v2.js';
-import { renderListCard, type ListLine } from '../../core/listimage.js';
+import { card, divider, screen, text } from '../../discord/v2.js';
 import type { GuildSettings, MemberAchievement } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import { ACHIEVEMENTS, TIER_LABEL, TIER_REWARD, type Achievement } from './achievements.catalog.js';
@@ -9,7 +8,6 @@ import type { Unlock } from './achievements.service.js';
 import { botName } from '../../core/identity.js';
 export const PROFILE_ACHIEVEMENTS_ID = 'profil:achievements';
 const COLOR = 0xe67e22;
-const TIER_COLOR = { bronze: '#cd7f32', argent: '#c0c0c0', or: '#f1c40f' } as const;
 const FOOTER = `${botName()}, loutre paladin · Par mon bouclier et mes moustaches !`;
 
 export function badgeLine(unlocked: MemberAchievement[]): string {
@@ -38,24 +36,23 @@ export function buildAchievementsEmbed(displayName: string, unlocked: MemberAchi
   return embed;
 }
 
-/** Écran des succès dans le profil : image par catégorie, débloqués en clair, verrouillés grisés avec indice. */
-export async function buildAchievementsView(displayName: string, unlocked: MemberAchievement[], s: GuildSettings, backId: string) {
+/** Écran des succès dans le profil (composants V2). */
+export function buildAchievementsView(displayName: string, unlocked: MemberAchievement[], s: GuildSettings, backId: string) {
   const byKey = new Map(unlocked.map((u) => [u.key, u]));
-  const when = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', timeZone: s.timezone });
-  const lines: ListLine[] = [];
+  const c = card(COLOR);
+  c.addTextDisplayComponents(text(`# 🏅 Succès de ${displayName}\n**${unlocked.length}** succès sur ${ACHIEVEMENTS.length}.`));
   for (const cat of [...new Set(ACHIEVEMENTS.map((a) => a.category))]) {
-    lines.push({ group: cat });
-    for (const a of ACHIEVEMENTS.filter((x) => x.category === cat)) {
+    const lines = ACHIEVEMENTS.filter((a) => a.category === cat).map((a) => {
       const u = byKey.get(a.key);
-      if (u) lines.push({ label: `${a.emoji} ${a.name}`, value: `${TIER_LABEL[a.tier]} · ${when.format(u.unlockedAt)}`, valueColor: TIER_COLOR[a.tier], sub: a.description });
-      else lines.push({ label: `🔒 ${a.name}`, value: `+${formatAmount(TIER_REWARD[a.tier], s)}`, valueColor: '#9aa7b2', sub: a.hint, muted: true });
-    }
+      return u ? `${a.emoji} **${a.name}** · ${TIER_LABEL[a.tier]} · ${time(u.unlockedAt, TimestampStyles.ShortDate)}` : `🔒 ${a.name} · *${a.hint}* · +${formatAmount(TIER_REWARD[a.tier], s)}`;
+    });
+    c.addSeparatorComponents(divider());
+    c.addTextDisplayComponents(text(`## ${cat}\n${lines.join('\n')}`));
   }
-  const image = await renderListCard({ title: `Succès de ${displayName}`, subtitle: `${unlocked.length} succès sur ${ACHIEVEMENTS.length}`, color: '#e67e22', lines });
   const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
     new ButtonBuilder().setCustomId(backId).setLabel('Retour au profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
   );
-  return imageScreen(image, 'succes.png', COLOR, [row], { caption: `Succès de ${displayName}` });
+  return screen(c, [row]);
 }
 
 export function buildUnlockAnnouncement(discordUserId: string, unlocks: Unlock[], s: GuildSettings) {

@@ -233,7 +233,6 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 - `/stats [membre]` : activité (messages, vocal, niveau, meilleure série), câlins donnés et reçus, blackjack, machine à sous, duels, vols, tombola, câlins collectifs, comptage, chacun avec son bilan net en cœurs. Seules les fonctionnalités actives apparaissent. Public.
 - Même écran depuis le profil, via le menu « Explorer… » qui remplace les boutons Boutique/Inventaire/Succès : Historique, Boutique, Inventaire, Succès, Statistiques, Guide des commandes.
-- Tous ces écrans sont des images générées par `sharp` (`src/core/listimage.ts` : bandeau titre, groupes, lignes alternées, valeurs colorées, hauteur selon le contenu), avec les boutons et menus en dessous. Boutique : articles numérotés dans l'image, un bouton d'achat par numéro (deux rangées de cinq), puis Précédent/Suivant, Inventaire, Profil. Le guide des commandes garde ses commandes cliquables en texte sous un bandeau image.
 - Guide des commandes : sommaire par rubrique (bourse, boutique, jeux, pour rigoler, progression, ensemble, et intendance pour les administrateurs), puis un menu pour ouvrir chaque rubrique avec les commandes cliquables et leur explication, calculée d'après les réglages du serveur (montants, mises, pourcentages). Les fonctionnalités en pause n'apparaissent pas. Catalogue dans `src/modules/help/help.catalog.ts`.
 
 ## Catalogue de boutique de départ

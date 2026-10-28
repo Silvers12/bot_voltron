@@ -1,4 +1,4 @@
-import { AttachmentBuilder, ContainerBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, MessageFlags, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder, type ActionRowBuilder, type MessageActionRowComponentBuilder } from 'discord.js';
+import { ContainerBuilder, MessageFlags, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder, type ActionRowBuilder, type MessageActionRowComponentBuilder } from 'discord.js';
 
 /** Petits assistants pour les écrans en « composants V2 » (conteneur, titres, séparateurs). */
 export const text = (content: string) => new TextDisplayBuilder().setContent(content);
@@ -23,12 +23,4 @@ export function clampLines(lines: string[], max = 1800): string {
     out.push(l); total += l.length + 1;
   }
   return out.join('\n');
-}
-
-/** Écran V2 dont le contenu est une image générée : galerie, texte optionnel sous l'image, lignes de composants. `attachments: []` remplace l'image précédente lors d'une mise à jour. */
-export function imageScreen(image: Buffer, name: string, color: number, rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [], { notice, caption }: { notice?: string; caption?: string } = {}) {
-  const c = card(color);
-  c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(`attachment://${name}`).setDescription(caption ?? name)));
-  if (notice) c.addTextDisplayComponents(text(`> ${notice}`));
-  return { ...screen(c, rows), files: [new AttachmentBuilder(image, { name })], attachments: [] as never[] };
 }

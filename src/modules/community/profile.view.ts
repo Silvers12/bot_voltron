@@ -6,8 +6,7 @@ import { formatAmount } from '../settings/settings.service.js';
 import { progressFor } from '../progression/levels.service.js';
 import { isFeatureEnabled } from '../features/features.js';
 import { badgeLine, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
-import { card, divider, imageScreen, screen, text } from '../../discord/v2.js';
-import { renderListCard, type ListLine } from '../../core/listimage.js';
+import { card, clampLines, divider, screen, text } from '../../discord/v2.js';
 
 import { botName } from '../../core/identity.js';
 export const PROFILE_REFRESH_ID = 'profil:refresh';
@@ -99,50 +98,48 @@ export function buildPublicProfileView({ member, settings, achievements, image }
 }
 
 
-/** Libellé d'un mouvement, avec le nom du membre concerné quand il y en a un. */
-function describeTransaction(t: Transaction, nameOf: (id: string) => string): string {
-  const who = t.counterpartyDiscordId ? nameOf(t.counterpartyDiscordId) : 'quelqu’un';
+function describeTransaction(t: Transaction): string {
   switch (t.type) {
-    case 'WELCOME': return '🎁 Bourse de bienvenue';
-    case 'DAILY': return '🌅 Récompense du jour';
-    case 'WEEKLY': return '🗓️ Récompense de la semaine';
-    case 'PURCHASE': return '🛒 Achat';
-    case 'REFUND': return '↩️ Remboursement';
-    case 'BET': return '🎰 Mise';
-    case 'BET_WIN': return '🎰 Gain';
-    case 'GROUP_HUG': return '🤗 Câlin collectif';
-    case 'DUEL_STAKE': return '⚔️ Mise de duel';
-    case 'DUEL_WIN': return '⚔️ Duel gagné';
-    case 'DUEL_REFUND': return '⚔️ Mise rendue';
-    case 'LOTTERY_TICKET': return '🎟️ Tickets de tombola';
-    case 'LOTTERY_WIN': return '🎟️ Tombola gagnée';
-    case 'HUG_SENT': return `🤗 Câlin à ${who}`;
-    case 'HUG_RECEIVED': return `🤗 Câlin de ${who}`;
-    case 'ADMIN_CREDIT': return '🛡️ Offert par l’intendance';
-    case 'ADMIN_DEBIT': return '🛡️ Retiré par l’intendance';
-    case 'ACHIEVEMENT': return '🏅 Succès débloqué';
-    case 'COUNTING_FINE': return '🔢 Amende de comptage';
-    case 'THEFT_GAIN': return `🥷 Volé à ${who}`;
-    case 'THEFT_LOSS': return `🥷 Dérobé par ${who}`;
-    case 'THEFT_FINE': return `🚔 Vol raté sur ${who}`;
-    case 'THEFT_COMPENSATION': return `🚔 Dédommagement de ${who}`;
+    case 'WELCOME': return '🎁 bourse de bienvenue';
+    case 'DAILY': return '🌅 récompense du jour';
+    case 'WEEKLY': return '🗓️ récompense de la semaine';
+    case 'PURCHASE': return '🛒 achat';
+    case 'REFUND': return '↩️ remboursement';
+    case 'BET': return '🎰 mise';
+    case 'BET_WIN': return '🎰 gain';
+    case 'GROUP_HUG': return '🤗 câlin collectif';
+    case 'DUEL_STAKE': return '⚔️ mise de duel';
+    case 'DUEL_WIN': return '⚔️ duel gagné';
+    case 'DUEL_REFUND': return '⚔️ mise rendue';
+    case 'LOTTERY_TICKET': return '🎟️ tickets de tombola';
+    case 'LOTTERY_WIN': return '🎟️ tombola gagnée';
+    case 'HUG_SENT': return `🤗 câlin à ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
+    case 'HUG_RECEIVED': return `🤗 câlin de ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
+    case 'ADMIN_CREDIT': return '🛡️ offert par l’intendance';
+    case 'ADMIN_DEBIT': return '🛡️ retiré par l’intendance';
+    case 'ACHIEVEMENT': return '🏅 succès débloqué';
+    case 'COUNTING_FINE': return '🔢 amende de comptage';
+    case 'THEFT_GAIN': return `🥷 volé à ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
+    case 'THEFT_LOSS': return `🥷 dérobé par ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
+    case 'THEFT_FINE': return `🚔 vol raté sur ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
+    case 'THEFT_COMPENSATION': return `🚔 dédommagement de ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
   }
 }
 
-/** Écran de l'historique des mouvements de la bourse, en image. */
-export async function buildHistoryView(member: Member, transactions: Transaction[], balance: number, settings: GuildSettings, nameOf: (id: string) => string) {
-  const when = new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: settings.timezone });
-  const lines: ListLine[] = transactions.map((t) => ({
-    label: describeTransaction(t, nameOf),
-    value: formatAmount(t.delta, settings, { signed: true }),
-    valueColor: t.delta >= 0 ? '#2ecc71' : '#e74c3c',
-    sub: `${when.format(t.createdAt)}${t.reason && !['WELCOME', 'DAILY', 'WEEKLY'].includes(t.type) ? ` · ${t.reason}` : ''}`,
-  }));
-  const image = await renderListCard({
-    title: 'Historique', subtitle: `Les derniers mouvements de la bourse de ${member.displayName}`, color: '#8e44ad', lines,
-    empty: 'Aucun mouvement pour le moment. Ta bourse attend sa première pièce !', footer: `Solde actuel : ${formatAmount(balance, settings)}`,
+/** Écran de l'historique des mouvements de la bourse. */
+export function buildHistoryView(member: Member, transactions: Transaction[], balance: number, settings: GuildSettings) {
+  const lines = transactions.map((t) => {
+    const label = describeTransaction(t);
+    const reason = t.reason && !['WELCOME', 'DAILY', 'WEEKLY'].includes(t.type) ? ` · ${t.reason}` : '';
+    return `${time(t.createdAt, TimestampStyles.ShortDateTime)} — **${formatAmount(t.delta, settings, { signed: true })}** ${label}${reason}`;
   });
-  return imageScreen(image, 'historique.png', 0x8e44ad, [backRow()], { caption: `Historique de ${member.displayName}` });
+  const c = card();
+  c.addTextDisplayComponents(text(`# 📜 Historique de ${member.displayName}`));
+  c.addSeparatorComponents(divider(true));
+  c.addTextDisplayComponents(text(lines.length ? clampLines(lines) : 'Aucun mouvement pour le moment. Ta bourse attend sa première pièce !'));
+  c.addSeparatorComponents(divider());
+  c.addTextDisplayComponents(text(`💰 **Solde actuel** · **${formatAmount(balance, settings)}**`));
+  return screen(c, [backRow()]);
 }
 
 export function backRow() {

@@ -1,10 +1,9 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, type MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SectionBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder, roleMention, type MessageActionRowComponentBuilder } from 'discord.js';
 import type { GuildSettings, ShopItem } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import type { InventoryEntry } from './shop.service.js';
 import { backRow, INVENTORY_OPEN_ID, PROFILE_REFRESH_ID, SHOP_OPEN_ID } from '../community/profile.view.js';
-import { imageScreen } from '../../discord/v2.js';
-import { renderListCard, type ListLine } from '../../core/listimage.js';
+import { card, clampLines, divider, screen, text } from '../../discord/v2.js';
 
 export { SHOP_OPEN_ID, INVENTORY_OPEN_ID };
 export const SHOP_BUY_PREFIX = 'shop:buy:';
@@ -26,36 +25,46 @@ function itemLabel(item: ShopItem): string {
   return `${item.emoji ? item.emoji + ' ' : ''}${item.name}`;
 }
 
+function stockLabel(item: ShopItem): string {
+  if (item.stock === null) return '';
+  return item.stock === 0 ? ' · *épuisé*' : ` · ${item.stock} en stock`;
+}
+
+function kindLabel(item: ShopItem): string {
+  if (item.kind === 'ROLE' && item.roleId) return ` · rôle ${roleMention(item.roleId)}`;
+  if (item.kind === 'TITLE') return ' · titre';
+  return '';
+}
+
 /**
- * Écran de la boutique : une page de SHOP_PAGE_SIZE articles numérotés dans l'image, un bouton d'achat par numéro (deux rangées), puis la navigation.
+ * Écran de la boutique : une page de SHOP_PAGE_SIZE articles, chacun sur une ligne avec son bouton d'achat (prix dedans).
+ * Budget de composants Discord (40 max) : conteneur + en-tête + séparateur + 10 × (section, texte, bouton) + navigation.
  */
-export async function buildShopView(allItems: ShopItem[], balance: number, settings: GuildSettings, notice?: string, page = 0, owned: Map<string, number> = new Map()) {
+export function buildShopView(allItems: ShopItem[], balance: number, settings: GuildSettings, notice?: string, page = 0, owned: Map<string, number> = new Map()) {
   const pages = Math.max(1, Math.ceil(allItems.length / SHOP_PAGE_SIZE));
   const current = Math.min(Math.max(0, page), pages - 1);
   const items = allItems.slice(current * SHOP_PAGE_SIZE, (current + 1) * SHOP_PAGE_SIZE);
-
-  const lines: ListLine[] = [];
-  const buys: ButtonBuilder[] = [];
-  items.forEach((item, i) => {
+  const c = card(SHOP_COLOR);
+  c.addTextDisplayComponents(text(`# 🛒 Boutique${pages > 1 ? ` · page ${current + 1}/${pages}` : ''}\n💰 Ta bourse : **${formatAmount(balance, settings)}**${notice ? `\n> ${notice}` : ''}`));
+  c.addSeparatorComponents(divider(true));
+  if (!items.length) c.addTextDisplayComponents(text('Les rayons sont vides pour le moment. Les intendants y travaillent !'));
+  for (const item of items) {
     const qty = owned.get(item.id) ?? 0;
     const soldOut = item.stock !== null && item.stock <= 0;
     const limited = item.maxPerMember !== null && qty >= item.maxPerMember;
     const tooPoor = balance < item.price;
-    const flags = [item.kind === 'ROLE' ? 'rôle' : item.kind === 'TITLE' ? 'titre' : '', item.stock !== null ? (soldOut ? 'épuisé' : `${item.stock} en stock`) : '', item.maxPerMember !== null ? `max ${item.maxPerMember} par membre` : '', qty ? `tu en as ${qty}` : ''].filter(Boolean).join(' · ');
-    lines.push({
-      index: i + 1, label: itemLabel(item), muted: soldOut || limited,
-      value: soldOut ? 'Épuisé' : limited ? 'Déjà à toi' : formatAmount(item.price, settings), valueColor: soldOut || limited ? '#9aa7b2' : tooPoor ? '#e74c3c' : '#f1c40f',
-      sub: [item.description, flags].filter(Boolean).join(' — '),
-    });
-    buys.push(new ButtonBuilder().setCustomId(SHOP_BUY_PREFIX + item.id).setLabel(`${i + 1}`).setEmoji('🛒').setStyle(soldOut || limited || tooPoor ? ButtonStyle.Secondary : ButtonStyle.Success).setDisabled(soldOut || limited || tooPoor));
-  });
-  const image = await renderListCard({
-    title: pages > 1 ? `Boutique · page ${current + 1}/${pages}` : 'Boutique', subtitle: `Ta bourse : ${formatAmount(balance, settings)} · clique le numéro d’un article pour l’acheter`, color: '#27ae60', lines,
-    empty: 'Les rayons sont vides pour le moment. Les intendants y travaillent !',
-  });
+    const flags = [kindLabel(item).replace(/^ · /, ''), item.stock !== null ? (soldOut ? 'épuisé' : `${item.stock} en stock`) : '', item.maxPerMember !== null ? `max ${item.maxPerMember}/membre` : '', qty ? `tu en as ${qty}` : ''].filter(Boolean).join(' · ');
+    const body = `**${itemLabel(item)}**${flags ? `  -# ${flags}` : ''}\n${item.description ? `-# ${item.description}` : ''}`.trimEnd();
+    const label = soldOut ? 'Épuisé' : limited ? 'Déjà à toi' : formatAmount(item.price, settings);
+    c.addSectionComponents(
+      new SectionBuilder()
+        .addTextDisplayComponents(text(body))
+        .setButtonAccessory(
+          new ButtonBuilder().setCustomId(SHOP_BUY_PREFIX + item.id).setLabel(label.slice(0, 80)).setStyle(soldOut || limited ? ButtonStyle.Secondary : tooPoor ? ButtonStyle.Secondary : ButtonStyle.Success).setEmoji('🛒').setDisabled(soldOut || limited || tooPoor),
+        ),
+    );
+  }
 
-  const rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [];
-  for (let i = 0; i < buys.length; i += 5) rows.push(new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(...buys.slice(i, i + 5)));
   const nav = new ActionRowBuilder<MessageActionRowComponentBuilder>();
   if (pages > 1) {
     nav.addComponents(
@@ -67,23 +76,24 @@ export async function buildShopView(allItems: ShopItem[], balance: number, setti
     new ButtonBuilder().setCustomId(INVENTORY_OPEN_ID).setLabel('Inventaire').setStyle(ButtonStyle.Primary).setEmoji('🎒'),
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
   );
-  rows.push(nav);
-  return imageScreen(image, 'boutique.png', SHOP_COLOR, rows, { notice, caption: 'Boutique' });
+  return screen(c, [nav]);
 }
 
-/** Inventaire du membre en image, avec le choix du titre porté s'il en possède. */
-export async function buildInventoryView(entries: InventoryEntry[], settings: GuildSettings, equippedTitleId: string | null, notice?: string) {
-  const lines: ListLine[] = entries.map((e) => ({
-    label: itemLabel(e.item),
-    value: e.item.kind === 'TITLE' ? (e.item.id === equippedTitleId ? 'Porté' : 'Titre') : e.item.kind === 'ROLE' ? 'Rôle' : e.quantity > 1 ? `× ${e.quantity}` : undefined,
-    valueColor: e.item.id === equippedTitleId ? '#f1c40f' : '#c9d3dc',
-    sub: e.item.description ?? undefined,
-  }));
-  const count = entries.reduce((n, e) => n + e.quantity, 0);
-  const image = await renderListCard({
-    title: 'Inventaire', subtitle: `${count} objet${count > 1 ? 's' : ''} · valeur d’achat ${formatAmount(entries.reduce((n, e) => n + e.quantity * e.item.price, 0), settings)}`, color: '#d35400', lines,
-    empty: 'Ton sac est vide. Fais un tour à la boutique !',
-  });
+/** Inventaire du membre, avec le choix du titre porté s'il en possède. */
+export function buildInventoryView(entries: InventoryEntry[], settings: GuildSettings, equippedTitleId: string | null, notice?: string) {
+  const describe = (e: InventoryEntry) => {
+    const qty = e.quantity > 1 ? ` ×${e.quantity}` : '';
+    if (e.item.kind === 'ROLE' && e.item.roleId) return `${itemLabel(e.item)}${qty} (${roleMention(e.item.roleId)})`;
+    if (e.item.kind === 'TITLE') return `${itemLabel(e.item)}${e.item.id === equippedTitleId ? ' · **porté**' : ''}`;
+    return `${itemLabel(e.item)}${qty}`;
+  };
+  const c = card(SHOP_COLOR);
+  c.addTextDisplayComponents(text('# 🎒 Inventaire'));
+  if (notice) c.addTextDisplayComponents(text(`> ${notice}`));
+  c.addSeparatorComponents(divider(true));
+  c.addTextDisplayComponents(text(entries.length ? clampLines(entries.map(describe)) : 'Ton sac est vide. Fais un tour à la boutique !'));
+  c.addSeparatorComponents(divider());
+  c.addTextDisplayComponents(text(`-# ${entries.reduce((n, e) => n + e.quantity, 0)} objet(s) · valeur d’achat ${formatAmount(entries.reduce((n, e) => n + e.quantity * e.item.price, 0), settings)}`));
 
   const rows: ActionRowBuilder<MessageActionRowComponentBuilder>[] = [];
   const titles = entries.filter((e) => e.item.kind === 'TITLE').map((e) => e.item);
@@ -102,7 +112,7 @@ export async function buildInventoryView(entries: InventoryEntry[], settings: Gu
     new ButtonBuilder().setCustomId(SHOP_OPEN_ID).setLabel('Boutique').setStyle(ButtonStyle.Primary).setEmoji('🛒'),
     new ButtonBuilder().setCustomId(PROFILE_REFRESH_ID).setLabel('Retour au profil').setStyle(ButtonStyle.Secondary).setEmoji('🦦'),
   ));
-  return imageScreen(image, 'inventaire.png', SHOP_COLOR, rows, { notice, caption: 'Inventaire' });
+  return screen(c, rows);
 }
 
 export { backRow };

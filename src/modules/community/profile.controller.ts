@@ -1,4 +1,4 @@
-import { MessageFlags, type ChatInputCommandInteraction, type Guild, type GuildMember } from 'discord.js';
+import { MessageFlags, type ChatInputCommandInteraction, type GuildMember } from 'discord.js';
 import type { Member } from '../../generated/prisma/client.js';
 import { registerButton, registerButtonPrefix, registerSelect, type ButtonContext, type SelectContext } from '../../discord/components.js';
 import { closeSession, openSession, touchSession } from '../../discord/sessions.js';
@@ -79,16 +79,13 @@ export async function renderPublicProfile(member: Member, guildMember: GuildMemb
   return buildPublicProfileView({ member, settings, achievements, image });
 }
 
-/** Nom affiché d'un membre du serveur (cache), sinon son identifiant. */
-const nameResolver = (guild: Guild) => (id: string) => guild.members.cache.get(id)?.displayName ?? 'un membre parti';
-
-export async function renderHistory(member: Member, guild: Guild) {
+export async function renderHistory(member: Member) {
   const [transactions, balance, settings] = await Promise.all([
     getHistory(member.id, 10),
     getBalance(member.id),
     getSettings(member.guildId),
   ]);
-  return buildHistoryView(member, transactions, balance, settings, nameResolver(guild));
+  return buildHistoryView(member, transactions, balance, settings);
 }
 
 // Les messages de /profil sont éphémères : seul leur destinataire peut cliquer ces boutons.
@@ -96,18 +93,13 @@ registerProfileButton(PROFILE_REFRESH_ID, async ({ interaction, member, guildMem
   await interaction.update(await renderProfile(member, guildMember));
 });
 
-/** Écran des succès avec son bandeau. */
-export async function renderAchievements(member: Member) {
-  const [unlocked, settings] = await Promise.all([listUnlocked(member.id), getSettings(member.guildId)]);
-  return buildAchievementsView(member.displayName, unlocked, settings, PROFILE_REFRESH_ID);
-}
-
 registerProfileButton(PROFILE_ACHIEVEMENTS_ID, async ({ interaction, member }) => {
-  await interaction.update(await renderAchievements(member));
+  const [unlocked, settings] = await Promise.all([listUnlocked(member.id), getSettings(member.guildId)]);
+  await interaction.update(buildAchievementsView(member.displayName, unlocked, settings, PROFILE_REFRESH_ID));
 });
 
 registerProfileButton(PROFILE_HISTORY_ID, async ({ interaction, member }) => {
-  await interaction.update(await renderHistory(member, interaction.guild));
+  await interaction.update(await renderHistory(member));
 });
 
 registerProfileButton(PROFILE_DAILY_ID, async ({ interaction, member, guildMember }) => {
