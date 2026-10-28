@@ -33,7 +33,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     key: 'bourse', label: 'Bourse et récompenses', emoji: '💰', blurb: 'Gagner et offrir des cœurs',
     intro: (s) => `Chaque membre a une bourse ouverte avec **${fmt(s.startingBalance, s)}**. Elle se remplit avec les récompenses, les jeux et les câlins reçus.`,
     entries: [
-      { command: 'profil', describe: (s) => `Ton tableau de bord privé : bourse, niveau, badges, et le bouton de la **récompense du jour** (**${fmt(s.dailyAmount, s)}**, +${s.dailyStreakBonusPercent} % par jour de série, sans plafond). Le menu *Explorer* mène à tout le reste.` },
+      { command: 'profil', describe: (s) => `Ton tableau de bord privé : bourse, niveau, badges, et le bouton de la **récompense du jour** (**${fmt(s.dailyAmount, s)}**, +${s.dailyStreakBonusPercent} % par jour de série, sans plafond). Le menu *Explorer* mène à tout le reste. Avec \`membre\`, affiche la fiche publique de quelqu’un : titre, ancienneté, niveau et badges.` },
       { command: 'hebdo', feature: 'hebdo', describe: (s) => `Récupère la récompense de la semaine : **${fmt(s.weeklyAmount, s)}**, une fois par semaine civile (aussi depuis le profil).` },
       { command: 'calin', args: 'membre montant [message]', feature: 'calin', describe: (s) => `Offre des ${s.currencyPlural} de ta bourse à un membre, avec un petit mot si tu veux. C'est un don, pas un prêt.` },
     ],

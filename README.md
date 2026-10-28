@@ -290,7 +290,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 Membres :
 - Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, inventaire, statistiques, tombola, tirage, câlin collectif, duel, machine à sous, page d'accueil. Assistants dans `src/discord/v2.ts`. Les messages publiés avant cette version restent en ancien format : `/admin tombola publier` et `/admin accueil publier` les remplacent.
-- `/profil` : espace personnel (privé) : bourse, titre porté, badges, niveau, ancienneté, boutons Récompense du jour, Hebdo et Rafraîchir, menu « Explorer… » (Historique, Boutique, Inventaire, Succès, Statistiques, Guide des commandes). Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
+- `/profil [membre]` : avec un membre, fiche publique en lecture seule (nom, titre porté, ancienneté, niveau et XP, badges ; ni bourse ni récompenses). Sans option, espace personnel (privé) : bourse, titre porté, badges, niveau, ancienneté, boutons Récompense du jour, Hebdo et Rafraîchir, menu « Explorer… » (Historique, Boutique, Inventaire, Succès, Statistiques, Guide des commandes). Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/vol membre` : tentative de vol de cœurs (voir section dédiée).
 - `/don membre article [quantite] [message]` : donne un objet de collection de son inventaire à un membre (autocomplétion sur ses propres objets, annonce publique). Transfert atomique ; la limite par membre du receveur est respectée. Les titres et les rôles ne se donnent pas. Suit l'interrupteur « boutique ».

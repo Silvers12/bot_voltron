@@ -46,7 +46,7 @@ import { listUnlocked, trackAchievements } from '../achievements/achievements.se
 import { getEquippedTitle } from '../shop/shop.service.js';
 import { buildAchievementsView, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
 import { time, TimestampStyles } from 'discord.js';
-import { buildHistoryView, buildProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID, PROFILE_WEEKLY_ID } from './profile.view.js';
+import { buildHistoryView, buildProfileView, buildPublicProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID, PROFILE_WEEKLY_ID } from './profile.view.js';
 
 /** Assemble les données du profil et construit l'écran. */
 export async function renderProfile(member: Member, guildMember: GuildMember, notice?: string) {
@@ -60,6 +60,17 @@ export async function renderProfile(member: Member, guildMember: GuildMember, no
     getEquippedTitle(member.id),
   ]);
   return buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, title, notice });
+}
+
+/** Fiche publique d'un autre membre. */
+export async function renderPublicProfile(member: Member, guildMember: GuildMember) {
+  const [settings, rank, achievements, title] = await Promise.all([
+    getSettings(member.guildId),
+    getRank(member.guildId, member.xp),
+    listUnlocked(member.id),
+    getEquippedTitle(member.id),
+  ]);
+  return buildPublicProfileView({ member, guildMember, settings, rank, achievements, title });
 }
 
 export async function renderHistory(member: Member) {

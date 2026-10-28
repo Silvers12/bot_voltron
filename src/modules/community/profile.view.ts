@@ -93,6 +93,23 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
   return screen(c, rows);
 }
 
+/** Fiche publique d'un membre, en lecture seule : nom, titre, ancienneté, niveau et XP, badges. Rien de personnel (bourse, récompenses). */
+export function buildPublicProfileView({ member, guildMember, settings, rank, achievements, title }: Pick<ProfileData, 'member' | 'guildMember' | 'settings' | 'rank' | 'achievements' | 'title'>) {
+  const c = card();
+  const header = [
+    `# ${member.displayName}`,
+    title ? `${title.emoji ? title.emoji + ' ' : '🏷️ '}**${title.name}**` : '',
+    `Dans la compagnie depuis ${member.joinedAt ? time(member.joinedAt, TimestampStyles.LongDate) : 'un moment'}`,
+  ].filter(Boolean).join('\n');
+  c.addSectionComponents(new SectionBuilder().addTextDisplayComponents(text(header)).setThumbnailAccessory(new ThumbnailBuilder().setURL(guildMember.displayAvatarURL({ size: 256 }))));
+  c.addSeparatorComponents(divider(true));
+  c.addTextDisplayComponents(text(levelLine(member.xp, settings, rank)));
+  if (isFeatureEnabled(settings, 'succes')) { c.addSeparatorComponents(divider()); c.addTextDisplayComponents(text(`🏅 **Badges** · ${badgeLine(achievements)}`)); }
+  c.addSeparatorComponents(divider());
+  c.addTextDisplayComponents(text(SIGNATURE));
+  return screen(c);
+}
+
 function levelLine(xp: number, settings: GuildSettings, rank: number): string {
   const p = progressFor(xp, settings);
   const filled = Math.round((p.current / p.needed) * 10);

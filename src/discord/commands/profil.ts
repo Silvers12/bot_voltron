@@ -1,10 +1,17 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { defineCommand } from '../types.js';
-import { openProfile } from '../../modules/community/profile.controller.js';
+import { openProfile, renderPublicProfile } from '../../modules/community/profile.controller.js';
+import { ensureMember } from '../../modules/community/member.service.js';
 
 export default defineCommand({
-  data: new SlashCommandBuilder().setName('profil').setDescription('Ouvre ton espace personnel'),
+  data: new SlashCommandBuilder()
+    .setName('profil')
+    .setDescription('Ouvre ton espace personnel, ou la fiche publique d’un membre')
+    .addUserOption((o) => o.setName('membre').setDescription('Membre dont tu veux voir la fiche (toi par défaut)')),
   async execute({ interaction, member, guildMember }) {
-    await openProfile({ interaction, member, guildMember });
+    const target = interaction.options.getMember('membre');
+    if (!target || target.id === interaction.user.id) return void (await openProfile({ interaction, member, guildMember }));
+    if (target.user.bot) return void (await interaction.reply({ content: 'Les bots n’ont pas de fiche. Ils ont déjà bien assez de travail.', flags: MessageFlags.Ephemeral }));
+    await interaction.reply(await renderPublicProfile(await ensureMember(target), target));
   },
 });
