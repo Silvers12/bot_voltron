@@ -9,6 +9,7 @@ import { DISABLED_MESSAGE, featureForCommand, featureForComponent, isFeatureEnab
 import { isCommandChannelAllowed } from '../../modules/settings/commands.admin.js';
 import { channelMention } from 'discord.js';
 
+import { botName } from '../../core/identity.js';
 const log = createLogger('interactions');
 
 async function replyError(interaction: RepliableInteraction, content: string) {
@@ -31,7 +32,7 @@ export default defineEvent({
   name: Events.InteractionCreate,
   async execute(client, interaction) {
     if (!isAllowed(interaction)) {
-      if (interaction.isRepliable()) await replyError(interaction, 'Voltron ne sert que sa propre compagnie.');
+      if (interaction.isRepliable()) await replyError(interaction, `${botName()} ne sert que sa propre compagnie.`);
       return;
     }
 
@@ -46,7 +47,7 @@ export default defineEvent({
         if (interaction.commandName !== 'admin') {
           const s = await getSettings(interaction.guildId);
           if (!isCommandChannelAllowed(s, interaction.channelId)) {
-            return replyError(interaction, `Les commandes de Voltron s’utilisent dans ${s.commandChannelIds.map(channelMention).join(' ou ')}. Je t’y attends !`);
+            return replyError(interaction, `Les commandes de ${botName()} s’utilisent dans ${s.commandChannelIds.map(channelMention).join(' ou ')}. Je t’y attends !`);
           }
         }
         const member = await ensureMember(interaction.member);

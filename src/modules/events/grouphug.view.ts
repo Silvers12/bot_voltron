@@ -4,12 +4,13 @@ import { notifyMention } from '../notify/notify.service.js';
 import type { GroupHug, GuildSettings } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 
+import { botName } from '../../core/identity.js';
 export const HUG_JOIN_PREFIX = 'hug:join:';
 
 export function buildHugOpenMessage(hug: GroupHug, count: number, s: GuildSettings) {
   const ping = notifyMention(s, 'hug').trim();
   const c = card(0xff6b9d);
-  c.addTextDisplayComponents(text(`${ping ? `${ping}\n` : ''}# 🤗 CÂLIN COLLECTIF !\nVoltron surgit au milieu du salon, les bras grand ouverts et les moustaches frémissantes.`));
+  c.addTextDisplayComponents(text(`${ping ? `${ping}\n` : ''}# 🤗 CÂLIN COLLECTIF !\n${botName()} surgit au milieu du salon, les bras grand ouverts et les moustaches frémissantes.`));
   c.addSeparatorComponents(divider(true));
   c.addTextDisplayComponents(text(`**Appuyez sur CÂLIN avant ${time(hug.endsAt, TimestampStyles.RelativeTime)} !**\nChaque câlineur reçoit **${formatAmount(hug.rewardPerHugger, s)} × le nombre de câlineurs**. Plus vous êtes nombreux, plus ça rapporte.`));
   c.addSeparatorComponents(divider());
@@ -28,8 +29,8 @@ export function buildHugClosedMessage(hug: GroupHug, participantIds: string[], r
   c.addSeparatorComponents(divider(true));
   c.addTextDisplayComponents(text(
     count
-      ? `Voltron serre fort ${count} camarade${count > 1 ? 's' : ''} : ${names}\n\nChacun repart avec **${formatAmount(rewardEach, s)}** (${formatAmount(hug.rewardPerHugger, s)} × ${count}).\n-# Vous êtes une belle compagnie.`
-      : 'Personne n’est venu. Voltron referme doucement les bras et retourne à sa rivière. Il reviendra.\n-# Snif.',
+      ? `${botName()} serre fort ${count} camarade${count > 1 ? 's' : ''} : ${names}\n\nChacun repart avec **${formatAmount(rewardEach, s)}** (${formatAmount(hug.rewardPerHugger, s)} × ${count}).\n-# Vous êtes une belle compagnie.`
+      : `Personne n’est venu. ${botName()} referme doucement les bras et retourne à sa rivière. Il reviendra.\n-# Snif.`,
   ));
   const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
     new ButtonBuilder().setCustomId(HUG_JOIN_PREFIX + hug.id).setLabel('Terminé').setStyle(ButtonStyle.Secondary).setEmoji('🤗').setDisabled(true),

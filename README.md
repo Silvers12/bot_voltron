@@ -61,7 +61,7 @@ Un départ marque `leftAt` sans supprimer le profil. Nécessite l'intent **Serve
 
 ## Créer et inviter son propre bot
 
-Voltron n'est pas un bot hébergé : chacun crée sa propre application Discord et héberge son instance.
+Voltron n'est pas un bot hébergé : chacun crée sa propre application Discord et héberge son instance. Le bot prend le **nom** et la **bannière** de l'application (onglet *Bot* du portail) : tous les textes disent « Loutsy » si l'application s'appelle Loutsy. Les fichiers de `content/` utilisent `{bot}` pour le nom.
 
 1. Developer Portal → **New Application** → onglet **Bot** → *Reset Token* : copier le token dans `DISCORD_TOKEN`, et l'Application ID (General Information) dans `DISCORD_CLIENT_ID`.
 2. Onglet **Bot** → activer les *Privileged Gateway Intents* **Server Members** et **Message Content** (membres, XP et comptage en dépendent).
@@ -258,7 +258,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Page d'accueil et rôles de notification
 
 - `/admin accueil installer salon:#accueil [salon_notifications:#notifications]` : crée les rôles « Câlins collectifs », « Tombola » et « Duels » s'ils manquent (mentionnables, sans permission), publie la page d'accueil (présentation du serveur, fonctionnalités actives) et, dans le second salon, la page des notifications (menu des rôles) ; les deux sont épinglées. Sans salon de notifications, le menu reste dans la page d'accueil. Le rôle de Voltron doit être au-dessus de ces rôles.
-- Page en « composants V2 » (conteneur coloré, titres, séparateurs, galerie pour la bannière, menu déroulant). Intro (texte personnalisable avec `/admin accueil texte`, bannière avec `/admin accueil banniere image:` — PNG/JPG/GIF/WebP 8 Mo, stockée en base), « Ce qui t'attend » (seules les fonctionnalités actives apparaissent), « Être prévenu » avec un menu déroulant à choix multiples.
+- Page en « composants V2 » (conteneur coloré, titres, séparateurs, galerie pour la bannière, menu déroulant). Intro (texte personnalisable avec `/admin accueil texte`, bannière : par défaut celle du bot définie sur le portail Discord (page *Bot*), remplaçable par `/admin accueil banniere image:` — PNG/JPG/GIF/WebP 8 Mo, stockée en base ; sans image, retour à celle du bot), « Ce qui t'attend » (seules les fonctionnalités actives apparaissent), « Être prévenu » avec un menu déroulant à choix multiples.
 - Le menu applique exactement la sélection : rôles cochés ajoutés, décochés retirés (confirmation privée). `/admin accueil roles` pour utiliser des rôles existants, `publier` pour mettre à jour les deux pages, `etat`. Toute modification republie les pages automatiquement.
 - Pings : le rôle est mentionné à l'apparition d'un câlin collectif, à chaque publication ou rappel de tombola, et quand un duel est lancé (le défié est toujours mentionné).
 

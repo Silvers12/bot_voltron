@@ -12,6 +12,7 @@ import { trackAchievements } from '../achievements/achievements.service.js';
 import { notifyMention } from '../notify/notify.service.js';
 import { buildDrawAnnouncement, buildLotteryMessage } from './lottery.view.js';
 
+import { botName } from '../../core/identity.js';
 const log = createLogger('lottery');
 
 export class LotteryError extends Error {
@@ -227,12 +228,12 @@ async function sendReminders(client: Client, open: Lottery, s: GuildSettings, no
   const reminder = reminderDate(open, s);
   if (reminder && !open.reminderSentAt && reminder.getTime() <= now) {
     const { count } = await prisma.lottery.updateMany({ where: { id: open.id, reminderSentAt: null, state: 'OPEN' }, data: { reminderSentAt: new Date() } });
-    if (count) await publishLottery(client, open, `🎟️ **Rappel de Voltron !** Le tirage approche et la cagnotte grossit. Qui veut ses tickets ?`);
+    if (count) await publishLottery(client, open, `🎟️ **Rappel de ${botName()} !** Le tirage approche et la cagnotte grossit. Qui veut ses tickets ?`);
     return;
   }
   const lastCall = lastCallDate(open, s);
   if (lastCall && !open.lastCallSentAt && lastCall.getTime() <= now) {
     const { count } = await prisma.lottery.updateMany({ where: { id: open.id, lastCallSentAt: null, state: 'OPEN' }, data: { lastCallSentAt: new Date() } });
-    if (count) await publishLottery(client, open, `🎟️ **Derniers tickets !** Voltron sort le chapeau dans ${s.lotteryLastCallHours} h. Après, c'est trop tard !`);
+    if (count) await publishLottery(client, open, `🎟️ **Derniers tickets !** ${botName()} sort le chapeau dans ${s.lotteryLastCallHours} h. Après, c'est trop tard !`);
   }
 }

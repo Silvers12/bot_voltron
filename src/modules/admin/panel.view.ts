@@ -4,6 +4,7 @@ import { formatAmount } from '../settings/settings.service.js';
 import { FEATURES, featureInfo, isFeatureEnabled, type FeatureKey } from '../features/features.js';
 import { ADMIN_EDIT_PREFIX, formsForModule } from './panel.forms.js';
 
+import { botName } from '../../core/identity.js';
 export const ADMIN_FEATURES_SELECT_ID = 'admin:features';
 export const ADMIN_MODULE_SELECT_ID = 'admin:module';
 export const ADMIN_HOME_ID = 'admin:home';
@@ -13,7 +14,7 @@ export const ADMIN_TOGGLE_PREFIX = 'admin:toggle:';
 export const ADMIN_MODULE_PREFIX = 'admin:open:';
 
 const COLOR = 0xc0392b;
-const FOOTER = 'Intendance de Voltron · panneau réservé, se ferme après 5 min d’inactivité';
+const FOOTER = `Intendance de ${botName()} · panneau réservé, se ferme après 5 min d’inactivité`;
 
 export type ModuleKey = 'economie' | 'progression' | 'boutique' | 'casino' | 'duel' | 'vol' | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'commandes' | 'accueil' | 'textes';
 
@@ -67,7 +68,7 @@ export function buildHomeView(s: GuildSettings, o: Overview, notice?: string) {
   const half = Math.ceil(FEATURES.length / 2);
   const embed = new EmbedBuilder()
     .setColor(COLOR)
-    .setTitle('🛡️ Intendance de Voltron')
+    .setTitle(`🛡️ Intendance de ${botName()}`)
     .addFields(
       {
         name: 'Compagnie',

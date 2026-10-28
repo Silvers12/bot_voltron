@@ -5,6 +5,7 @@ import { ensureMember } from '../../modules/community/member.service.js';
 import { hug, InsufficientFundsError } from '../../modules/economy/economy.service.js';
 import { formatAmount, getSettings } from '../../modules/settings/settings.service.js';
 
+import { botName } from '../../core/identity.js';
 export default defineCommand({
   data: new SlashCommandBuilder()
     .setName('calin')
@@ -21,7 +22,7 @@ export default defineCommand({
     const refuse = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
 
     if (!target) return void (await refuse('Ce membre ne fait pas (ou plus) partie du serveur.'));
-    if (target.user.bot) return void (await refuse('Les bots ne savent pas recevoir les câlins. Pas même Voltron, hélas.'));
+    if (target.user.bot) return void (await refuse(`Les bots ne savent pas recevoir les câlins. Pas même ${botName()}, hélas.`));
     if (target.id === interaction.user.id) return void (await refuse('Un câlin à soi-même ? Essaie plutôt avec un camarade.'));
 
     const toMember = await ensureMember(target);

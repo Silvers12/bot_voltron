@@ -71,19 +71,22 @@ export async function importCatalog(guildId: string): Promise<{ created: string[
   const { readFile } = await import('node:fs/promises');
   const { default: path } = await import('node:path');
   const { contentDir } = await import('../../core/paths.js');
+  const { botName } = await import('../../core/identity.js');
+  const named = (t: string | null | undefined) => t?.replaceAll('{bot}', botName()) ?? null;
   const raw = JSON.parse(await readFile(path.join(contentDir, 'boutique.json'), 'utf8')) as { items: CatalogItem[] };
   if (!Array.isArray(raw.items)) throw new Error('boutique.json : « items » doit être un tableau');
   const created: string[] = [];
   let skipped = 0;
   for (const it of raw.items) {
     if (!it.name || !Number.isInteger(it.price) || it.price < 0) throw new Error(`boutique.json : article invalide « ${it.name ?? '?'} »`);
-    if (await findItemByName(guildId, it.name)) { skipped++; continue; }
+    const name = named(it.name)!;
+    if (await findItemByName(guildId, name)) { skipped++; continue; }
     await createItem(guildId, {
-      name: it.name, price: it.price, description: it.description ?? null, emoji: it.emoji ?? null,
+      name, price: it.price, description: named(it.description), emoji: it.emoji ?? null,
       kind: it.kind ?? 'COLLECTIBLE', roleId: null, stock: it.stock ?? null,
       maxPerMember: it.maxPerMember ?? (it.kind === 'TITLE' ? 1 : null), sortOrder: it.sortOrder ?? 0,
     });
-    created.push(it.name);
+    created.push(name);
   }
   log.info(`Catalogue importé sur ${guildId} : ${created.length} créé(s), ${skipped} déjà présent(s)`);
   return { created, skipped };

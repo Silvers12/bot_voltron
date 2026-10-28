@@ -12,6 +12,7 @@ import {
 } from '../../modules/casino/blackjack.service.js';
 import { BJ_AGAIN_PREFIX, BJ_DOUBLE_ID, BJ_HIT_ID, BJ_STAND_ID, buildBlackjackView } from '../../modules/casino/blackjack.view.js';
 
+import { botName } from '../../core/identity.js';
 /** Sans action pendant ce délai, la partie est réglée comme si le joueur restait. */
 const TURN_TTL_MS = 2 * 60 * 1000;
 const sessionKey = (guildId: string, userId: string) => `blackjack:${guildId}:${userId}`;
@@ -29,7 +30,7 @@ function expireHandler(member: Member) {
     const view = await settle(game, 'voltron');
     if (interaction.inCachedGuild()) trackAchievements(interaction.guild, member.id);
     const payload = await render(view, member);
-    await interaction.editReply({ ...payload, content: '⏱️ Temps écoulé : Voltron a joué pour toi en restant.' });
+    await interaction.editReply({ ...payload, content: `⏱️ Temps écoulé : ${botName()} a joué pour toi en restant.` });
   };
 }
 
@@ -81,7 +82,7 @@ registerButtonPrefix(BJ_AGAIN_PREFIX, async (ctx) => {
 export default defineCommand({
   data: new SlashCommandBuilder()
     .setName('blackjack')
-    .setDescription('Joue au blackjack contre Voltron en misant des cœurs')
+    .setDescription(`Joue au blackjack contre ${botName()} en misant des cœurs`)
     .addIntegerOption((o) => o.setName('mise').setDescription('Mise en cœurs').setRequired(true).setMinValue(1)),
   async execute({ interaction, member }) {
     // Partie en cours (ex. message fermé) : on la ré-affiche plutôt que d'en ouvrir une autre.

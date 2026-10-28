@@ -3,6 +3,7 @@ import { defineCommand } from '../types.js';
 import { ensureMember, findMember } from '../../modules/community/member.service.js';
 import { getInventory, giftItem, PurchaseError } from '../../modules/shop/shop.service.js';
 
+import { botName } from '../../core/identity.js';
 export default defineCommand({
   data: new SlashCommandBuilder()
     .setName('don')
@@ -32,7 +33,7 @@ export default defineCommand({
     const refuse = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
 
     if (!target) return void (await refuse('Ce membre ne fait pas (ou plus) partie du serveur.'));
-    if (target.user.bot) return void (await refuse('Les bots n’ont pas de poches. Pas même Voltron.'));
+    if (target.user.bot) return void (await refuse(`Les bots n’ont pas de poches. Pas même ${botName()}.`));
     if (target.id === interaction.user.id) return void (await refuse('Te donner un objet à toi-même ? Il est déjà à toi.'));
 
     const toMember = await ensureMember(target);

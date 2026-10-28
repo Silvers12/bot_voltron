@@ -6,6 +6,7 @@ import { duoRateOfTheDay } from '../../modules/rates/rates.service.js';
 import { renderDuoCard } from '../../modules/rates/rates.image.js';
 import { card, screen, text } from '../v2.js';
 
+import { botName } from '../../core/identity.js';
 export default defineCommand({
   data: new SlashCommandBuilder()
     .setName('duo')
@@ -19,9 +20,9 @@ export default defineCommand({
     const left = interaction.options.getMember('avec') ?? guildMember;
     const right = interaction.options.getMember('membre');
     if (!right) return void (await interaction.reply({ content: 'Membre introuvable.', flags: MessageFlags.Ephemeral }));
-    if (left.id === right.id) return void (await interaction.reply({ content: 'Un duo avec soi-même ? Voltron admire l’autonomie, mais il faut être deux.', flags: MessageFlags.Ephemeral }));
+    if (left.id === right.id) return void (await interaction.reply({ content: `Un duo avec soi-même ? ${botName()} admire l’autonomie, mais il faut être deux.`, flags: MessageFlags.Ephemeral }));
     const botId = interaction.client.user.id;
-    if ((left.user.bot && left.id !== botId) || (right.user.bot && right.id !== botId)) return void (await interaction.reply({ content: 'Les bots ne font pas de duo. Sauf Voltron, qui adore ça.', flags: MessageFlags.Ephemeral }));
+    if ((left.user.bot && left.id !== botId) || (right.user.bot && right.id !== botId)) return void (await interaction.reply({ content: `Les bots ne font pas de duo. Sauf ${botName()}, qui adore ça.`, flags: MessageFlags.Ephemeral }));
 
     await interaction.deferReply();
     const s = await getSettings(interaction.guildId);

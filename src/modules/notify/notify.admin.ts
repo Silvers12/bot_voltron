@@ -4,6 +4,7 @@ import { roleAssignabilityProblem } from '../../core/roles.js';
 import { ensureNotifyRoles, NotifyError, publishPages, publishWelcome, setWelcomeBanner } from './notify.service.js';
 import { NOTIFY_ROLES } from './notify.view.js';
 
+import { botName } from '../../core/identity.js';
 export function buildWelcomeAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
   return group
     .setName('accueil')
@@ -18,7 +19,7 @@ export function buildWelcomeAdminGroup(group: SlashCommandSubcommandGroupBuilder
     .addSubcommand((sub) =>
       sub
         .setName('roles')
-        .setDescription('Utilise des rôles existants au lieu de ceux créés par Voltron')
+        .setDescription(`Utilise des rôles existants au lieu de ceux créés par ${botName()}`)
         .addRoleOption((o) => o.setName('calin').setDescription('Rôle « câlins collectifs »'))
         .addRoleOption((o) => o.setName('tombola').setDescription('Rôle « tombola »'))
         .addRoleOption((o) => o.setName('duel').setDescription('Rôle « duels »')),
@@ -26,7 +27,7 @@ export function buildWelcomeAdminGroup(group: SlashCommandSubcommandGroupBuilder
     .addSubcommand((sub) =>
       sub
         .setName('banniere')
-        .setDescription('Image en haut de la page d’accueil (sans image : la retire)')
+        .setDescription('Image en haut de la page d’accueil (sans image : retour à la bannière du bot)')
         .addAttachmentOption((o) => o.setName('image').setDescription('PNG, JPG, GIF ou WebP, 8 Mo max')),
     )
     .addSubcommand((sub) =>
@@ -75,7 +76,7 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
       await setWelcomeBanner(guildId, image ? { url: image.url, contentType: image.contentType, size: image.size } : null);
       const s = await getSettings(guildId);
       const outcome = s.welcomeChannelId ? ` Page ${await publishWelcome(interaction.guild)}.` : '';
-      await interaction.editReply(image ? `Bannière enregistrée.${outcome}` : `Bannière retirée.${outcome}`);
+      await interaction.editReply(image ? `Bannière enregistrée.${outcome}` : `Bannière personnalisée retirée : la page reprend la bannière du bot.${outcome}`);
       return;
     }
     if (sub === 'texte') {
@@ -99,7 +100,7 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
 
 export function describeWelcome(s: Awaited<ReturnType<typeof getSettings>>): string {
   return [
-    `**Salon d’accueil :** ${s.welcomeChannelId ? channelMention(s.welcomeChannelId) : '*aucun*'}` + (s.welcomeBanner ? ' · bannière ✅' : ' · sans bannière') + (s.welcomeText ? ' · texte personnalisé' : ''),
+    `**Salon d’accueil :** ${s.welcomeChannelId ? channelMention(s.welcomeChannelId) : '*aucun*'}` + (s.welcomeBanner ? ' · bannière personnalisée' : ' · bannière du bot') + (s.welcomeText ? ' · texte personnalisé' : ''),
     `**Salon des notifications :** ${s.notifyChannelId ? channelMention(s.notifyChannelId) : '*le menu est dans la page d’accueil*'}`,
     ...NOTIFY_ROLES.map((r) => `**${r.emoji} ${r.label} :** ${s[r.field] ? roleMention(s[r.field]!) : '*non configuré*'}`),
   ].join('\n');

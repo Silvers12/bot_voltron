@@ -2,14 +2,15 @@ import { channelMention, ChannelType, MessageFlags, time, TimestampStyles, type 
 import { formatAmount, getSettings, updateGroupHugSettings } from '../settings/settings.service.js';
 import { getOpenHug, GroupHugError, launchHug, resolveHugChannel, scheduleNext } from './grouphug.service.js';
 
+import { botName } from '../../core/identity.js';
 export function buildGroupHugAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
   return group
     .setName('calin')
-    .setDescription('Câlin collectif : apparitions de Voltron')
+    .setDescription(`Câlin collectif : apparitions de ${botName()}`)
     .addSubcommand((sub) =>
       sub
         .setName('ajouter-salon')
-        .setDescription('Ajoute un salon où Voltron peut apparaître')
+        .setDescription(`Ajoute un salon où ${botName()} peut apparaître`)
         .addChannelOption((o) => o.setName('salon').setDescription('Salon textuel').setRequired(true).addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)),
     )
     .addSubcommand((sub) =>

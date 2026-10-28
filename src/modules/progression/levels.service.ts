@@ -6,6 +6,7 @@ import type { GuildSettings, LevelRole } from '../../generated/prisma/client.js'
 import { trackAchievements } from '../achievements/achievements.service.js';
 import { getSettings } from '../settings/settings.service.js';
 
+import { botName } from '../../core/identity.js';
 const log = createLogger('levels');
 
 /** XP nécessaire pour passer du niveau `level` au suivant. */
@@ -76,7 +77,7 @@ async function announce(guild: Guild, s: GuildSettings, discordUserId: string, l
     .setColor(0xf1c40f)
     .setDescription(
       `🎉 ${userMention(discordUserId)} atteint le **niveau ${level}** !` +
-        (gainedTier && tier ? `\nVoltron lui remet le rôle ${roleMention(tier.roleId)}. Par mon bouclier, quelle ascension !` : ''),
+        (gainedTier && tier ? `\n${botName()} lui remet le rôle ${roleMention(tier.roleId)}. Par mon bouclier, quelle ascension !` : ''),
     );
   await channel.send({ embeds: [embed], allowedMentions: { users: [discordUserId] } }).catch((err) => log.warn('Annonce de niveau impossible', err));
 }

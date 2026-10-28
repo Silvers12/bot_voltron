@@ -5,6 +5,7 @@ import { card, divider, screen, text } from '../../discord/v2.js';
 import { backRow } from '../community/profile.view.js';
 import type { GameStats } from './stats.service.js';
 
+import { botName } from '../../core/identity.js';
 const COLOR = 0x16a085;
 
 function net(n: number, s: GuildSettings): string {
@@ -35,6 +36,6 @@ export function buildStatsView(displayName: string, st: GameStats, s: GuildSetti
     c.addTextDisplayComponents(text(body));
   }
   c.addSeparatorComponents(divider());
-  c.addTextDisplayComponents(text(`-# ${st.unlocked} succès débloqués · Voltron tient les comptes.`));
+  c.addTextDisplayComponents(text(`-# ${st.unlocked} succès débloqués · ${botName()} tient les comptes.`));
   return screen(c, withBack ? [backRow()] : []);
 }

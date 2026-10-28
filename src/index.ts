@@ -1,45 +1,6 @@
 import { config } from './core/config.js';
-import { createLogger } from './core/logger.js';
-import { prisma } from './infrastructure/prisma.js';
-import { createClient } from './discord/client.js';
-import { loadCommands, loadEvents } from './discord/loaders.js';
-import './modules/community/profile.controller.js';
-import './modules/shop/shop.controller.js';
-import './modules/events/grouphug.controller.js';
-import './modules/admin/panel.controller.js';
-import './modules/notify/notify.controller.js';
-import './modules/community/profile.nav.js';
-import { loadBanter } from './modules/banter/banter.service.js';
-import { loadDuelTexts } from './modules/duel/duel.service.js';
-import { loadTheftTexts } from './modules/theft/theft.service.js';
+import { resolveBotIdentity } from './core/identity.js';
 
-const log = createLogger('app');
-
-await prisma.$connect();
-log.info('Base de données connectée');
-
-await loadBanter();
-await loadDuelTexts();
-await loadTheftTexts();
-
-const client = createClient();
-
-for (const [name, command] of await loadCommands()) client.commands.set(name, command);
-log.info(`${client.commands.size} commande(s) : ${[...client.commands.keys()].map((n) => '/' + n).join(', ')}`);
-
-for (const event of await loadEvents()) {
-  const handler = (...args: unknown[]) => (event.execute as (...a: unknown[]) => unknown)(client, ...args);
-  event.once ? client.once(event.name, handler) : client.on(event.name, handler);
-}
-
-async function shutdown(signal: string) {
-  log.info(`Arrêt (${signal})`);
-  await client.destroy();
-  await prisma.$disconnect();
-  process.exit(0);
-}
-process.on('SIGINT', () => void shutdown('SIGINT'));
-process.on('SIGTERM', () => void shutdown('SIGTERM'));
-process.on('unhandledRejection', (err) => log.error('Promesse rejetée non gérée', err));
-
-await client.login(config.discord.token);
+// Le nom du bot est lu avant tout le reste : les modules composent leurs textes avec lui dès leur chargement.
+await resolveBotIdentity(config.discord.token);
+await import('./app.js');

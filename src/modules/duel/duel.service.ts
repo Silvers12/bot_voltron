@@ -8,6 +8,7 @@ import type { Duel } from '../../generated/prisma/client.js';
 import { credit, debit, InsufficientFundsError } from '../economy/economy.service.js';
 import { getSettings } from '../settings/settings.service.js';
 
+import { botName } from '../../core/identity.js';
 const log = createLogger('duel');
 
 export const DUEL_TTL_MS = 2 * 60 * 1000;
@@ -43,7 +44,7 @@ export async function createDuel(input: { guildId: string; channelId: string; ch
   if (!Number.isInteger(input.stake) || input.stake < s.duelMinStake || input.stake > s.duelMaxStake) {
     throw new DuelError(`La mise doit être comprise entre ${s.duelMinStake} et ${s.duelMaxStake}.`);
   }
-  if (input.challenger.id === input.opponentId) throw new DuelError('Se défier soi-même ? Voltron admire l’audace, mais non.');
+  if (input.challenger.id === input.opponentId) throw new DuelError(`Se défier soi-même ? ${botName()} admire l’audace, mais non.`);
   const pending = await prisma.duel.findFirst({ where: { challengerId: input.challenger.id, state: 'PENDING' } });
   if (pending) throw new DuelError('Tu as déjà un défi en attente. Attends la réponse ou annule-le.');
 
@@ -124,7 +125,7 @@ export async function acceptDuel(duel: DuelWithMembers, opponent: { id: string; 
   do {
     c = randomInt(1, 21); o = randomInt(1, 21);
     const attacker = randomInt(2) === 0 ? fresh.challenger : fresh.opponent;
-    rounds.push({ text: pick(texts.attaques).replaceAll('{a}', `**${attacker.displayName}**`), challengerRoll: c, opponentRoll: o });
+    rounds.push({ text: pick(texts.attaques).replaceAll('{bot}', botName()).replaceAll('{a}', `**${attacker.displayName}**`), challengerRoll: c, opponentRoll: o });
     if (c === o) rounds.push({ text: pick(texts.egalites), challengerRoll: c, opponentRoll: o });
   } while (c === o && rounds.length < 10);
   if (c === o) c++; // garde-fou improbable
@@ -143,7 +144,7 @@ export async function acceptDuel(duel: DuelWithMembers, opponent: { id: string; 
 
   const winner = winnerId === fresh.challengerId ? fresh.challenger : fresh.opponent;
   const loser = winnerId === fresh.challengerId ? fresh.opponent : fresh.challenger;
-  const finish = pick(texts.victoires).replaceAll('{w}', `**${winner.displayName}**`).replaceAll('{l}', `**${loser.displayName}**`);
+  const finish = pick(texts.victoires).replaceAll('{bot}', botName()).replaceAll('{w}', `**${winner.displayName}**`).replaceAll('{l}', `**${loser.displayName}**`);
   log.info(`Duel ${fresh.id} : ${winnerDiscordId} gagne ${pot} (${c} contre ${o})`);
   return { duel: (await getDuel(fresh.id))!, rounds, winnerId, loserId, pot, finish };
 }

@@ -3,6 +3,7 @@ import { registerButtonPrefix, registerSelect } from '../../discord/components.j
 import { applyNotifySelection, NotifyError, toggleNotifyRole } from './notify.service.js';
 import { NOTIFY_ROLES, NOTIFY_SELECT_ID, NOTIFY_TOGGLE_PREFIX, type NotifyKey } from './notify.view.js';
 
+import { botName } from '../../core/identity.js';
 registerButtonPrefix(NOTIFY_TOGGLE_PREFIX, async ({ interaction, guildMember, arg }) => {
   const info = NOTIFY_ROLES.find((r) => r.key === arg);
   if (!info) return void (await interaction.reply({ content: 'Bouton inconnu.', flags: MessageFlags.Ephemeral }));
@@ -28,7 +29,7 @@ registerSelect(NOTIFY_SELECT_ID, async ({ interaction, guildMember, values }) =>
     const lines = [
       on.length ? `Ajouté : ${on.map(label).join(', ')}.` : '',
       off.length ? `Retiré : ${off.map(label).join(', ')}.` : '',
-      now.length ? `Tu seras prévenu pour : ${now.join(', ')}.` : 'Tu ne seras prévenu de rien. Voltron respecte ton calme.',
+      now.length ? `Tu seras prévenu pour : ${now.join(', ')}.` : `Tu ne seras prévenu de rien. ${botName()} respecte ton calme.`,
     ].filter(Boolean);
     await interaction.reply({ content: lines.join('\n'), flags: MessageFlags.Ephemeral });
   } catch (err) {

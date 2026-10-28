@@ -5,6 +5,7 @@ import { card, divider, screen, text } from '../../discord/v2.js';
 import { PROFILE_REFRESH_ID } from '../community/profile.view.js';
 import { ADMIN_CATEGORY, HELP_CATEGORIES, type HelpCategory, type HelpEntry } from './help.catalog.js';
 
+import { botName } from '../../core/identity.js';
 export const HELP_SELECT_ID = 'profil:help';
 export const HELP_INDEX_ID = 'profil:helpindex';
 
@@ -49,11 +50,11 @@ function buttonsRow(withIndex: boolean) {
 export function buildHelpIndex(s: GuildSettings, admin: boolean) {
   const cats = helpCategories(s, admin);
   const c = card();
-  c.addTextDisplayComponents(text('# 📖 Guide des commandes\nTout ce que Voltron sait faire, rangé par rubrique. Choisis-en une dans le menu ; les commandes y sont cliquables.'));
+  c.addTextDisplayComponents(text(`# 📖 Guide des commandes\nTout ce que ${botName()} sait faire, rangé par rubrique. Choisis-en une dans le menu ; les commandes y sont cliquables.`));
   c.addSeparatorComponents(divider(true));
   c.addTextDisplayComponents(text(cats.map((cat) => `${cat.emoji} **${cat.label}** · ${cat.blurb}\n-# ${visibleEntries(cat, s).map((e) => (/^[a-z]+$/.test(e.command) ? `/${e.command}${e.sub && /^[a-z]+( [a-z]+)?$/.test(e.sub) ? ` ${e.sub}` : ''}` : e.command)).filter((v, i, a) => a.indexOf(v) === i).join(' · ')}`).join('\n\n')));
   c.addSeparatorComponents(divider());
-  c.addTextDisplayComponents(text('-# Les commandes se lancent dans les salons prévus pour Voltron. Les rubriques en pause n’apparaissent pas.'));
+  c.addTextDisplayComponents(text(`-# Les commandes se lancent dans les salons prévus pour ${botName()}. Les rubriques en pause n’apparaissent pas.`));
   return screen(c, [menuRow(s, admin), buttonsRow(false)]);
 }
 

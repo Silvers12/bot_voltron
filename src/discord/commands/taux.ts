@@ -6,6 +6,7 @@ import { rateOfTheDay } from '../../modules/rates/rates.service.js';
 import { renderRateCard } from '../../modules/rates/rates.image.js';
 import { card, screen, text } from '../v2.js';
 
+import { botName } from '../../core/identity.js';
 export default defineCommand({
   data: new SlashCommandBuilder()
     .setName('taux')
@@ -16,7 +17,7 @@ export default defineCommand({
     const rate = rateByKey(interaction.options.getString('type', true));
     if (!rate) return void (await interaction.reply({ content: 'Taux inconnu.', flags: MessageFlags.Ephemeral }));
     const target = interaction.options.getMember('membre') ?? guildMember;
-    if (target.user.bot && target.id !== interaction.client.user.id) return void (await interaction.reply({ content: 'Les bots n’ont pas de taux. Sauf Voltron, évidemment.', flags: MessageFlags.Ephemeral }));
+    if (target.user.bot && target.id !== interaction.client.user.id) return void (await interaction.reply({ content: `Les bots n’ont pas de taux. Sauf ${botName()}, évidemment.`, flags: MessageFlags.Ephemeral }));
 
     await interaction.deferReply();
     const s = await getSettings(interaction.guildId);

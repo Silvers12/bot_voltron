@@ -1,10 +1,11 @@
 import { channelMention, ChannelType, MessageFlags, type ChatInputCommandInteraction, type SlashCommandSubcommandGroupBuilder } from 'discord.js';
 import { getSettings, updateSettings } from './settings.service.js';
 
+import { botName } from '../../core/identity.js';
 export function buildCommandsAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
   return group
     .setName('commandes')
-    .setDescription('Salons où les membres peuvent utiliser Voltron')
+    .setDescription(`Salons où les membres peuvent utiliser ${botName()}`)
     .addSubcommand((sub) =>
       sub.setName('ajouter-salon').setDescription('Autorise un salon').addChannelOption((o) => o.setName('salon').setDescription('Salon').setRequired(true).addChannelTypes(ChannelType.GuildText)),
     )

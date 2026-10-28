@@ -7,6 +7,7 @@ import type { GuildSettings } from '../../generated/prisma/client.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { getOrCreateAccount } from '../economy/economy.service.js';
 
+import { botName } from '../../core/identity.js';
 const log = createLogger('theft');
 
 export class TheftError extends Error {}
@@ -48,7 +49,7 @@ function rollShare(balance: number, maxPercent: number): number {
  * amende du même ordre (calculée sur sa propre bourse) à la cible. Tout se fait dans une transaction.
  */
 export async function attemptTheft(thief: TheftParty, target: TheftParty, s: GuildSettings, names: { thief: string; target: string }, format: (n: number) => string): Promise<TheftOutcome> {
-  if (thief.id === target.id) throw new TheftError('Se voler soi-même ? Même Voltron n’y comprend rien.');
+  if (thief.id === target.id) throw new TheftError(`Se voler soi-même ? Même ${botName()} n’y comprend rien.`);
   const [thiefAccount, targetAccount] = await Promise.all([getOrCreateAccount(thief.id), getOrCreateAccount(target.id)]);
   if (Math.floor((targetAccount.balance * s.theftMaxPercent) / 100) < 1) throw new TheftError('Cette bourse est trop maigre pour mériter un larcin.');
 
@@ -65,7 +66,7 @@ export async function attemptTheft(thief: TheftParty, target: TheftParty, s: Gui
   }
 
   const success = randomInt(100) < s.theftSuccessPercent;
-  const fill = (t: string, m: number) => t.replaceAll('{v}', names.thief).replaceAll('{c}', names.target).replaceAll('{m}', `**${format(m)}**`);
+  const fill = (t: string, m: number) => t.replaceAll('{bot}', botName()).replaceAll('{v}', names.thief).replaceAll('{c}', names.target).replaceAll('{m}', `**${format(m)}**`);
 
   const outcome = await prisma.$transaction(async (db) => {
     const common = { actorDiscordId: thief.discordUserId };

@@ -4,6 +4,7 @@ import { formatAmount } from '../settings/settings.service.js';
 import type { DrawResult } from './lottery.service.js';
 import { card, divider, screen, text } from '../../discord/v2.js';
 
+import { botName } from '../../core/identity.js';
 export const LOTTERY_BUY_PREFIX = 'lottery:buy:';
 const COLOR = 0x8e44ad;
 
@@ -31,14 +32,14 @@ export function buildDrawAnnouncement(r: DrawResult, totalTickets: number, s: Gu
   const c = card(r.winner ? 0xf1c40f : 0x95a5a6);
   if (r.winner) {
     const chance = Math.round((100 * r.winner.tickets) / totalTickets);
-    c.addTextDisplayComponents(text(`# 🎟️ Tirage de la tombola !\nVoltron plonge la patte dans le chapeau, farfouille longuement… et en sort le ticket de ${userMention(r.winner.discordUserId)} !`));
+    c.addTextDisplayComponents(text(`# 🎟️ Tirage de la tombola !\n${botName()} plonge la patte dans le chapeau, farfouille longuement… et en sort le ticket de ${userMention(r.winner.discordUserId)} !`));
     c.addSeparatorComponents(divider(true));
     c.addTextDisplayComponents(text(`🏆 **${formatAmount(r.lottery.pot, s)}** remportés avec ${r.winner.tickets} ticket${r.winner.tickets > 1 ? 's' : ''} sur ${totalTickets} (${chance} % de chances).`));
     c.addSeparatorComponents(divider());
     c.addTextDisplayComponents(text(`-# Prochain tirage ${time(r.next.drawAt, TimestampStyles.RelativeTime)} : la cagnotte repart à ${formatAmount(r.next.pot, s)}.`));
     return { ...screen(c), allowedMentions: { users: [r.winner.discordUserId] } };
   }
-  c.addTextDisplayComponents(text('# 🎟️ Tirage de la tombola\nPersonne n’a pris de ticket cette semaine. Voltron range le chapeau, un peu déçu.'));
+  c.addTextDisplayComponents(text(`# 🎟️ Tirage de la tombola\nPersonne n’a pris de ticket cette semaine. ${botName()} range le chapeau, un peu déçu.`));
   c.addSeparatorComponents(divider(true));
   c.addTextDisplayComponents(text(`La cagnotte de **${formatAmount(r.lottery.pot, s)}** est reportée : prochain tirage ${time(r.next.drawAt, TimestampStyles.RelativeTime)} avec **${formatAmount(r.next.pot, s)}** en jeu.`));
   return { ...screen(c), allowedMentions: { parse: [] as [] } };

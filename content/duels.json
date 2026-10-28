@@ -16,10 +16,10 @@
     "{w} triomphe sous les acclamations de la compagnie !",
     "{w} remporte le duel, et {l} jure qu'il avait le soleil dans les yeux.",
     "{w} s'impose avec panache. {l} repart la tête haute, la bourse un peu moins.",
-    "Victoire de {w} ! Voltron note le résultat dans les chroniques de la rivière."
+    "Victoire de {w} ! {bot} note le résultat dans les chroniques de la rivière."
   ],
   "egalites": [
     "Coup pour coup, les deux combattants s'effondrent en même temps. On remet ça !",
-    "Les dés sont ex æquo. Voltron exige un second assaut !"
+    "Les dés sont ex æquo. {bot} exige un second assaut !"
   ]
 }

@@ -10,6 +10,7 @@ import { isFeatureEnabled } from '../features/features.js';
 import { evaluateExpression } from './expression.js';
 import type { Counting } from '../../generated/prisma/client.js';
 
+import { botName } from '../../core/identity.js';
 const log = createLogger('comptage');
 
 export const CHECK = '✅';
@@ -71,12 +72,12 @@ export async function handleCountingMessage(message: Message) {
   await prisma.counting.update({ where: { guildId: message.guildId }, data: { current: restart ? 0 : state.current, lastMemberId: null } });
   log.info(`${message.author.id} se trompe à ${expected} (${failure}) : amende ${fine}, ${restart ? 'retour à 1' : `on continue à ${state.current + 1}`}`);
 
-  const fineText = !member ? 'Voltron se confond en excuses, pas d’amende pour une loutre.' : fine > 0 ? `Amende de **${formatAmount(fine, s)}**${fine < s.countingFine ? ' (toute la bourse !)' : ''}.` : 'Bourse vide, pas d’amende cette fois.';
+  const fineText = !member ? `${botName()} se confond en excuses, pas d’amende pour une loutre.` : fine > 0 ? `Amende de **${formatAmount(fine, s)}**${fine < s.countingFine ? ' (toute la bourse !)' : ''}.` : 'Bourse vide, pas d’amende cette fois.';
   const coin = restart
     ? `🪙 **Face !** On recommence à **1**.`
     : `🪙 **Pile !** On continue : prochain nombre **${state.current + 1}**.`;
   await message.channel.send({
-    content: `${CROSS} ${member ? userMention(message.author.id) : 'Voltron'} s’est trompé : ${failure}. ${fineText}\nVoltron lance la pièce… ${coin}`,
+    content: `${CROSS} ${member ? userMention(message.author.id) : `${botName()}`} s’est trompé : ${failure}. ${fineText}\n${botName()} lance la pièce… ${coin}`,
     allowedMentions: { users: [message.author.id] },
   }).catch((err) => log.warn('Message de comptage impossible', err));
 }

@@ -2,6 +2,7 @@ import type { GuildSettings } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import type { FeatureKey } from '../features/features.js';
 
+import { botName } from '../../core/identity.js';
 /** Une commande (ou sous-commande) du guide, avec sa description calculée d'après les réglages du serveur. */
 export interface HelpEntry {
   command: string;
@@ -48,7 +49,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
   },
   {
     key: 'jeux', label: 'Jeux et paris', emoji: '🎰', blurb: 'Blackjack, machine, duels, vols, tombola',
-    intro: () => 'Tout se joue avec des cœurs de ta bourse. Voltron ne fait pas crédit.',
+    intro: () => `Tout se joue avec des cœurs de ta bourse. ${botName()} ne fait pas crédit.`,
     entries: [
       { command: 'blackjack', args: 'mise', feature: 'blackjack', describe: (s) => `Partie privée contre la banque, mise de **${fmt(s.blackjackMinBet, s)}** à **${fmt(s.blackjackMaxBet, s)}**. Tirer, rester, doubler.` },
       { command: 'machine', feature: 'machine', describe: (s) => `Pose la machine à sous dans le salon : **${fmt(s.slotBet, s)}** le tour, seuls les triples gagnent. Trois loutres raflent toute la cagnotte, un autre triple en prend ${s.slotTriplePercent} %.` },
@@ -62,7 +63,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     intro: () => 'Rien à gagner ni à perdre ici, juste de quoi animer le salon.',
     entries: [
       { command: 'de', args: '[nombre]', feature: 'des', describe: () => 'Lance de 1 à 5 dés à six faces, avec une bannière et le total.' },
-      { command: 'pileouface', args: '[choix]', feature: 'des', describe: () => 'Lance une pièce. Si tu annonces pile ou face, Voltron dit si tu as vu juste.' },
+      { command: 'pileouface', args: '[choix]', feature: 'des', describe: () => `Lance une pièce. Si tu annonces pile ou face, ${botName()} dit si tu as vu juste.` },
       { command: 'taux', args: 'type [membre]', feature: 'taux', describe: () => 'Ton taux du jour de chance, choupitude, suspicion, criminalité, loutritude, flemme, sagesse ou chaos. Fixe pour la journée, nouveau tirage à minuit.' },
       { command: 'duo', args: 'type membre [avec]', feature: 'taux', describe: () => 'Taux entre deux membres : amour, amitié, complicité, rivalité, esprit d’équipe, chaos à deux. Le même pour les deux, toute la journée.' },
       { command: 'compliment', args: 'membre', feature: 'compliments', describe: () => 'Un compliment tiré au sort, parfois rare, parfois épique.' },
@@ -82,7 +83,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     key: 'communaute', label: 'Ensemble', emoji: '🤗', blurb: 'Câlins collectifs, comptage, notifications',
     intro: () => 'Ce qui se passe sans commande, au fil de la vie du serveur.',
     entries: [
-      { command: 'Câlin collectif', feature: 'calin_collectif', show: (s) => s.groupHugChannelIds.length > 0, describe: (s) => `Voltron surgit à l’improviste (toutes les ${s.groupHugMinIntervalMinutes} à ${s.groupHugMaxIntervalMinutes} min) : cliquez **CÂLIN** pendant ${s.groupHugDurationSeconds} s, chacun reçoit ${fmt(s.groupHugReward, s)} par participant.` },
+      { command: 'Câlin collectif', feature: 'calin_collectif', show: (s) => s.groupHugChannelIds.length > 0, describe: (s) => `${botName()} surgit à l’improviste (toutes les ${s.groupHugMinIntervalMinutes} à ${s.groupHugMaxIntervalMinutes} min) : cliquez **CÂLIN** pendant ${s.groupHugDurationSeconds} s, chacun reçoit ${fmt(s.groupHugReward, s)} par participant.` },
       { command: 'Salon de comptage', feature: 'comptage', show: (s) => !!s.countingChannelId, describe: (s) => `Dans <#${s.countingChannelId}>, on compte à la suite (les petites formules sont acceptées), jamais deux fois d’affilée. Une erreur coûte ${fmt(s.countingFine, s)} ou le double, à pile ou face.` },
       { command: 'Notifications', show: (s) => !!(s.notifyChannelId ?? s.welcomeChannelId), describe: (s) => `Dans <#${s.notifyChannelId ?? s.welcomeChannelId}>, choisis les notifications que tu veux recevoir (câlins collectifs, tombola, duels).` },
     ],
@@ -94,10 +95,10 @@ export const ADMIN_CATEGORY: HelpCategory = {
   intro: () => 'Visible uniquement par l’intendance. Le panneau regroupe tous les réglages avec des formulaires.',
   entries: [
     { command: 'admin', sub: 'panneau', describe: () => 'Panneau de contrôle complet : fonctionnalités, montants, salons, paliers, boutique, accueil.' },
-    { command: 'admin', sub: 'installer', args: '[categorie]', describe: () => 'Installe ou répare Voltron : catégorie, salons, rôles, page d’accueil.' },
+    { command: 'admin', sub: 'installer', args: '[categorie]', describe: () => `Installe ou répare ${botName()} : catégorie, salons, rôles, page d’accueil.` },
     { command: 'admin', sub: 'crediter', args: 'membre montant [raison]', describe: () => 'Ajoute des cœurs à un membre. `/admin debiter` pour l’inverse, `/admin solde` pour consulter.' },
     { command: 'admin', sub: 'boutique liste', describe: () => 'La boutique : `ajouter`, `modifier`, `retirer`, `liste`, `importer`.' },
-    { command: 'admin', sub: 'message', args: 'texte [salon] [repondre_a]', describe: () => 'Fait parler Voltron. `/admin messages` pour supprimer des messages.' },
+    { command: 'admin', sub: 'message', args: 'texte [salon] [repondre_a]', describe: () => `Fait parler ${botName()}. \`/admin messages\` pour supprimer des messages.` },
     { command: 'admin', sub: 'fonction', args: 'nom active', describe: () => 'Met une fonctionnalité en pause ou la réveille.' },
     { command: 'admin', sub: 'stats', describe: () => 'Vue d’ensemble de l’économie du serveur.' },
   ],

@@ -23,6 +23,7 @@ import {
   buildClosedView, buildHomeView, buildModuleView, moduleInfo, MODULES, type ModuleDetails, type ModuleKey, type Overview,
 } from './panel.view.js';
 
+import { botName } from '../../core/identity.js';
 const TTL_MS = 5 * 60 * 1000;
 const key = (guildId: string, userId: string) => `admin:${guildId}:${userId}`;
 const DAYS = ['', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi', 'dimanche'];
@@ -188,7 +189,7 @@ function describeChange(changed: FeatureKey[], enabledNow: (k: FeatureKey) => bo
 function guarded<C extends ButtonContext | SelectContext | ModalContext>(handler: (ctx: C) => Promise<void>, { touch = true } = {}) {
   return async (ctx: C) => {
     if (!isBotAdmin(ctx.guildMember)) {
-      await ctx.interaction.reply({ content: 'Ce panneau est réservé à l’intendance de Voltron.', flags: MessageFlags.Ephemeral });
+      await ctx.interaction.reply({ content: `Ce panneau est réservé à l’intendance de ${botName()}.`, flags: MessageFlags.Ephemeral });
       return;
     }
     await handler(ctx);

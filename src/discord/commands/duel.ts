@@ -11,6 +11,7 @@ import { buildChallengeMessage, buildClosedMessage, buildResolvedMessage, DUEL_A
 
 const log = createLogger('duel');
 import { trackAchievements } from '../../modules/achievements/achievements.service.js';
+import { botName } from '../../core/identity.js';
 const expiryTimers = new Map<string, NodeJS.Timeout>();
 
 async function editDuelMessage(client: Client, duel: DuelWithMembers, payload: Parameters<import('discord.js').Message['edit']>[0]) {
@@ -96,7 +97,7 @@ export default defineCommand({
     const fail = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
     if (!target) return void (await fail('Ce membre ne fait pas (ou plus) partie du serveur.'));
     if (target.user.bot) return void (await fail('Défier une loutre paladin ? Elle décline, pour ton bien.'));
-    if (target.id === interaction.user.id) return void (await fail('Se défier soi-même ? Voltron admire l’audace, mais non.'));
+    if (target.id === interaction.user.id) return void (await fail(`Se défier soi-même ? ${botName()} admire l’audace, mais non.`));
 
     const opponent = await ensureMember(target);
     let duel: DuelWithMembers;

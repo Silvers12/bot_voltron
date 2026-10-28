@@ -1,5 +1,6 @@
 import { contentDir } from '../../core/paths.js';
 import { readFile } from 'node:fs/promises';
+import { botName } from '../../core/identity.js';
 import path from 'node:path';
 import { createLogger } from '../../core/logger.js';
 
@@ -61,5 +62,5 @@ export function drawBanter(kind: BanterKind, target: string, author: string): Ba
   const rarity = pickRarity(catalog.weights);
   const pool = catalog[rarity];
   const template = pool[Math.floor(Math.random() * pool.length)] ?? '';
-  return { rarity, text: template.replaceAll('{cible}', target).replaceAll('{auteur}', author) };
+  return { rarity, text: template.replaceAll('{cible}', target).replaceAll('{auteur}', author).replaceAll('{bot}', botName()) };
 }

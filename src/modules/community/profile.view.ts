@@ -8,6 +8,7 @@ import { isFeatureEnabled } from '../features/features.js';
 import { badgeLine, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
 import { card, clampLines, divider, screen, text } from '../../discord/v2.js';
 
+import { botName } from '../../core/identity.js';
 export const PROFILE_REFRESH_ID = 'profil:refresh';
 export const PROFILE_HISTORY_ID = 'profil:history';
 export const PROFILE_DAILY_ID = 'profil:daily';
@@ -17,7 +18,7 @@ export const PROFILE_NAV_ID = 'profil:nav';
 export const SHOP_OPEN_ID = 'shop:open';
 export const INVENTORY_OPEN_ID = 'shop:inventory';
 
-const SIGNATURE = '-# Voltron, loutre paladin · Par mon bouclier et mes moustaches !';
+const SIGNATURE = `-# ${botName()}, loutre paladin · Par mon bouclier et mes moustaches !`;
 
 export interface ProfileData {
   member: Member;

@@ -10,6 +10,7 @@ import { formatAmount, getSettings } from '../../modules/settings/settings.servi
 import { getJackpot, playSlots, type SpinResult } from '../../modules/casino/slots.service.js';
 import { trackAchievements } from '../../modules/achievements/achievements.service.js';
 
+import { botName } from '../../core/identity.js';
 const SPIN_ID = 'slots:spin';
 
 /** Machines en train de tourner, par identifiant de message : un seul tour à la fois par machine. */
@@ -27,7 +28,7 @@ interface FrameOptions {
 
 function frame({ reels, s, pool, playerId, result, busy }: FrameOptions) {
   const c = card(!result ? 0x2e86c1 : result.kind === 'jackpot' ? 0xf1c40f : result.kind === 'triple' ? 0x2ecc71 : 0xe74c3c);
-  c.addTextDisplayComponents(text(`# 🎰 La machine de Voltron\n# ${reels.join(' │ ')}`));
+  c.addTextDisplayComponents(text(`# 🎰 La machine de ${botName()}\n# ${reels.join(' │ ')}`));
   c.addSeparatorComponents(divider(true));
   c.addTextDisplayComponents(text(`🦦🦦🦦 **Cagnotte** · **${formatAmount(pool, s)}** · 🎟️ **Prix du tour** · ${formatAmount(s.slotBet, s)}`));
   if (result && playerId) {
@@ -102,7 +103,7 @@ registerButton(SPIN_ID, async ({ interaction, member }) => {
 });
 
 export default defineCommand({
-  data: new SlashCommandBuilder().setName('machine').setDescription('Installe la machine à sous de Voltron dans le salon (prix fixe par tour)'),
+  data: new SlashCommandBuilder().setName('machine').setDescription(`Installe la machine à sous de ${botName()} dans le salon (prix fixe par tour)`),
   async execute({ interaction, member }) {
     // Machine publique : tout le monde voit les tours et la cagnotte, chacun joue avec sa bourse.
     const [s, jackpot] = await Promise.all([getSettings(member.guildId), getJackpot(member.guildId)]);

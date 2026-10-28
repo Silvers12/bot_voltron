@@ -8,13 +8,14 @@ import { scheduleNext } from '../events/grouphug.service.js';
 import { getOrCreateOpenLottery, publishLottery } from '../lottery/lottery.service.js';
 import type { GuildSettings } from '../../generated/prisma/client.js';
 
+import { botName } from '../../core/identity.js';
 const log = createLogger('installation');
 
 /** Salons créés par l'installation, avec le réglage qu'ils alimentent. */
 const CHANNELS = [
-  { key: 'accueil', name: '🦦・accueil', topic: 'Bienvenue ! Voltron se présente ici.', readOnly: true },
-  { key: 'notifications', name: '🔔・notifications', topic: 'Choisis ici les notifications que Voltron t’envoie.', readOnly: true },
-  { key: 'commandes', name: '🎮・commandes', topic: 'Les commandes de Voltron se tapent ici : /profil, /calin, /blackjack…', readOnly: false },
+  { key: 'accueil', name: '🦦・accueil', topic: `Bienvenue ! ${botName()} se présente ici.`, readOnly: true },
+  { key: 'notifications', name: '🔔・notifications', topic: `Choisis ici les notifications que ${botName()} t’envoie.`, readOnly: true },
+  { key: 'commandes', name: '🎮・commandes', topic: `Les commandes de ${botName()} se tapent ici : /profil, /calin, /blackjack…`, readOnly: false },
   { key: 'jeux', name: '🎲・jeux', topic: 'Câlins collectifs, tombola, machine à sous et duels.', readOnly: false },
   { key: 'comptage', name: '🔢・comptage', topic: 'On compte à la suite : 1, 2, 3… ou 2+2. Une erreur coûte cher !', readOnly: false },
   { key: 'annonces', name: '📣・annonces-voltron', topic: 'Montées de niveau et succès débloqués.', readOnly: true },
@@ -43,7 +44,7 @@ function existingChannel(guild: Guild, s: GuildSettings, key: ChannelKey): TextC
 
 async function ensureCategory(guild: Guild, name: string): Promise<CategoryChannel> {
   const found = guild.channels.cache.find((c): c is CategoryChannel => c.type === ChannelType.GuildCategory && c.name === name);
-  return found ?? guild.channels.create({ name, type: ChannelType.GuildCategory, reason: 'Installation de Voltron' });
+  return found ?? guild.channels.create({ name, type: ChannelType.GuildCategory, reason: `Installation de ${botName()}` });
 }
 
 async function ensureChannel(guild: Guild, category: CategoryChannel, def: (typeof CHANNELS)[number], existing: TextChannel | null): Promise<{ channel: TextChannel; created: boolean }> {
@@ -58,7 +59,7 @@ async function ensureChannel(guild: Guild, category: CategoryChannel, def: (type
   }
   const byName = guild.channels.cache.find((c): c is TextChannel => c.type === ChannelType.GuildText && c.name === def.name && c.parentId === category.id);
   if (byName) return { channel: byName, created: false };
-  const channel = await guild.channels.create({ name: def.name, type: ChannelType.GuildText, parent: category.id, topic: def.topic, permissionOverwrites: overwrites, reason: 'Installation de Voltron' });
+  const channel = await guild.channels.create({ name: def.name, type: ChannelType.GuildText, parent: category.id, topic: def.topic, permissionOverwrites: overwrites, reason: `Installation de ${botName()}` });
   return { channel, created: true };
 }
 
@@ -74,7 +75,7 @@ export async function handleInstall(interaction: ChatInputCommandInteraction<'ca
     return void (await interaction.reply({ content: `Il me manque des permissions pour installer : ${missing.join(', ')}. Donne-les à mon rôle puis relance.`, flags: MessageFlags.Ephemeral }));
   }
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-  const categoryName = interaction.options.getString('categorie')?.trim() || '🦦 Voltron';
+  const categoryName = interaction.options.getString('categorie')?.trim() || `🦦 ${botName()}`;
   const report: string[] = [];
 
   // 1. Catégorie et salons

@@ -9,6 +9,7 @@ import { listLevelRoles, resyncAllLevels } from '../progression/levels.service.j
 import type { Client } from 'discord.js';
 import type { ModuleKey } from './panel.view.js';
 
+import { botName } from '../../core/identity.js';
 export const ADMIN_EDIT_PREFIX = 'admin:edit:';
 export const ADMIN_FORM_PREFIX = 'admin:form:';
 
@@ -253,7 +254,7 @@ export const FORMS: Form[] = [
     ],
     async apply({ guild, values }) {
       const s = await updateSettings(guild.id, values as Partial<GuildSettings>);
-      return s.commandChannelIds.length ? 'Salons enregistrés : les membres ne peuvent utiliser Voltron que là.' : 'Aucune restriction : commandes autorisées partout.';
+      return s.commandChannelIds.length ? `Salons enregistrés : les membres ne peuvent utiliser ${botName()} que là.` : 'Aucune restriction : commandes autorisées partout.';
     },
   },
   {

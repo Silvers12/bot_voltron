@@ -1,6 +1,7 @@
 import type { GuildSettings } from '../../generated/prisma/client.js';
 import { getSettings, updateDisabledFeatures } from '../settings/settings.service.js';
 
+import { botName } from '../../core/identity.js';
 /** Clés des fonctionnalités que l'intendance peut couper. */
 export type FeatureKey =
   | 'quotidien' | 'hebdo' | 'calin' | 'boutique' | 'xp'
@@ -26,7 +27,7 @@ export const FEATURES: FeatureInfo[] = [
   { key: 'machine', label: 'Machine à sous', emoji: '🎰', description: '/machine et bouton Lancer' },
   { key: 'duel', label: 'Duels', emoji: '⚔️', description: '/duel' },
   { key: 'vol', label: 'Vol de cœurs', emoji: '🥷', description: '/vol : tentative de larcin sur un membre' },
-  { key: 'calin_collectif', label: 'Câlin collectif', emoji: '🫂', description: 'Apparitions automatiques de Voltron' },
+  { key: 'calin_collectif', label: 'Câlin collectif', emoji: '🫂', description: `Apparitions automatiques de ${botName()}` },
   { key: 'tombola', label: 'Tombola', emoji: '🎟️', description: '/tombola, rappels et tirages' },
   { key: 'succes', label: 'Succès et badges', emoji: '🏅', description: 'Déblocages, annonces et /succes' },
   { key: 'comptage', label: 'Salon de comptage', emoji: '🔢', description: 'Compter à la suite, amende en cas d’erreur' },
@@ -80,4 +81,4 @@ export function featureForComponent(customId: string): FeatureKey | undefined {
   return COMPONENT_FEATURES.find(([prefix]) => customId.startsWith(prefix))?.[1];
 }
 
-export const DISABLED_MESSAGE = 'Cette fonctionnalité est en pause pour le moment. Voltron fait la sieste dessus.';
+export const DISABLED_MESSAGE = `Cette fonctionnalité est en pause pour le moment. ${botName()} fait la sieste dessus.`;

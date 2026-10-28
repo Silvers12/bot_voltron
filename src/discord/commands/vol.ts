@@ -5,6 +5,7 @@ import { ensureMember } from '../../modules/community/member.service.js';
 import { formatAmount, getSettings } from '../../modules/settings/settings.service.js';
 import { attemptTheft, TheftError } from '../../modules/theft/theft.service.js';
 
+import { botName } from '../../core/identity.js';
 export default defineCommand({
   data: new SlashCommandBuilder()
     .setName('vol')
@@ -18,7 +19,7 @@ export default defineCommand({
 
     if (!target) return void (await refuse('Ce membre ne fait pas (ou plus) partie du serveur.'));
     if (target.user.bot) return void (await refuse('Voler un bot ? Ils n’ont que des zéros et des uns dans les poches.'));
-    if (target.id === interaction.user.id) return void (await refuse('Se voler soi-même ? Même Voltron n’y comprend rien.'));
+    if (target.id === interaction.user.id) return void (await refuse(`Se voler soi-même ? Même ${botName()} n’y comprend rien.`));
 
     const toMember = await ensureMember(target);
     try {

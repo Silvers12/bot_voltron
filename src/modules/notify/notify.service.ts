@@ -5,6 +5,7 @@ import { getSettings, updateSettings } from '../settings/settings.service.js';
 import { buildNotifyMessage, buildWelcomeMessage, NOTIFY_ROLES, roleIdFor, type NotifyKey } from './notify.view.js';
 import type { GuildSettings } from '../../generated/prisma/client.js';
 
+import { botName } from '../../core/identity.js';
 const log = createLogger('accueil');
 
 export class NotifyError extends Error {}
@@ -21,7 +22,7 @@ export async function ensureNotifyRoles(guild: Guild): Promise<GuildSettings> {
   if (!guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles)) throw new NotifyError('Le bot n’a pas la permission « Gérer les rôles ».');
   for (const r of NOTIFY_ROLES) {
     if (s[r.field] && guild.roles.cache.has(s[r.field]!)) continue;
-    const role = await guild.roles.create({ name: r.roleName, mentionable: true, permissions: [], reason: 'Rôle de notification Voltron' });
+    const role = await guild.roles.create({ name: r.roleName, mentionable: true, permissions: [], reason: `Rôle de notification ${botName()}` });
     s = await updateSettings(guild.id, { [r.field]: role.id });
     log.info(`Rôle « ${role.name} » créé sur ${guild.name}`);
   }

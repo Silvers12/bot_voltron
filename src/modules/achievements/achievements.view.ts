@@ -5,9 +5,10 @@ import { formatAmount } from '../settings/settings.service.js';
 import { ACHIEVEMENTS, TIER_LABEL, TIER_REWARD, type Achievement } from './achievements.catalog.js';
 import type { Unlock } from './achievements.service.js';
 
+import { botName } from '../../core/identity.js';
 export const PROFILE_ACHIEVEMENTS_ID = 'profil:achievements';
 const COLOR = 0xe67e22;
-const FOOTER = 'Voltron, loutre paladin · Par mon bouclier et mes moustaches !';
+const FOOTER = `${botName()}, loutre paladin · Par mon bouclier et mes moustaches !`;
 
 export function badgeLine(unlocked: MemberAchievement[]): string {
   const emojis = unlocked.map((u) => ACHIEVEMENTS.find((a) => a.key === u.key)?.emoji).filter(Boolean);
@@ -60,7 +61,7 @@ export function buildUnlockAnnouncement(discordUserId: string, unlocks: Unlock[]
     .setColor(COLOR)
     .setTitle(unlocks.length > 1 ? '🏅 Nouveaux succès !' : '🏅 Nouveau succès !')
     .setDescription(lines.join('\n'))
-    .setFooter({ text: 'Voltron applaudit des deux pattes.' });
+    .setFooter({ text: `${botName()} applaudit des deux pattes.` });
   return { embeds: [embed], allowedMentions: { users: [discordUserId] } };
 }
 

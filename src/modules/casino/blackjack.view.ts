@@ -3,6 +3,7 @@ import type { GuildSettings } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import type { GameView, Hand } from './blackjack.service.js';
 
+import { botName } from '../../core/identity.js';
 export const BJ_HIT_ID = 'bj:hit';
 export const BJ_STAND_ID = 'bj:stand';
 export const BJ_DOUBLE_ID = 'bj:double';
@@ -31,7 +32,7 @@ export function buildBlackjackView(view: GameView, balance: number, settings: Gu
     .setColor(result.color)
     .setTitle(result.title)
     .addFields(
-      { name: 'Banque (Voltron)', value: renderHand(dealer, dealerHidden) },
+      { name: `Banque (${botName()})`, value: renderHand(dealer, dealerHidden) },
       { name: 'Ta main', value: renderHand(player) },
       { name: 'Mise', value: `${formatAmount(stake, settings)}${game.doubled ? ' (doublée)' : ''}`, inline: true },
     );

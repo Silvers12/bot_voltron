@@ -1,7 +1,9 @@
 import { REST, Routes } from 'discord.js';
 import { config } from '../core/config.js';
-import { loadCommands } from './loaders.js';
+import { resolveBotIdentity } from '../core/identity.js';
 
+await resolveBotIdentity(config.discord.token);
+const { loadCommands } = await import('./loaders.js');
 const commands = [...(await loadCommands()).values()].map((c) => c.data.toJSON());
 const rest = new REST().setToken(config.discord.token);
 

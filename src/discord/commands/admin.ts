@@ -20,13 +20,14 @@ import { FEATURES, featureInfo, isFeatureEnabled, setFeatureEnabled, type Featur
 import { applyFeatureEffects } from '../../modules/features/features.effects.js';
 import { formatAmount, getSettings, updateCurrency, updateStartingBalance, updateDailyAmount, updateWeeklyAmount, updateXpSettings, updateBlackjackLimits, updateSlotLimits, updateDuelLimits } from '../../modules/settings/settings.service.js';
 
+import { botName } from '../../core/identity.js';
 const MAX_AMOUNT = 1_000_000;
 
 /** Résout le membre ciblé par l'option `membre`, en créant son profil si besoin. */
 async function resolveTarget(interaction: ChatInputCommandInteraction<'cached'>) {
   const target = interaction.options.getMember('membre');
   if (!target) return { error: 'Ce membre ne fait pas (ou plus) partie du serveur.' as string } as const;
-  if (target.user.bot) return { error: 'Les bots n’ont pas de bourse, même Voltron.' as string } as const;
+  if (target.user.bot) return { error: `Les bots n’ont pas de bourse, même ${botName()}.` as string } as const;
   return { error: undefined, member: await ensureMember(target), guildMember: target } as const;
 }
 
@@ -119,13 +120,13 @@ export default defineCommand({
     .addSubcommand((sub) =>
       sub
         .setName('installer')
-        .setDescription('Installe Voltron : catégorie, salons, rôles, réglages, page d’accueil (relançable)')
-        .addStringOption((o) => o.setName('categorie').setDescription('Nom de la catégorie (défaut : 🦦 Voltron)').setMaxLength(60)),
+        .setDescription(`Installe ${botName()} : catégorie, salons, rôles, réglages, page d’accueil (relançable)`)
+        .addStringOption((o) => o.setName('categorie').setDescription(`Nom de la catégorie (défaut : 🦦 ${botName()})`).setMaxLength(60)),
     )
     .addSubcommand((sub) =>
       sub
         .setName('message')
-        .setDescription('Écrit un message en tant que Voltron')
+        .setDescription(`Écrit un message en tant que ${botName()}`)
         .addStringOption((o) => o.setName('texte').setDescription('Texte (\\n pour un retour à la ligne)').setRequired(true).setMaxLength(2000))
         .addChannelOption((o) => o.setName('salon').setDescription('Salon (par défaut : celui-ci)').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.PublicThread, ChannelType.PrivateThread))
         .addStringOption((o) => o.setName('repondre_a').setDescription('ID d’un message du salon auquel répondre')),
@@ -156,7 +157,7 @@ export default defineCommand({
   async execute({ interaction }) {
     // Vérification côté serveur : la visibilité de la commande ne suffit pas.
     if (!isBotAdmin(interaction.member)) {
-      await interaction.reply({ content: 'Cette commande est réservée à l’intendance de Voltron.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: `Cette commande est réservée à l’intendance de ${botName()}.`, flags: MessageFlags.Ephemeral });
       return;
     }
 
