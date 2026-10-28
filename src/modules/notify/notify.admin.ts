@@ -42,7 +42,9 @@ export function buildWelcomeAdminGroup(group: SlashCommandSubcommandGroupBuilder
 export async function handleWelcomeAdmin(interaction: ChatInputCommandInteraction<'cached'>) {
   const sub = interaction.options.getSubcommand(true);
   const guildId = interaction.guildId;
-  const reply = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
+  // Publier une page peut dépasser les 3 s accordées par Discord (envoi de la bannière) : on diffère toujours.
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const reply = (content: string) => interaction.editReply(content);
   try {
     if (sub === 'installer') {
       const channel = interaction.options.getChannel('salon', true);
@@ -70,7 +72,6 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
     }
     if (sub === 'banniere') {
       const image = interaction.options.getAttachment('image');
-      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await setWelcomeBanner(guildId, image ? { url: image.url, contentType: image.contentType, size: image.size } : null);
       const s = await getSettings(guildId);
       const outcome = s.welcomeChannelId ? ` Page ${await publishWelcome(interaction.guild)}.` : '';
@@ -91,10 +92,7 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
     }
     await reply(describeWelcome(await getSettings(guildId)));
   } catch (err) {
-    if (err instanceof NotifyError) {
-      if (interaction.deferred) return void (await interaction.editReply(err.message));
-      return void (await reply(err.message));
-    }
+    if (err instanceof NotifyError) return void (await reply(err.message));
     throw err;
   }
 }
