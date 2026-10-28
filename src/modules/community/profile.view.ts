@@ -133,9 +133,7 @@ export function buildHistoryView(member: Member, transactions: Transaction[], ba
     const reason = t.reason && !['WELCOME', 'DAILY', 'WEEKLY'].includes(t.type) ? ` · ${t.reason}` : '';
     return `${time(t.createdAt, TimestampStyles.ShortDateTime)} — **${formatAmount(t.delta, settings, { signed: true })}** ${label}${reason}`;
   });
-  const c = card();
-  c.addTextDisplayComponents(text(`# 📜 Historique de ${member.displayName}`));
-  c.addSeparatorComponents(divider(true));
+  const c = card(0x8e44ad);
   c.addTextDisplayComponents(text(lines.length ? clampLines(lines) : 'Aucun mouvement pour le moment. Ta bourse attend sa première pièce !'));
   c.addSeparatorComponents(divider());
   c.addTextDisplayComponents(text(`💰 **Solde actuel** · **${formatAmount(balance, settings)}**`));

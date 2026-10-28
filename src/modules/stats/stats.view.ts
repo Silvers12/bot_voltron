@@ -17,7 +17,7 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n > 1 ? man
 export function buildStatsView(displayName: string, st: GameStats, s: GuildSettings, { withBack = false } = {}) {
   const on = (k: Parameters<typeof isFeatureEnabled>[1]) => isFeatureEnabled(s, k);
   const c = card(COLOR);
-  c.addTextDisplayComponents(text(`# 📊 Statistiques de ${displayName}`));
+  if (!withBack) c.addTextDisplayComponents(text(`# 📊 Statistiques de ${displayName}`));
 
   const blocks: Array<[show: boolean, body: string]> = [
     [true, `## ⭐ Activité\n${plural(st.messages, 'message')} · ${st.voiceHours.toFixed(1)} h de vocal · niveau **${st.level}**\nMeilleure série quotidienne : **${plural(st.maxStreak, 'jour')}**`],

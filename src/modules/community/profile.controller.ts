@@ -47,6 +47,7 @@ import { getEquippedTitle } from '../shop/shop.service.js';
 import { buildAchievementsView, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
 import { time, TimestampStyles } from 'discord.js';
 import { renderProfileCard } from './profile.image.js';
+import { withHeader } from '../../discord/header.js';
 import { ACHIEVEMENTS } from '../achievements/achievements.catalog.js';
 import { buildHistoryView, buildProfileView, buildPublicProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID, PROFILE_WEEKLY_ID } from './profile.view.js';
 
@@ -85,7 +86,7 @@ export async function renderHistory(member: Member) {
     getBalance(member.id),
     getSettings(member.guildId),
   ]);
-  return buildHistoryView(member, transactions, balance, settings);
+  return withHeader(buildHistoryView(member, transactions, balance, settings), { title: 'Historique', subtitle: `Les derniers mouvements de la bourse de ${member.displayName}`, color: '#8e44ad' });
 }
 
 // Les messages de /profil sont éphémères : seul leur destinataire peut cliquer ces boutons.
@@ -93,9 +94,14 @@ registerProfileButton(PROFILE_REFRESH_ID, async ({ interaction, member, guildMem
   await interaction.update(await renderProfile(member, guildMember));
 });
 
-registerProfileButton(PROFILE_ACHIEVEMENTS_ID, async ({ interaction, member }) => {
+/** Écran des succès avec son bandeau. */
+export async function renderAchievements(member: Member) {
   const [unlocked, settings] = await Promise.all([listUnlocked(member.id), getSettings(member.guildId)]);
-  await interaction.update(buildAchievementsView(member.displayName, unlocked, settings, PROFILE_REFRESH_ID));
+  return withHeader(buildAchievementsView(member.displayName, unlocked, settings, PROFILE_REFRESH_ID), { title: 'Succès', subtitle: `${unlocked.length} succès sur ${ACHIEVEMENTS.length} pour ${member.displayName}`, color: '#f39c12' });
+}
+
+registerProfileButton(PROFILE_ACHIEVEMENTS_ID, async ({ interaction, member }) => {
+  await interaction.update(await renderAchievements(member));
 });
 
 registerProfileButton(PROFILE_HISTORY_ID, async ({ interaction, member }) => {

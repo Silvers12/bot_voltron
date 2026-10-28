@@ -45,8 +45,7 @@ export function buildShopView(allItems: ShopItem[], balance: number, settings: G
   const current = Math.min(Math.max(0, page), pages - 1);
   const items = allItems.slice(current * SHOP_PAGE_SIZE, (current + 1) * SHOP_PAGE_SIZE);
   const c = card(SHOP_COLOR);
-  c.addTextDisplayComponents(text(`# 🛒 Boutique${pages > 1 ? ` · page ${current + 1}/${pages}` : ''}\n💰 Ta bourse : **${formatAmount(balance, settings)}**${notice ? `\n> ${notice}` : ''}`));
-  c.addSeparatorComponents(divider(true));
+  if (notice) c.addTextDisplayComponents(text(`> ${notice}`));
   if (!items.length) c.addTextDisplayComponents(text('Les rayons sont vides pour le moment. Les intendants y travaillent !'));
   for (const item of items) {
     const qty = owned.get(item.id) ?? 0;
@@ -88,7 +87,6 @@ export function buildInventoryView(entries: InventoryEntry[], settings: GuildSet
     return `${itemLabel(e.item)}${qty}`;
   };
   const c = card(SHOP_COLOR);
-  c.addTextDisplayComponents(text('# 🎒 Inventaire'));
   if (notice) c.addTextDisplayComponents(text(`> ${notice}`));
   c.addSeparatorComponents(divider(true));
   c.addTextDisplayComponents(text(entries.length ? clampLines(entries.map(describe)) : 'Ton sac est vide. Fais un tour à la boutique !'));

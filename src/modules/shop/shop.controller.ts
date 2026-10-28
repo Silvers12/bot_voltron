@@ -5,10 +5,15 @@ import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { equipTitle, getEquippedTitle, getInventory, getItem, listItems, purchase, PurchaseError } from './shop.service.js';
 import { buildInventoryView, buildShopView, INVENTORY_OPEN_ID, NO_TITLE_VALUE, SHOP_BUY_PREFIX, SHOP_OPEN_ID, SHOP_PAGE_PREFIX, SHOP_PAGE_SIZE, SHOP_TITLE_SELECT_ID } from './shop.view.js';
 import type { Member } from '../../generated/prisma/client.js';
+import { withHeader } from '../../discord/header.js';
 
 export async function renderShop(member: Member, notice?: string, page = 0) {
   const [items, balance, settings, inventory] = await Promise.all([listItems(member.guildId), getBalance(member.id), getSettings(member.guildId), getInventory(member.id)]);
-  return buildShopView(items, balance, settings, notice, page, new Map(inventory.map((e) => [e.itemId, e.quantity])));
+  const pages = Math.max(1, Math.ceil(items.length / SHOP_PAGE_SIZE));
+  const current = Math.min(Math.max(0, page), pages - 1);
+  return withHeader(buildShopView(items, balance, settings, notice, page, new Map(inventory.map((e) => [e.itemId, e.quantity]))), {
+    title: pages > 1 ? `Boutique · page ${current + 1}/${pages}` : 'Boutique', subtitle: `Ta bourse : ${formatAmount(balance, settings)}`, color: '#27ae60',
+  });
 }
 
 /** Page contenant un article donné (pour revenir au bon endroit après un achat). */
@@ -28,7 +33,7 @@ registerProfileButtonPrefix(SHOP_PAGE_PREFIX, async ({ interaction, member, arg 
 
 export async function renderInventory(member: Member, notice?: string) {
   const [entries, settings, title] = await Promise.all([getInventory(member.id), getSettings(member.guildId), getEquippedTitle(member.id)]);
-  return buildInventoryView(entries, settings, title?.id ?? null, notice);
+  return withHeader(buildInventoryView(entries, settings, title?.id ?? null, notice), { title: 'Inventaire', subtitle: title ? `Titre porté : ${title.name}` : `${entries.length} article${entries.length > 1 ? 's' : ''}`, color: '#d35400' });
 }
 
 registerProfileButton(INVENTORY_OPEN_ID, async ({ interaction, member }) => {

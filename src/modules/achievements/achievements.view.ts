@@ -40,13 +40,14 @@ export function buildAchievementsEmbed(displayName: string, unlocked: MemberAchi
 export function buildAchievementsView(displayName: string, unlocked: MemberAchievement[], s: GuildSettings, backId: string) {
   const byKey = new Map(unlocked.map((u) => [u.key, u]));
   const c = card(COLOR);
-  c.addTextDisplayComponents(text(`# 🏅 Succès de ${displayName}\n**${unlocked.length}** succès sur ${ACHIEVEMENTS.length}.`));
+  let first = true;
   for (const cat of [...new Set(ACHIEVEMENTS.map((a) => a.category))]) {
     const lines = ACHIEVEMENTS.filter((a) => a.category === cat).map((a) => {
       const u = byKey.get(a.key);
       return u ? `${a.emoji} **${a.name}** · ${TIER_LABEL[a.tier]} · ${time(u.unlockedAt, TimestampStyles.ShortDate)}` : `🔒 ${a.name} · *${a.hint}* · +${formatAmount(TIER_REWARD[a.tier], s)}`;
     });
-    c.addSeparatorComponents(divider());
+    if (!first) c.addSeparatorComponents(divider());
+    first = false;
     c.addTextDisplayComponents(text(`## ${cat}\n${lines.join('\n')}`));
   }
   const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
