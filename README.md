@@ -44,7 +44,7 @@ src/
   modules/admin/           # panneau d'intendance, formulaires, /admin installer
   modules/moderation/      # /admin messages (suppression)
   modules/settings/        # réglages du serveur, salons des commandes
-content/                   # textes et catalogue éditables (compliments, insultes, duels, vols, boutique, icônes de taux, visuels dé et pièce)
+content/                   # textes et catalogue éditables (compliments, insultes, duels, vols, boutique, icônes de taux, visuels dé, pièce, compliment et insulte)
 scripts/                   # deploy.sh, backup.sh, restore.sh
 prisma/schema.prisma       # modèle de données
 prisma/migrations/         # migrations versionnées
@@ -152,7 +152,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 <img width="600" height="222" alt="image" src="https://github.com/user-attachments/assets/d1453715-e411-48c4-afe9-ed71653f072c" />
 <img width="595" height="217" alt="image" src="https://github.com/user-attachments/assets/56ad8ae0-03b0-4b3d-bdcb-559241aafa1c" />
 
-- `/compliment membre` et `/insulte membre` : message public avec un texte tiré au sort. Second degré, bienveillant.
+- `/compliment membre` et `/insulte membre` : carte publique colorée selon la rareté, avec le texte tiré au sort et, si fournie, une vignette (`content/banter/compliment.png`, `content/banter/insulte.png`, 512 × 512). Second degré, bienveillant.
 - Textes dans `content/compliments.json` et `content/insultes.json` : 3 catégories (10 classiques, 5 rares, 5 épiques) et poids de tirage (80 / 15 / 5 par défaut). Modifiables sans toucher au code ; rechargés au démarrage du bot. Variables : `{cible}`, `{auteur}`.
 
 ## Blackjack
