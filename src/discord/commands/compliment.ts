@@ -14,6 +14,7 @@ export default defineCommand({
     if (!target) return void (await interaction.reply({ content: 'Ce membre ne fait pas (ou plus) partie du serveur.', flags: MessageFlags.Ephemeral }));
     if (target.user.bot) return void (await interaction.reply({ content: `${botName()} rougit, mais garde tes compliments pour les humains.`, flags: MessageFlags.Ephemeral }));
     const draw = drawBanter('compliment', target.displayName, interaction.member.displayName);
-    await interaction.reply(await buildBanterMessage('compliment', draw, interaction.user.id, target.id));
+    await interaction.deferReply();
+    await interaction.editReply(await buildBanterMessage('compliment', draw, interaction.member, target));
   },
 });
