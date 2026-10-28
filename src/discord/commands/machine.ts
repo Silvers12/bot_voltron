@@ -89,7 +89,7 @@ async function spin(interaction: ButtonInteraction<'cached'>, memberId: string) 
 
     if (result.kind === 'jackpot' && interaction.channel?.isSendable()) {
       await interaction.channel.send({
-        content: `🎰🦦 **JACKPOT !** ${userMention(interaction.user.id)} aligne trois loutres et rafle la cagnotte : **${formatAmount(result.payout, s)}** ! Par mon bouclier et mes moustaches ! La cagnotte repart à ${formatAmount(result.pool, s)}.`,
+        content: `🎰🦦 **JACKPOT !** ${userMention(interaction.user.id)} aligne trois loutres et rafle la cagnotte : **${formatAmount(result.payout, s)}** ! Quelle veine ! La cagnotte repart à ${formatAmount(result.pool, s)}.`,
         allowedMentions: { users: [interaction.user.id] },
       }).catch(() => {});
     }

@@ -99,7 +99,7 @@ export default defineEvent({
     } catch (err) {
       log.error('Erreur pendant une interaction', err);
       if (interaction.isRepliable()) {
-        await replyError(interaction, 'Par mes moustaches, quelque chose a mal tourné. Réessaie dans un instant.').catch(() => {});
+        await replyError(interaction, 'Oups, quelque chose a mal tourné. Réessaie dans un instant.').catch(() => {});
       }
     }
   },

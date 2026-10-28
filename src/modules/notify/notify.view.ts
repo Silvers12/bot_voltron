@@ -24,7 +24,7 @@ export function roleIdFor(s: GuildSettings, key: NotifyKey): string | null {
 const COLOR = 0x2e86c1;
 const BANNER_NAME = 'banniere';
 
-const DEFAULT_INTRO = `Moi, c’est **${botName()}**, loutre paladin et gardien de la rivière : j’anime la compagnie. Ici, on gagne des cœurs en participant, on les dépense, on les parie, et on se fait des câlins. Par mon bouclier et mes moustaches, fais comme chez toi !`;
+const DEFAULT_INTRO = `Moi, c’est **${botName()}**, la petite loutre du serveur : j’anime la compagnie. Ici, on gagne des cœurs en participant, on les dépense, on les parie, et on se fait des câlins. Fais comme chez toi, et viens me faire un câlin !`;
 
 const text = (content: string) => new TextDisplayBuilder().setContent(content);
 const divider = (large = false) => new SeparatorBuilder().setDivider(true).setSpacing(large ? SeparatorSpacingSize.Large : SeparatorSpacingSize.Small);
@@ -69,7 +69,7 @@ export function buildWelcomeMessage(s: GuildSettings, guildName: string) {
     addNotifyBlock(container, s);
   }
   container.addSeparatorComponents(divider());
-  container.addTextDisplayComponents(text(`-# ${botName()}, loutre paladin · Par mon bouclier et mes moustaches !`));
+  container.addTextDisplayComponents(text(`-# ${botName()}, petite loutre du serveur · Un câlin ? 🦦`));
 
   return { components: [container], files, flags: MessageFlags.IsComponentsV2 as const };
 }
@@ -103,6 +103,6 @@ export function buildNotifyMessage(s: GuildSettings) {
   container.addTextDisplayComponents(text(`# 🔔 Notifications\n${botName()} ne mentionne que celles et ceux qui l’ont demandé. Coche ce qui t’intéresse, décoche pour arrêter.`));
   addNotifyBlock(container, s);
   container.addSeparatorComponents(divider());
-  container.addTextDisplayComponents(text(`-# ${botName()}, loutre paladin · Par mon bouclier et mes moustaches !`));
+  container.addTextDisplayComponents(text(`-# ${botName()}, petite loutre du serveur · Un câlin ? 🦦`));
   return { components: [container], flags: MessageFlags.IsComponentsV2 as const };
 }

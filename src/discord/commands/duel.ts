@@ -96,7 +96,7 @@ export default defineCommand({
     const stake = interaction.options.getInteger('mise', true);
     const fail = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
     if (!target) return void (await fail('Ce membre ne fait pas (ou plus) partie du serveur.'));
-    if (target.user.bot) return void (await fail('Défier une loutre paladin ? Elle décline, pour ton bien.'));
+    if (target.user.bot) return void (await fail('Défier une petite loutre ? Elle préfère les câlins.'));
     if (target.id === interaction.user.id) return void (await fail(`Se défier soi-même ? ${botName()} admire l’audace, mais non.`));
 
     const opponent = await ensureMember(target);

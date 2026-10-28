@@ -18,7 +18,7 @@ export const PROFILE_NAV_ID = 'profil:nav';
 export const SHOP_OPEN_ID = 'shop:open';
 export const INVENTORY_OPEN_ID = 'shop:inventory';
 
-const SIGNATURE = `-# ${botName()}, loutre paladin · Par mon bouclier et mes moustaches !`;
+const SIGNATURE = `-# ${botName()}, petite loutre du serveur · Un câlin ? 🦦`;
 
 export interface ProfileData {
   member: Member;

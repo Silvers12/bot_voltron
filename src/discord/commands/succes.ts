@@ -14,7 +14,7 @@ export default defineCommand({
     .addUserOption((o) => o.setName('membre').setDescription('Membre à afficher')),
   async execute({ interaction, member }) {
     const target = interaction.options.getMember('membre');
-    if (target?.user.bot) return void (await interaction.reply({ content: `Les bots n’ont pas de badges. Même ${botName()}, et il en est un peu triste.`, flags: MessageFlags.Ephemeral }));
+    if (target?.user.bot) return void (await interaction.reply({ content: `Les bots n’ont pas de badges. Même ${botName()}, et elle en est un peu triste.`, flags: MessageFlags.Ephemeral }));
     const shown = target ? await ensureMember(target) : member;
     const s = await getSettings(interaction.guildId);
     const [unlocked, title] = await Promise.all([listUnlocked(shown.id), getEquippedTitle(shown.id)]);

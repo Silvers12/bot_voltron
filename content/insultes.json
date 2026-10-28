@@ -1,5 +1,9 @@
 {
-  "weights": { "classique": 60, "rare": 30, "epique": 10 },
+  "weights": {
+    "classique": 60,
+    "rare": 30,
+    "epique": 10
+  },
   "classique": [
     "{cible}, tout le monde sait que tu ranges tes chaussettes par couleur, puis par longueur, puis par humeur. On ne te juge pas. Enfin si, un peu. Mais avec tendresse, parce qu’au fond on aimerait bien avoir ton tiroir.",
     "{cible}, tu es la personne qui écrit « j’arrive dans cinq minutes » depuis l’an dernier. On a vu des saisons passer, des mises à jour sortir, des amitiés naître, et toi, toujours à cinq minutes. Un jour tu arriveras, et on fera une fête. Sans toi, probablement, parce que tu seras en retard.",
@@ -20,7 +24,7 @@
     "{cible}, tu es la seule personne de l’histoire capable de perdre à pile ou face avec une pièce à deux faces identiques. Elle est tombée sur la tranche. Puis elle a roulé sous un meuble. Puis on ne l’a jamais retrouvée. La malchance t’a adopté, et elle t’offre des cadeaux à Noël."
   ],
   "epique": [
-    "PAR MON BOUCLIER ET MES MOUSTACHES ! Qu’on fasse silence dans les rangs. {cible}, les bardes des sept royaumes ont écrit une chanson sur toi. Elle fait vingt-trois couplets, un pont et un refrain que personne n’ose chanter en entier, parce que dès le troisième vers les tavernes se vident et les chiens se mettent à hurler. Elle raconte tes exploits, tes chutes, tes plans qui ne marchent jamais et pourtant finissent bien. C’est la chanson la plus honnête jamais écrite, et tu en es le héros malgré toi.",
+    "PAR TOUS LES POISSONS DE LA RIVIÈRE ! Qu’on fasse silence dans les rangs. {cible}, les bardes des sept royaumes ont écrit une chanson sur toi. Elle fait vingt-trois couplets, un pont et un refrain que personne n’ose chanter en entier, parce que dès le troisième vers les tavernes se vident et les chiens se mettent à hurler. Elle raconte tes exploits, tes chutes, tes plans qui ne marchent jamais et pourtant finissent bien. C’est la chanson la plus honnête jamais écrite, et tu en es le héros malgré toi.",
     "{cible}, les dragons eux-mêmes refusent de te combattre. Ce n’est pas par peur de ta force, ni de ton armure, ni de ton courage, qui sont tous trois sujets à débat. C’est à cause de ton cri de guerre. Celui que tu pousses quand tu paniques en vocal. Les dragons l’ont entendu une fois, ont replié leurs ailes, et ont décidé collectivement de se reconvertir dans l’élevage de moutons. Tu as pacifié une espèce entière sans le vouloir.",
     "{cible}, on raconte dans les chroniques qu’un jour, un seul jour, tu as pris une bonne décision. Les historiens cherchent encore la source. Ils ont fouillé les archives, interrogé les témoins, consulté les oracles, et n’ont trouvé que des pistes contradictoires et un reçu de pizza. Pourtant la légende persiste, et nous choisissons d’y croire, parce que ce serveur a besoin d’espoir.",
     "{cible}, tu es l’élu de la prophétie. Pas celle qui annonce un sauveur ou un roi, non. Celle, plus ancienne et plus mystérieuse, qui parle de celui qui renverse son verre à chaque banquet, qui marche sur le seul câble qui ne fallait pas débrancher, et qui dit « c’est bon, j’ai compris » juste avant la catastrophe. Les sages l’ont attendu des siècles. Tu es arrivé. Ils ont soupiré. Mais ils ont souri aussi.",

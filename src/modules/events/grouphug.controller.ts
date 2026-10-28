@@ -10,7 +10,7 @@ registerButtonPrefix(HUG_JOIN_PREFIX, async ({ interaction, member, arg: hugId }
   const content = result.ok
     ? `Tu es dans le câlin ! Vous êtes **${result.count}** pour l’instant. 🤗`
     : result.reason === 'already'
-      ? `Tu es déjà dans les bras de ${botName()}. Un seul câlin par personne, mais il est sincère.`
+      ? `Tu es déjà dans les bras de ${botName()}. Un seul câlin par personne, mais il vient du cœur.`
       : `Trop tard, ${botName()} a déjà refermé les bras. Guette sa prochaine apparition !`;
   await interaction.reply({ content, flags: MessageFlags.Ephemeral });
 });

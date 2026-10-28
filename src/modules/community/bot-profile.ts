@@ -52,6 +52,6 @@ export async function renderBotProfile(guild: Guild) {
   c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://profil.png').setDescription(`Fiche de ${name}`)));
   if (app.description) c.addTextDisplayComponents(text(app.description));
   c.addSeparatorComponents(divider());
-  c.addTextDisplayComponents(text(`-# ${name} · toujours là pour un câlin.`));
+  c.addTextDisplayComponents(text(`-# ${name} · toujours là pour un câlin. 🦦`));
   return { ...screen(c), files: [new AttachmentBuilder(image, { name: 'profil.png' })] };
 }

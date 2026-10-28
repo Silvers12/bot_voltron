@@ -50,7 +50,7 @@ export const ACHIEVEMENTS: Achievement[] = [
   { key: 'pipelette', name: 'Pipelette', emoji: '🗣️', tier: 'argent', category: 'Compagnie', description: 'a écrit 1 000 messages. La rivière n’a plus de secrets.', hint: 'Écrire 1 000 messages', check: (s) => s.messages >= 1000 },
   { key: 'orateur', name: 'Voix de la rivière', emoji: '📣', tier: 'or', category: 'Compagnie', description: `a écrit 5 000 messages. ${botName()} prend des notes.`, hint: 'Écrire 5 000 messages', check: (s) => s.messages >= 5000 },
   { key: 'casque', name: 'Casque vissé', emoji: '🎧', tier: 'bronze', category: 'Compagnie', description: 'a passé 10 heures en vocal.', hint: 'Passer 10 h en vocal', check: (s) => s.voiceHours >= 10 },
-  { key: 'micro', name: 'Micro d’or', emoji: '🎙️', tier: 'or', category: 'Compagnie', description: 'a passé 100 heures en vocal. Des cordes vocales de paladin.', hint: 'Passer 100 h en vocal', check: (s) => s.voiceHours >= 100 },
+  { key: 'micro', name: 'Micro d’or', emoji: '🎙️', tier: 'or', category: 'Compagnie', description: 'a passé 100 heures en vocal. Des cordes vocales en or.', hint: 'Passer 100 h en vocal', check: (s) => s.voiceHours >= 100 },
   { key: 'recrue', name: 'Recrue', emoji: '⭐', tier: 'bronze', category: 'Compagnie', description: 'atteint le niveau 5.', hint: 'Atteindre le niveau 5', check: (s) => s.level >= 5 },
   { key: 'veteran', name: 'Vétéran', emoji: '🌟', tier: 'argent', category: 'Compagnie', description: 'atteint le niveau 10.', hint: 'Atteindre le niveau 10', check: (s) => s.level >= 10 },
   { key: 'legende', name: 'Légende de la rivière', emoji: '💫', tier: 'or', category: 'Compagnie', description: 'atteint le niveau 25. On racontera ça aux loutrons.', hint: 'Atteindre le niveau 25', check: (s) => s.level >= 25 },

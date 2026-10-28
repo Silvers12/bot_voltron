@@ -1,15 +1,19 @@
 {
-  "weights": { "classique": 60, "rare": 30, "epique": 10 },
+  "weights": {
+    "classique": 60,
+    "rare": 30,
+    "epique": 10
+  },
   "classique": [
     "{cible}, j’ai parcouru bien des rivières et croisé bien des compagnies, et je peux l’affirmer sans trembler des moustaches : tu es la personne la plus douce que ce serveur ait jamais accueillie. Quand tu parles, les gens se calment. Quand tu ris, les autres suivent. C’est un pouvoir, et tu l’utilises bien.",
     "{cible}, il y a des gens qui entrent dans un vocal et des gens qui l’illuminent. Toi, tu fais partie de la seconde catégorie, celle qui fait remonter les micros coupés et sortir les timides de leur tanière. On ne te le dit pas assez : merci d’être là.",
     "{cible}, tu as le cœur aussi grand que ma collection de cailloux brillants, et crois-moi, j’en ai beaucoup. Tu écoutes, tu encourages, tu retiens les petits détails que les autres oublient. C’est ça, un vrai compagnon de route.",
-    "{cible}, si la gentillesse était une armure, tu serais indestructible, et je dis ça en tant que paladin qui s’y connaît en armures. Tu encaisses les mauvais jours sans jamais les faire payer aux autres. Ça force le respect.",
+    "{cible}, si la gentillesse était une fourrure, tu serais la loutre la plus chaude de la rivière, et je m’y connais en fourrure. Tu encaisses les mauvais jours sans jamais les faire payer aux autres. Ça force le respect.",
     "{cible}, tu es ce genre de personne qu’on invite en premier et qui part en dernier, pas parce qu’elle n’a rien d’autre à faire, mais parce qu’avec elle la soirée n’a pas envie de finir. La compagnie a de la chance de te compter dans ses rangs.",
     "{cible}, ton rire devrait être classé au patrimoine du serveur. Il arrive toujours au bon moment, il contamine tout le monde, et il transforme n’importe quelle partie ratée en bon souvenir. Ne change jamais ça.",
     "{cible}, tu rends cette compagnie meilleure rien qu’en y étant. Je t’ai vu accueillir des nouveaux comme s’ils étaient là depuis toujours, et c’est exactement l’esprit que je défends avec mon bouclier. Tu le défends avec ton cœur, et tu le fais mieux que moi.",
     "{cible}, tu es la preuve vivante que le bon sens et le bon cœur peuvent cohabiter dans la même personne. Tu donnes des conseils justes sans jamais donner de leçons, et tu sais quand il faut se taire et juste être là. C’est rare, et c’est précieux.",
-    "{cible}, je donnerais mon bouclier pour un câlin de ta part, et un paladin ne dit pas ça à la légère. Il y a chez toi une chaleur qui fait qu’on se sent chez soi même dans un salon vocal à trois heures du matin. Ne le répète à personne, mais tu es mon préféré.",
+    "{cible}, je donnerais tous mes cailloux brillants pour un câlin de ta part, et une loutre ne dit pas ça à la légère. Il y a chez toi une chaleur qui fait qu’on se sent chez soi même dans un salon vocal à trois heures du matin. Ne le répète à personne, mais tu es mon préféré.",
     "{cible}, tu es une rivière calme : les gens viennent se poser près de toi sans toujours savoir pourquoi, et repartent apaisés. Tu n’as pas besoin de faire de bruit pour compter. Tu comptes, c’est tout."
   ],
   "rare": [
@@ -20,10 +24,10 @@
     "{cible}, ta bienveillance ferait pleurer un boss de donjon. Je parle d’un vrai, avec trois phases, des sbires et une musique dramatique. Il poserait ses armes, s’assiérait, et te demanderait comment tu fais pour être aussi sincère. Et tu lui répondrais gentiment, parce que c’est toi."
   ],
   "epique": [
-    "PAR MON BOUCLIER ET MES MOUSTACHES ! Que tout le monde s’arrête et écoute. {cible}, les bardes des sept royaumes ont composé des ballades sur toi, et chacune d’elles est trop courte, parce qu’aucun refrain ne peut contenir ce que tu apportes à ceux qui t’entourent. Tu es le genre de personne qu’on cherche toute une vie et qu’on a la chance insolente d’avoir déjà trouvée. Cette compagnie a un cœur, et ce soir, je le nomme : c’est toi.",
+    "PAR TOUS LES POISSONS DE LA RIVIÈRE ! Que tout le monde s’arrête et écoute. {cible}, les bardes des sept royaumes ont composé des ballades sur toi, et chacune d’elles est trop courte, parce qu’aucun refrain ne peut contenir ce que tu apportes à ceux qui t’entourent. Tu es le genre de personne qu’on cherche toute une vie et qu’on a la chance insolente d’avoir déjà trouvée. Cette compagnie a un cœur, et ce soir, je le nomme : c’est toi.",
     "{cible}, écoute bien, car je ne le dirai qu’une fois avec autant de solennité. Les étoiles elles-mêmes ont déposé une requête officielle pour briller aussi fort que toi. Le conseil céleste l’a examinée, a hoché la tête, et a répondu que ce n’était pas possible, que certaines lumières ne se reproduisent pas. Tu es de celles-là. Et tu nous éclaires chaque jour sans jamais demander qu’on te regarde.",
     "{cible}, un jour, {bot} sera oublié. Les serveurs fermeront, les bots s’éteindront, les cailloux brillants retourneront à la rivière. Mais quelque part, quelqu’un racontera encore l’histoire d’une personne qui faisait rire les tristes, qui accueillait les perdus et qui tenait la compagnie debout quand tout tanguait. Ce quelqu’un parlera de toi. Et il aura raison.",
     "{cible}, j’ai vu des dragons cracher des flammes à faire fondre les montagnes. J’ai vu des tempêtes renverser des navires comme des feuilles mortes. J’ai même vu des chats s’endormir sur des claviers en pleine partie classée. Rien, absolument rien de tout cela ne m’a autant impressionné que ton cœur. Il est plus vaste que les dragons, plus puissant que les tempêtes, et infiniment plus doux que les chats. Tu es un miracle qui se prend pour une personne normale.",
-    "{cible}, une loutre paladin ne s’agenouille devant personne. Ni devant les rois, ni devant les dieux, ni devant les boss de raid. C’est écrit dans le serment, gravé dans l’acier du bouclier. Et pourtant, ce soir, devant toute la compagnie rassemblée, je pose un genou à terre. Pour toi. Pour ta bonté, pour ta loyauté, pour tout ce que tu donnes sans compter. Juste cette fois. Mais de tout mon cœur."
+    "{cible}, une loutre ne fait de câlin qu’à ceux qu’elle a choisis. Ni les rois, ni les dieux, ni les boss de raid n’ont jamais eu le leur. C’est une règle de la rivière, gravée dans la vase depuis toujours. Et pourtant, ce soir, devant toute la compagnie rassemblée, je t’ouvre les bras. Pour toi. Pour ta bonté, pour ta loyauté, pour tout ce que tu donnes sans compter. Juste cette fois. Mais de tout mon cœur."
   ]
 }

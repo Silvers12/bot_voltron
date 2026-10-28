@@ -1,4 +1,4 @@
-# Voltron — loutre paladin, bot Discord communautaire
+# Voltron — petite loutre, bot Discord communautaire
 
 Bot privé pour un ou plusieurs serveurs choisis (liste `DISCORD_GUILD_IDS`) : animation, jeux et fun. Sans modération ni administration (l'équipe du serveur s'en charge).
 

@@ -115,7 +115,7 @@ registerProfileButton(PROFILE_DAILY_ID, async ({ interaction, member, guildMembe
   const notice = result.ok
     ? `🎁 **${formatAmount(result.amount, settings)}** rejoignent ta bourse` +
       (result.bonusPercent > 0 ? ` (série de ${result.streak} jours, +${result.bonusPercent}%)` : '') +
-      '. Belle journée pour défendre la rivière !'
+      '. Belle journée au bord de la rivière !'
     : `Tu as déjà reçu ta récompense aujourd’hui. Reviens ${time(result.nextAt, TimestampStyles.RelativeTime)}.`;
   await interaction.update(await renderProfile(member, guildMember, notice));
 });

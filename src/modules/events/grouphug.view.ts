@@ -14,7 +14,7 @@ export function buildHugOpenMessage(hug: GroupHug, count: number, s: GuildSettin
   c.addSeparatorComponents(divider(true));
   c.addTextDisplayComponents(text(`**Appuyez sur CÂLIN avant ${time(hug.endsAt, TimestampStyles.RelativeTime)} !**\nChaque câlineur reçoit **${formatAmount(hug.rewardPerHugger, s)} × le nombre de câlineurs**. Plus vous êtes nombreux, plus ça rapporte.`));
   c.addSeparatorComponents(divider());
-  c.addTextDisplayComponents(text(`🤗 **Câlineurs** · **${count}** · 💰 **Récompense actuelle** · **${formatAmount(hug.rewardPerHugger * count, s)}** chacun\n-# Par mon bouclier et mes moustaches, venez là !`));
+  c.addTextDisplayComponents(text(`🤗 **Câlineurs** · **${count}** · 💰 **Récompense actuelle** · **${formatAmount(hug.rewardPerHugger * count, s)}** chacun\n-# Venez là, il y a de la place pour tout le monde !`));
   const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
     new ButtonBuilder().setCustomId(HUG_JOIN_PREFIX + hug.id).setLabel('CÂLIN').setStyle(ButtonStyle.Success).setEmoji('🤗'),
   );
@@ -30,7 +30,7 @@ export function buildHugClosedMessage(hug: GroupHug, participantIds: string[], r
   c.addTextDisplayComponents(text(
     count
       ? `${botName()} serre fort ${count} camarade${count > 1 ? 's' : ''} : ${names}\n\nChacun repart avec **${formatAmount(rewardEach, s)}** (${formatAmount(hug.rewardPerHugger, s)} × ${count}).\n-# Vous êtes une belle compagnie.`
-      : `Personne n’est venu. ${botName()} referme doucement les bras et retourne à sa rivière. Il reviendra.\n-# Snif.`,
+      : `Personne n’est venu. ${botName()} referme doucement les bras et retourne à sa rivière. Elle reviendra.\n-# Snif.`,
   ));
   const row = new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
     new ButtonBuilder().setCustomId(HUG_JOIN_PREFIX + hug.id).setLabel('Terminé').setStyle(ButtonStyle.Secondary).setEmoji('🤗').setDisabled(true),

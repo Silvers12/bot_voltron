@@ -27,7 +27,7 @@
     { "name": "Buveur de café froid", "emoji": "☕", "price": 1500, "kind": "TITLE", "maxPerMember": 1, "description": "Vous ne réchauffez jamais. Vous êtes au-dessus de ça. Ou en dessous.", "sortOrder": 52 },
     { "name": "Choupi officiel", "emoji": "🧸", "price": 2500, "kind": "TITLE", "maxPerMember": 1, "description": "Certifié par {bot} après examen approfondi des joues.", "sortOrder": 53 },
     { "name": "Roi du jackpot", "emoji": "🎰", "price": 4000, "kind": "TITLE", "maxPerMember": 1, "description": "La machine tremble quand vous approchez. Ou c’est vous qui tremblez.", "sortOrder": 54 },
-    { "name": "Écuyer de {bot}", "emoji": "🛡️", "price": 7000, "kind": "TITLE", "maxPerMember": 1, "description": "Porte le bouclier quand {bot} fait la sieste. Souvent, donc.", "sortOrder": 55 },
+    { "name": "Chouchou de {bot}", "emoji": "🧸", "price": 7000, "kind": "TITLE", "maxPerMember": 1, "description": "Celui ou celle que {bot} câline en premier. Souvent, donc.", "sortOrder": 55 },
     { "name": "Paladin de la rivière", "emoji": "⚔️", "price": 15000, "kind": "TITLE", "maxPerMember": 1, "description": "Défenseur des eaux calmes, des câlins collectifs et des tupperwares orphelins.", "sortOrder": 56 },
     { "name": "Légende de la compagnie", "emoji": "🌟", "price": 50000, "kind": "TITLE", "stock": 3, "maxPerMember": 1, "description": "Trois exemplaires, pas un de plus. On racontera votre nom aux loutrons, chaussette comprise.", "sortOrder": 57 }
   ]

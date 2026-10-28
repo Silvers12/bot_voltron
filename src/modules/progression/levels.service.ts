@@ -77,7 +77,7 @@ async function announce(guild: Guild, s: GuildSettings, discordUserId: string, l
     .setColor(0xf1c40f)
     .setDescription(
       `🎉 ${userMention(discordUserId)} atteint le **niveau ${level}** !` +
-        (gainedTier && tier ? `\n${botName()} lui remet le rôle ${roleMention(tier.roleId)}. Par mon bouclier, quelle ascension !` : ''),
+        (gainedTier && tier ? `\n${botName()} lui remet le rôle ${roleMention(tier.roleId)}. Quelle ascension !` : ''),
     );
   await channel.send({ embeds: [embed], allowedMentions: { users: [discordUserId] } }).catch((err) => log.warn('Annonce de niveau impossible', err));
 }

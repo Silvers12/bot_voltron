@@ -8,7 +8,7 @@ import type { Unlock } from './achievements.service.js';
 import { botName } from '../../core/identity.js';
 export const PROFILE_ACHIEVEMENTS_ID = 'profil:achievements';
 const COLOR = 0xe67e22;
-const FOOTER = `${botName()}, loutre paladin · Par mon bouclier et mes moustaches !`;
+const FOOTER = `${botName()}, petite loutre du serveur · Un câlin ? 🦦`;
 
 export function badgeLine(unlocked: MemberAchievement[]): string {
   const emojis = unlocked.map((u) => ACHIEVEMENTS.find((a) => a.key === u.key)?.emoji).filter(Boolean);

@@ -16,7 +16,7 @@ function renderHand(hand: Hand, hidden = false): string {
 }
 
 const RESULT = {
-  BLACKJACK: { title: '🃏 BLACKJACK !', color: 0xf1c40f, line: 'Par mes moustaches, un naturel ! La banque paie 3 pour 2.' },
+  BLACKJACK: { title: '🃏 BLACKJACK !', color: 0xf1c40f, line: 'Oh ! Un naturel ! La banque paie 3 pour 2.' },
   WON: { title: '🎉 Gagné', color: 0x2ecc71, line: 'La banque s’incline. Bien joué, camarade.' },
   PUSH: { title: '🤝 Égalité', color: 0x95a5a6, line: 'Personne ne gagne, ta mise te revient.' },
   LOST: { title: '💸 Perdu', color: 0xe74c3c, line: 'La rivière reprend ce qu’elle a donné. Une autre fois !' },
