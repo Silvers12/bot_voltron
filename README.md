@@ -290,6 +290,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 Membres :
 - Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, inventaire, statistiques, tombola, tirage, câlin collectif, duel, machine à sous, page d'accueil. Assistants dans `src/discord/v2.ts`. Les messages publiés avant cette version restent en ancien format : `/admin tombola publier` et `/admin accueil publier` les remplacent.
+- `/profil membre:@bot` : fiche du bot lui-même (nom et avatar du compte, description de l'application Discord, date d'arrivée, cœurs offerts, câlins collectifs faits, membres).
 - `/profil [membre]` : avec un membre, fiche publique en lecture seule (nom, titre porté, ancienneté, niveau et XP, badges ; ni bourse ni récompenses). Sans option, espace personnel (privé) avec la même bannière en tête, enrichie de la bourse : bourse, titre porté, badges, niveau, ancienneté, boutons Récompense du jour, Hebdo et Rafraîchir, menu « Explorer… » (Historique, Boutique, Inventaire, Succès, Statistiques, Guide des commandes). Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/vol membre` : tentative de vol de cœurs (voir section dédiée).
