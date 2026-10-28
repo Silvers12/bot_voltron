@@ -1,5 +1,5 @@
 {
-  "weights": { "classique": 80, "rare": 15, "epique": 5 },
+  "weights": { "classique": 60, "rare": 30, "epique": 10 },
   "classique": [
     "{cible}, j’ai parcouru bien des rivières et croisé bien des compagnies, et je peux l’affirmer sans trembler des moustaches : tu es la personne la plus douce que ce serveur ait jamais accueillie. Quand tu parles, les gens se calment. Quand tu ris, les autres suivent. C’est un pouvoir, et tu l’utilises bien.",
     "{cible}, il y a des gens qui entrent dans un vocal et des gens qui l’illuminent. Toi, tu fais partie de la seconde catégorie, celle qui fait remonter les micros coupés et sortir les timides de leur tanière. On ne te le dit pas assez : merci d’être là.",

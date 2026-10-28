@@ -153,7 +153,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 <img width="595" height="217" alt="image" src="https://github.com/user-attachments/assets/56ad8ae0-03b0-4b3d-bdcb-559241aafa1c" />
 
 - `/compliment membre` et `/insulte membre` : bannière générée (avatar de l’auteur, titre et rareté, texte entier, illustration `content/banter/compliment.png` ou `insulte.png` à droite), hauteur adaptée au texte, et une ligne de mentions pour prévenir la cible. Second degré, bienveillant.
-- Textes dans `content/compliments.json` et `content/insultes.json` : 3 catégories (10 classiques, 5 rares, 5 épiques) et poids de tirage (80 / 15 / 5 par défaut). Modifiables sans toucher au code ; rechargés au démarrage du bot. Variables : `{cible}`, `{auteur}`.
+- Textes dans `content/compliments.json` et `content/insultes.json` : 3 catégories (10 classiques, 5 rares, 5 épiques) et poids de tirage (60 / 30 / 10 par défaut). Modifiables sans toucher au code ; rechargés au démarrage du bot. Variables : `{cible}`, `{auteur}`.
 
 ## Blackjack
 

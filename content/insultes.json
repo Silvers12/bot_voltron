@@ -1,5 +1,5 @@
 {
-  "weights": { "classique": 80, "rare": 15, "epique": 5 },
+  "weights": { "classique": 60, "rare": 30, "epique": 10 },
   "classique": [
     "{cible}, tout le monde sait que tu ranges tes chaussettes par couleur, puis par longueur, puis par humeur. On ne te juge pas. Enfin si, un peu. Mais avec tendresse, parce qu’au fond on aimerait bien avoir ton tiroir.",
     "{cible}, tu es la personne qui écrit « j’arrive dans cinq minutes » depuis l’an dernier. On a vu des saisons passer, des mises à jour sortir, des amitiés naître, et toi, toujours à cinq minutes. Un jour tu arriveras, et on fera une fête. Sans toi, probablement, parce que tu seras en retard.",
