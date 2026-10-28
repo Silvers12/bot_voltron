@@ -1,4 +1,4 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, SectionBuilder, StringSelectMenuBuilder, ThumbnailBuilder, time, TimestampStyles, userMention, type GuildMember, type MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder, SectionBuilder, StringSelectMenuBuilder, ThumbnailBuilder, time, TimestampStyles, userMention, type GuildMember, type MessageActionRowComponentBuilder } from 'discord.js';
 import type { GuildSettings, Member, MemberAchievement, ShopItem, Transaction } from '../../generated/prisma/client.js';
 import type { DailyStatus } from '../economy/daily.service.js';
 import type { WeeklyStatus } from '../economy/weekly.service.js';
@@ -94,20 +94,12 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
 }
 
 /** Fiche publique d'un membre, en lecture seule : nom, titre, ancienneté, niveau et XP, badges. Rien de personnel (bourse, récompenses). */
-export function buildPublicProfileView({ member, guildMember, settings, rank, achievements, title }: Pick<ProfileData, 'member' | 'guildMember' | 'settings' | 'rank' | 'achievements' | 'title'>) {
+export function buildPublicProfileView({ member, settings, achievements, image }: Pick<ProfileData, 'member' | 'settings' | 'achievements'> & { image: Buffer }) {
   const c = card();
-  const header = [
-    `# ${member.displayName}`,
-    title ? `${title.emoji ? title.emoji + ' ' : '🏷️ '}**${title.name}**` : '',
-    `Dans la compagnie depuis ${member.joinedAt ? time(member.joinedAt, TimestampStyles.LongDate) : 'un moment'}`,
-  ].filter(Boolean).join('\n');
-  c.addSectionComponents(new SectionBuilder().addTextDisplayComponents(text(header)).setThumbnailAccessory(new ThumbnailBuilder().setURL(guildMember.displayAvatarURL({ size: 256 }))));
-  c.addSeparatorComponents(divider(true));
-  c.addTextDisplayComponents(text(levelLine(member.xp, settings, rank)));
-  if (isFeatureEnabled(settings, 'succes')) { c.addSeparatorComponents(divider()); c.addTextDisplayComponents(text(`🏅 **Badges** · ${badgeLine(achievements)}`)); }
-  c.addSeparatorComponents(divider());
+  c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://profil.png').setDescription(`Fiche de ${member.displayName}`)));
+  if (isFeatureEnabled(settings, 'succes')) c.addTextDisplayComponents(text(`🏅 ${badgeLine(achievements)}`));
   c.addTextDisplayComponents(text(SIGNATURE));
-  return screen(c);
+  return { ...screen(c), files: [new AttachmentBuilder(image, { name: 'profil.png' })] };
 }
 
 function levelLine(xp: number, settings: GuildSettings, rank: number): string {

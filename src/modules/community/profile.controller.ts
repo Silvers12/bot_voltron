@@ -46,6 +46,8 @@ import { listUnlocked, trackAchievements } from '../achievements/achievements.se
 import { getEquippedTitle } from '../shop/shop.service.js';
 import { buildAchievementsView, PROFILE_ACHIEVEMENTS_ID } from '../achievements/achievements.view.js';
 import { time, TimestampStyles } from 'discord.js';
+import { renderProfileCard } from './profile.image.js';
+import { ACHIEVEMENTS } from '../achievements/achievements.catalog.js';
 import { buildHistoryView, buildProfileView, buildPublicProfileView, PROFILE_DAILY_ID, PROFILE_HISTORY_ID, PROFILE_REFRESH_ID, PROFILE_WEEKLY_ID } from './profile.view.js';
 
 /** Assemble les données du profil et construit l'écran. */
@@ -70,7 +72,9 @@ export async function renderPublicProfile(member: Member, guildMember: GuildMemb
     listUnlocked(member.id),
     getEquippedTitle(member.id),
   ]);
-  return buildPublicProfileView({ member, guildMember, settings, rank, achievements, title });
+  const avatarPng = Buffer.from(await (await fetch(guildMember.displayAvatarURL({ extension: 'png', size: 256 }))).arrayBuffer());
+  const image = await renderProfileCard({ member, avatarPng, settings, rank, title, badges: achievements.length, badgesTotal: ACHIEVEMENTS.length });
+  return buildPublicProfileView({ member, settings, achievements, image });
 }
 
 export async function renderHistory(member: Member) {

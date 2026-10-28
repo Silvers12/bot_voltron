@@ -12,6 +12,7 @@ export default defineCommand({
     const target = interaction.options.getMember('membre');
     if (!target || target.id === interaction.user.id) return void (await openProfile({ interaction, member, guildMember }));
     if (target.user.bot) return void (await interaction.reply({ content: 'Les bots n’ont pas de fiche. Ils ont déjà bien assez de travail.', flags: MessageFlags.Ephemeral }));
-    await interaction.reply(await renderPublicProfile(await ensureMember(target), target));
+    await interaction.deferReply();
+    await interaction.editReply(await renderPublicProfile(await ensureMember(target), target));
   },
 });
