@@ -162,7 +162,7 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
     case 'commandes':
       return { lines: [describeCommandChannels(s)], commands: ['/admin commandes ajouter-salon · retirer-salon · partout · liste'] };
     case 'accueil':
-      return { lines: describeWelcome(s).split('\n'), commands: ['/admin accueil installer · roles · publier · etat'] };
+      return { lines: describeWelcome(s).split('\n'), commands: ['/admin accueil installer salon salon_notifications · roles · publier · etat'] };
     case 'textes':
       return {
         lines: ['Textes dans `content/compliments.json` et `content/insultes.json` (rechargés au redémarrage)', 'Taux : icônes PNG optionnelles dans `content/taux/<clé>.png` (chance, choupitude, suspicion, criminalite, loutritude, flemme, sagesse, chaos)', 'Dé et pièce : visuels PNG optionnels dans `content/jeux/` (de_1 à de_6, pile, face)'],

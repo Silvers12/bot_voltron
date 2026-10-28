@@ -30,7 +30,7 @@ const divider = (large = false) => new SeparatorBuilder().setDivider(true).setSp
 
 /**
  * Page d'accueil en composants V2 : un conteneur coloré avec la bannière, un titre au nom du serveur,
- * les blocs de présentation séparés par des lignes, et un menu déroulant pour choisir ses notifications.
+ * les blocs de présentation séparés par des lignes. Sans salon de notifications dédié, le menu des rôles est inclus ici.
  */
 export function buildWelcomeMessage(s: GuildSettings, guildName: string) {
   const files: AttachmentBuilder[] = [];
@@ -59,6 +59,20 @@ export function buildWelcomeMessage(s: GuildSettings, guildName: string) {
     container.addTextDisplayComponents(text(shown.map((b) => `**${b.name}**\n${b.value}`).join('\n\n')));
   }
 
+  if (s.notifyChannelId) {
+    container.addSeparatorComponents(divider(true));
+    container.addTextDisplayComponents(text(`## 🔔 Être prévenu\nChoisis tes notifications dans <#${s.notifyChannelId}>.`));
+  } else {
+    addNotifyBlock(container, s);
+  }
+  container.addSeparatorComponents(divider());
+  container.addTextDisplayComponents(text('-# Voltron, loutre paladin · Par mon bouclier et mes moustaches !'));
+
+  return { components: [container], files, flags: MessageFlags.IsComponentsV2 as const };
+}
+
+/** Bloc « Être prévenu » : explication, liste des rôles et menu à choix multiples. */
+function addNotifyBlock(container: ContainerBuilder, s: GuildSettings) {
   const configured = NOTIFY_ROLES.filter((r) => s[r.field]);
   container.addSeparatorComponents(divider(true));
   container.addTextDisplayComponents(
@@ -78,8 +92,14 @@ export function buildWelcomeMessage(s: GuildSettings, guildName: string) {
       .addOptions(configured.map((r) => new StringSelectMenuOptionBuilder().setLabel(r.label).setValue(r.key).setDescription(r.description).setEmoji(r.emoji)));
     container.addActionRowComponents(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu));
   }
+}
+
+/** Page des notifications, publiée dans son propre salon : uniquement le choix des rôles. */
+export function buildNotifyMessage(s: GuildSettings) {
+  const container = new ContainerBuilder().setAccentColor(COLOR);
+  container.addTextDisplayComponents(text('# 🔔 Notifications\nVoltron ne mentionne que celles et ceux qui l’ont demandé. Coche ce qui t’intéresse, décoche pour arrêter.'));
+  addNotifyBlock(container, s);
   container.addSeparatorComponents(divider());
   container.addTextDisplayComponents(text('-# Voltron, loutre paladin · Par mon bouclier et mes moustaches !'));
-
-  return { components: [container], files, flags: MessageFlags.IsComponentsV2 as const };
+  return { components: [container], flags: MessageFlags.IsComponentsV2 as const };
 }

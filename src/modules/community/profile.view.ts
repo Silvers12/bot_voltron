@@ -83,6 +83,7 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
     ] : []),
     ...(isFeatureEnabled(settings, 'succes') ? [{ label: 'Succès', value: 'achievements', description: 'Badges débloqués et à débloquer', emoji: '🏅' }] : []),
     { label: 'Statistiques', value: 'stats', description: 'Tes chiffres de jeu et d’activité', emoji: '📊' },
+    { label: 'Guide des commandes', value: 'help', description: 'Toutes les commandes, rangées et expliquées', emoji: '📖' },
   );
   const rows = [new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(nav), row];
 

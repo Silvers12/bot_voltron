@@ -2,7 +2,7 @@ import { ChannelType, PermissionFlagsBits, roleMention, type Guild, type GuildMe
 import { createLogger } from '../../core/logger.js';
 import { roleAssignabilityProblem } from '../../core/roles.js';
 import { getSettings, updateSettings } from '../settings/settings.service.js';
-import { buildWelcomeMessage, NOTIFY_ROLES, roleIdFor, type NotifyKey } from './notify.view.js';
+import { buildNotifyMessage, buildWelcomeMessage, NOTIFY_ROLES, roleIdFor, type NotifyKey } from './notify.view.js';
 import type { GuildSettings } from '../../generated/prisma/client.js';
 
 const log = createLogger('accueil');
@@ -71,17 +71,18 @@ export async function toggleNotifyRole(member: GuildMember, key: NotifyKey): Pro
   return true;
 }
 
-/** Publie ou met à jour la page d'accueil dans le salon configuré, et l'épingle si possible. */
-export async function publishWelcome(guild: Guild): Promise<string> {
-  const s = await getSettings(guild.id);
-  if (!s.welcomeChannelId) throw new NotifyError('Aucun salon d’accueil configuré.');
-  const channel = guild.channels.cache.get(s.welcomeChannelId);
-  if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) throw new NotifyError('Le salon d’accueil n’existe plus ou n’est pas textuel.');
-  const perms = channel.permissionsFor(guild.members.me!);
-  if (!perms.has(PermissionFlagsBits.ViewChannel) || !perms.has(PermissionFlagsBits.SendMessages)) throw new NotifyError('Le bot ne peut pas écrire dans le salon d’accueil.');
+type PageSpec = { channelId: string | null; messageId: string | null; messageField: 'welcomeMessageId' | 'notifyMessageId'; label: string; build: () => ReturnType<typeof buildWelcomeMessage> | ReturnType<typeof buildNotifyMessage> };
 
-  const payload = buildWelcomeMessage(s, guild.name);
-  const existing = s.welcomeMessageId ? await channel.messages.fetch(s.welcomeMessageId).catch(() => null) : null;
+/** Publie ou met à jour une page épinglée dans son salon ; retourne « publiée » ou « mise à jour ». */
+async function publishPage(guild: Guild, page: PageSpec): Promise<string> {
+  if (!page.channelId) throw new NotifyError(`Aucun salon ${page.label} configuré.`);
+  const channel = guild.channels.cache.get(page.channelId);
+  if (!channel || (channel.type !== ChannelType.GuildText && channel.type !== ChannelType.GuildAnnouncement)) throw new NotifyError(`Le salon ${page.label} n’existe plus ou n’est pas textuel.`);
+  const perms = channel.permissionsFor(guild.members.me!);
+  if (!perms.has(PermissionFlagsBits.ViewChannel) || !perms.has(PermissionFlagsBits.SendMessages)) throw new NotifyError(`Le bot ne peut pas écrire dans le salon ${page.label}.`);
+
+  const payload = page.build();
+  const existing = page.messageId ? await channel.messages.fetch(page.messageId).catch(() => null) : null;
   if (existing) {
     // attachments: [] remplace l'ancienne bannière ; content/embeds vidés pour passer en composants V2 si besoin
     const edited = await existing.edit({ ...payload, content: '', embeds: [], attachments: [] }).then(() => true).catch(() => false);
@@ -90,6 +91,28 @@ export async function publishWelcome(guild: Guild): Promise<string> {
   }
   const message = await channel.send(payload);
   if (perms.has(PermissionFlagsBits.ManageMessages)) await message.pin().catch(() => undefined);
-  await updateSettings(guild.id, { welcomeMessageId: message.id });
+  await updateSettings(guild.id, { [page.messageField]: message.id });
   return 'publiée';
+}
+
+/** Publie ou met à jour la page d'accueil dans le salon configuré. */
+export async function publishWelcome(guild: Guild): Promise<string> {
+  const s = await getSettings(guild.id);
+  return publishPage(guild, { channelId: s.welcomeChannelId, messageId: s.welcomeMessageId, messageField: 'welcomeMessageId', label: 'd’accueil', build: () => buildWelcomeMessage(s, guild.name) });
+}
+
+/** Publie ou met à jour la page des notifications dans son salon (si configuré). */
+export async function publishNotify(guild: Guild): Promise<string> {
+  const s = await getSettings(guild.id);
+  return publishPage(guild, { channelId: s.notifyChannelId, messageId: s.notifyMessageId, messageField: 'notifyMessageId', label: 'des notifications', build: () => buildNotifyMessage(s) });
+}
+
+/** Republie les deux pages (accueil, et notifications si un salon lui est dédié) ; retourne un résumé. */
+export async function publishPages(guild: Guild): Promise<string> {
+  const s = await getSettings(guild.id);
+  const parts: string[] = [];
+  if (s.welcomeChannelId) parts.push(`page d’accueil ${await publishWelcome(guild)}`);
+  if (s.notifyChannelId) parts.push(`page des notifications ${await publishNotify(guild)}`);
+  if (!parts.length) throw new NotifyError('Aucun salon d’accueil configuré.');
+  return parts.join(', ');
 }

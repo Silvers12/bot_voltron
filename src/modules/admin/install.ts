@@ -3,7 +3,7 @@ import {
 } from 'discord.js';
 import { createLogger } from '../../core/logger.js';
 import { getSettings, updateSettings } from '../settings/settings.service.js';
-import { ensureNotifyRoles, publishWelcome } from '../notify/notify.service.js';
+import { ensureNotifyRoles, publishPages } from '../notify/notify.service.js';
 import { scheduleNext } from '../events/grouphug.service.js';
 import { getOrCreateOpenLottery, publishLottery } from '../lottery/lottery.service.js';
 import type { GuildSettings } from '../../generated/prisma/client.js';
@@ -12,7 +12,8 @@ const log = createLogger('installation');
 
 /** Salons créés par l'installation, avec le réglage qu'ils alimentent. */
 const CHANNELS = [
-  { key: 'accueil', name: '🦦・accueil', topic: 'Bienvenue ! Choisis tes notifications ici.', readOnly: true },
+  { key: 'accueil', name: '🦦・accueil', topic: 'Bienvenue ! Voltron se présente ici.', readOnly: true },
+  { key: 'notifications', name: '🔔・notifications', topic: 'Choisis ici les notifications que Voltron t’envoie.', readOnly: true },
   { key: 'commandes', name: '🎮・commandes', topic: 'Les commandes de Voltron se tapent ici : /profil, /calin, /blackjack…', readOnly: false },
   { key: 'jeux', name: '🎲・jeux', topic: 'Câlins collectifs, tombola, machine à sous et duels.', readOnly: false },
   { key: 'comptage', name: '🔢・comptage', topic: 'On compte à la suite : 1, 2, 3… ou 2+2. Une erreur coûte cher !', readOnly: false },
@@ -30,6 +31,7 @@ const BOT_ALLOW = [
 function existingChannel(guild: Guild, s: GuildSettings, key: ChannelKey): TextChannel | null {
   const id = {
     accueil: s.welcomeChannelId,
+    notifications: s.notifyChannelId,
     commandes: s.commandChannelIds[0] ?? null,
     jeux: s.lotteryChannelId ?? s.groupHugChannelIds[0] ?? null,
     comptage: s.countingChannelId,
@@ -88,6 +90,7 @@ export async function handleInstall(interaction: ChatInputCommandInteraction<'ca
   // 2. Réglages : chaque salon alimente sa fonctionnalité (sans écraser un réglage déjà fait ailleurs)
   s = await updateSettings(guild.id, {
     welcomeChannelId: s.welcomeChannelId ?? made.accueil.id,
+    notifyChannelId: s.notifyChannelId ?? made.notifications.id,
     commandChannelIds: s.commandChannelIds.length ? s.commandChannelIds : [made.commandes.id, made.jeux.id],
     groupHugChannelIds: s.groupHugChannelIds.length ? s.groupHugChannelIds : [made.jeux.id],
     lotteryChannelId: s.lotteryChannelId ?? made.jeux.id,
@@ -100,8 +103,8 @@ export async function handleInstall(interaction: ChatInputCommandInteraction<'ca
   // 3. Rôles de notification et page d'accueil
   try {
     await ensureNotifyRoles(guild);
-    const outcome = await publishWelcome(guild);
-    report.push(`✔️ Rôles de notification prêts, page d’accueil ${outcome}.`);
+    const outcome = await publishPages(guild);
+    report.push(`✔️ Rôles de notification prêts, ${outcome}.`);
   } catch (err) {
     report.push(`⚠️ Accueil : ${(err as Error).message}`);
   }

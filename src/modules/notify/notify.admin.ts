@@ -1,7 +1,7 @@
 import { channelMention, ChannelType, MessageFlags, roleMention, type ChatInputCommandInteraction, type SlashCommandSubcommandGroupBuilder } from 'discord.js';
 import { getSettings, updateSettings } from '../settings/settings.service.js';
 import { roleAssignabilityProblem } from '../../core/roles.js';
-import { ensureNotifyRoles, NotifyError, publishWelcome, setWelcomeBanner } from './notify.service.js';
+import { ensureNotifyRoles, NotifyError, publishPages, publishWelcome, setWelcomeBanner } from './notify.service.js';
 import { NOTIFY_ROLES } from './notify.view.js';
 
 export function buildWelcomeAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
@@ -11,8 +11,9 @@ export function buildWelcomeAdminGroup(group: SlashCommandSubcommandGroupBuilder
     .addSubcommand((sub) =>
       sub
         .setName('installer')
-        .setDescription('Crée les rôles manquants et publie la page d’accueil dans un salon')
-        .addChannelOption((o) => o.setName('salon').setDescription('Salon de la page d’accueil').setRequired(true).addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)),
+        .setDescription('Crée les rôles manquants et publie la page d’accueil, et celle des notifications')
+        .addChannelOption((o) => o.setName('salon').setDescription('Salon de la page d’accueil').setRequired(true).addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement))
+        .addChannelOption((o) => o.setName('salon_notifications').setDescription('Salon du menu des notifications (sinon : dans la page d’accueil)').addChannelTypes(ChannelType.GuildText, ChannelType.GuildAnnouncement)),
     )
     .addSubcommand((sub) =>
       sub
@@ -45,10 +46,11 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
   try {
     if (sub === 'installer') {
       const channel = interaction.options.getChannel('salon', true);
-      await updateSettings(guildId, { welcomeChannelId: channel.id });
+      const notifyChannel = interaction.options.getChannel('salon_notifications');
+      await updateSettings(guildId, { welcomeChannelId: channel.id, ...(notifyChannel ? { notifyChannelId: notifyChannel.id } : {}) });
       await ensureNotifyRoles(interaction.guild);
-      const outcome = await publishWelcome(interaction.guild);
-      await reply(`Page d’accueil ${outcome} dans ${channelMention(channel.id)}.\n${describeWelcome(await getSettings(guildId))}`);
+      const outcome = await publishPages(interaction.guild);
+      await reply(`${outcome.charAt(0).toUpperCase()}${outcome.slice(1)}.\n${describeWelcome(await getSettings(guildId))}`);
       return;
     }
     if (sub === 'roles') {
@@ -62,7 +64,7 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
       }
       if (!Object.keys(changes).length) return void (await reply('Indique au moins un rôle.'));
       const s = await updateSettings(guildId, changes);
-      if (s.welcomeChannelId) await publishWelcome(interaction.guild).catch(() => undefined);
+      await publishPages(interaction.guild).catch(() => undefined);
       await reply(describeWelcome(s));
       return;
     }
@@ -83,8 +85,8 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
       return;
     }
     if (sub === 'publier') {
-      const outcome = await publishWelcome(interaction.guild);
-      await reply(`Page d’accueil ${outcome}.`);
+      const outcome = await publishPages(interaction.guild);
+      await reply(`${outcome.charAt(0).toUpperCase()}${outcome.slice(1)}.`);
       return;
     }
     await reply(describeWelcome(await getSettings(guildId)));
@@ -100,6 +102,7 @@ export async function handleWelcomeAdmin(interaction: ChatInputCommandInteractio
 export function describeWelcome(s: Awaited<ReturnType<typeof getSettings>>): string {
   return [
     `**Salon d’accueil :** ${s.welcomeChannelId ? channelMention(s.welcomeChannelId) : '*aucun*'}` + (s.welcomeBanner ? ' · bannière ✅' : ' · sans bannière') + (s.welcomeText ? ' · texte personnalisé' : ''),
+    `**Salon des notifications :** ${s.notifyChannelId ? channelMention(s.notifyChannelId) : '*le menu est dans la page d’accueil*'}`,
     ...NOTIFY_ROLES.map((r) => `**${r.emoji} ${r.label} :** ${s[r.field] ? roleMention(s[r.field]!) : '*non configuré*'}`),
   ].join('\n');
 }

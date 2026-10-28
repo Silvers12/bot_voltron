@@ -37,8 +37,9 @@ src/
   modules/achievements/    # succès et badges
   modules/stats/           # statistiques de jeu
   modules/rates/           # taux du jour et duo (bannières générées)
+  modules/help/            # guide des commandes (menu du profil)
   modules/dice/            # dé et pile ou face
-  modules/notify/          # page d'accueil et rôles de notification
+  modules/notify/          # pages d'accueil et de notifications, rôles de notification
   modules/features/        # interrupteurs de fonctionnalités
   modules/admin/           # panneau d'intendance, formulaires, /admin installer
   modules/moderation/      # /admin messages (suppression)
@@ -102,7 +103,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 ### Installation en une commande
 
-`/admin installer [categorie]` sur un serveur fraîchement invité (le bot doit avoir « Gérer les salons » et « Gérer les rôles ») : crée la catégorie « 🦦 Voltron » et cinq salons (accueil en lecture seule, commandes, jeux, comptage, annonces en lecture seule) avec les permissions du bot, règle les salons des commandes (commandes + jeux), des câlins collectifs et de la tombola (jeux), du comptage, des annonces de niveaux et de succès, crée les rôles de notification, publie la page d'accueil et la première tombola, programme le premier câlin collectif. Relançable : conserve les salons et réglages existants. Reste ensuite : `/admin succes recalculer`, montants et horaires via `/admin panneau`, boutique, rôles de palier.
+`/admin installer [categorie]` sur un serveur fraîchement invité (le bot doit avoir « Gérer les salons » et « Gérer les rôles ») : crée la catégorie « 🦦 Voltron » et six salons (accueil et notifications en lecture seule, commandes, jeux, comptage, annonces en lecture seule) avec les permissions du bot, règle les salons des commandes (commandes + jeux), des câlins collectifs et de la tombola (jeux), du comptage, des annonces de niveaux et de succès, crée les rôles de notification, publie la page d'accueil et la première tombola, programme le premier câlin collectif. Relançable : conserve les salons et réglages existants. Reste ensuite : `/admin succes recalculer`, montants et horaires via `/admin panneau`, boutique, rôles de palier.
 
 ### Déploiement rapide
 
@@ -231,7 +232,8 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Statistiques
 
 - `/stats [membre]` : activité (messages, vocal, niveau, meilleure série), câlins donnés et reçus, blackjack, machine à sous, duels, vols, tombola, câlins collectifs, comptage, chacun avec son bilan net en cœurs. Seules les fonctionnalités actives apparaissent. Public.
-- Même écran depuis le profil, via le menu « Explorer… » qui remplace les boutons Boutique/Inventaire/Succès : Historique, Boutique, Inventaire, Succès, Statistiques.
+- Même écran depuis le profil, via le menu « Explorer… » qui remplace les boutons Boutique/Inventaire/Succès : Historique, Boutique, Inventaire, Succès, Statistiques, Guide des commandes.
+- Guide des commandes : sommaire par rubrique (bourse, boutique, jeux, pour rigoler, progression, ensemble, et intendance pour les administrateurs), puis un menu pour ouvrir chaque rubrique avec les commandes cliquables et leur explication, calculée d'après les réglages du serveur (montants, mises, pourcentages). Les fonctionnalités en pause n'apparaissent pas. Catalogue dans `src/modules/help/help.catalog.ts`.
 
 ## Catalogue de boutique de départ
 
@@ -255,9 +257,9 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 ## Page d'accueil et rôles de notification
 
-- `/admin accueil installer salon:#accueil` : crée les rôles « Câlins collectifs », « Tombola » et « Duels » s'ils manquent (mentionnables, sans permission), publie la page d'accueil (présentation du serveur, fonctionnalités actives, menu de notifications) et l'épingle. Le rôle de Voltron doit être au-dessus de ces rôles.
+- `/admin accueil installer salon:#accueil [salon_notifications:#notifications]` : crée les rôles « Câlins collectifs », « Tombola » et « Duels » s'ils manquent (mentionnables, sans permission), publie la page d'accueil (présentation du serveur, fonctionnalités actives) et, dans le second salon, la page des notifications (menu des rôles) ; les deux sont épinglées. Sans salon de notifications, le menu reste dans la page d'accueil. Le rôle de Voltron doit être au-dessus de ces rôles.
 - Page en « composants V2 » (conteneur coloré, titres, séparateurs, galerie pour la bannière, menu déroulant). Intro (texte personnalisable avec `/admin accueil texte`, bannière avec `/admin accueil banniere image:` — PNG/JPG/GIF/WebP 8 Mo, stockée en base), « Ce qui t'attend » (seules les fonctionnalités actives apparaissent), « Être prévenu » avec un menu déroulant à choix multiples.
-- Le menu applique exactement la sélection : rôles cochés ajoutés, décochés retirés (confirmation privée). `/admin accueil roles` pour utiliser des rôles existants, `publier` pour mettre à jour la page, `etat`. Toute modification republie la page automatiquement.
+- Le menu applique exactement la sélection : rôles cochés ajoutés, décochés retirés (confirmation privée). `/admin accueil roles` pour utiliser des rôles existants, `publier` pour mettre à jour les deux pages, `etat`. Toute modification republie les pages automatiquement.
 - Pings : le rôle est mentionné à l'apparition d'un câlin collectif, à chaque publication ou rappel de tombola, et quand un duel est lancé (le défié est toujours mentionné).
 
 ## Salons des commandes
@@ -288,7 +290,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 
 Membres :
 - Écrans en « composants V2 » (conteneur coloré, titres, séparateurs, avatar en vignette) : profil, historique, succès, boutique, inventaire, statistiques, tombola, tirage, câlin collectif, duel, machine à sous, page d'accueil. Assistants dans `src/discord/v2.ts`. Les messages publiés avant cette version restent en ancien format : `/admin tombola publier` et `/admin accueil publier` les remplacent.
-- `/profil` : espace personnel (privé) : bourse, titre porté, badges, niveau, ancienneté, boutons Récompense du jour, Hebdo et Rafraîchir, menu « Explorer… » (Historique, Boutique, Inventaire, Succès, Statistiques). Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
+- `/profil` : espace personnel (privé) : bourse, titre porté, badges, niveau, ancienneté, boutons Récompense du jour, Hebdo et Rafraîchir, menu « Explorer… » (Historique, Boutique, Inventaire, Succès, Statistiques, Guide des commandes). Le panneau se ferme après 2 min sans clic ; rouvrir `/profil` ferme le panneau précédent.
 - `/calin membre montant [message]` : offre des cœurs à un membre (annonce publique).
 - `/vol membre` : tentative de vol de cœurs (voir section dédiée).
 - `/don membre article [quantite] [message]` : donne un objet de collection de son inventaire à un membre (autocomplétion sur ses propres objets, annonce publique). Transfert atomique ; la limite par membre du receveur est respectée. Les titres et les rôles ne se donnent pas. Suit l'interrupteur « boutique ».
@@ -317,7 +319,7 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin comptage salon|amende|reinitialiser|etat`
 - `/admin installer [categorie]`
 - `/admin panneau`, `/admin fonction`
-- `/admin accueil installer|roles|banniere|texte|publier|etat`
+- `/admin accueil installer salon [salon_notifications]|roles|banniere|texte|publier|etat`
 - `/admin commandes ajouter-salon|retirer-salon|partout|liste`
 - `/admin messages supprimer id:… [salon]` : supprime un message · `depuis id:… [salon]` : supprime ce message et tous ceux postés après · `vider [salon]` : supprime tout le salon. Les deux derniers demandent une confirmation (bouton, 1 min). Les messages de moins de 14 jours partent par lots, les plus anciens un par un (plus lent). Le bot doit avoir « Gérer les messages » et « Lire l’historique » dans le salon.
 - `/admin message texte:… [salon] [repondre_a]` : écrit en tant que Voltron (`\n` pour un retour à la ligne, mentions de membres et de rôles autorisées, pas de @everyone)

@@ -135,6 +135,9 @@ model GuildSettings {
   /// Page d'accueil (message avec les boutons de rôles) et rôles de notification
   welcomeChannelId String?
   welcomeMessageId String?
+  /// Page des notifications (menu de rôles) ; sans salon, le menu reste dans la page d'accueil
+  notifyChannelId  String?
+  notifyMessageId  String?
   /// Bannière (image) et texte d'intro de la page d'accueil
   welcomeBanner    Bytes?
   welcomeBannerType String?
