@@ -387,6 +387,9 @@ model Counting {
   lastMemberId String?
   best         Int     @default(0)
   failures     Int     @default(0)
+  /// Bons nombres cumulés (ne redescend jamais) et seuil de la prochaine surprise (0 = à programmer)
+  correctTotal Int     @default(0)
+  nextRewardAt Int     @default(0)
   updatedAt    DateTime @updatedAt
 }
 

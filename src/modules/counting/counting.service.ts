@@ -27,12 +27,26 @@ export async function resetCounting(guildId: string): Promise<Counting> {
   return prisma.counting.upsert({ where: { guildId }, create: { guildId }, update: { current: 0, lastMemberId: null } });
 }
 
+/** Écart jusqu'à la prochaine surprise : entre la moitié et une fois et demie l'intervalle moyen, jamais moins de 2. */
+function nextGap(every: number): number {
+  const min = Math.max(2, Math.ceil(every / 2)), max = Math.max(min, Math.floor(every * 1.5));
+  return randomInt(min, max + 1);
+}
+
 /**
- * Récompense surprise : à chaque bon nombre, une chance sur `countingRewardEvery` de gagner entre min et max.
- * Pas de rythme fixe : en moyenne une fois tous les N nombres, parfois deux de suite, parfois rien pendant longtemps.
+ * Récompense surprise : la prochaine est programmée à un nombre de bons comptes aléatoire après la précédente
+ * (en moyenne `countingRewardEvery`, jamais deux de suite). Le seuil est secret, personne ne peut le viser.
  */
-async function maybeReward(message: Message<true>, memberId: string, number: number, s: Awaited<ReturnType<typeof getSettings>>) {
-  if (s.countingRewardEvery <= 0 || s.countingRewardMax <= 0 || randomInt(s.countingRewardEvery) !== 0) return;
+async function maybeReward(message: Message<true>, memberId: string, number: number, correctTotal: number, nextRewardAt: number, s: Awaited<ReturnType<typeof getSettings>>) {
+  const guildId = message.guildId;
+  if (s.countingRewardEvery <= 0 || s.countingRewardMax <= 0) return;
+  if (nextRewardAt === 0 || nextRewardAt > correctTotal) {
+    if (nextRewardAt === 0) await prisma.counting.update({ where: { guildId }, data: { nextRewardAt: correctTotal + nextGap(s.countingRewardEvery) } });
+    return;
+  }
+  // Verrou : un seul message déclenche la surprise, le seuil est repoussé dans la même requête.
+  const { count } = await prisma.counting.updateMany({ where: { guildId, nextRewardAt }, data: { nextRewardAt: correctTotal + nextGap(s.countingRewardEvery) } });
+  if (count === 0) return;
   const amount = randomInt(Math.min(s.countingRewardMin, s.countingRewardMax), Math.max(s.countingRewardMin, s.countingRewardMax) + 1);
   await credit({ memberId, amount, type: 'COUNTING_REWARD', actorDiscordId: 'voltron', reason: `Comptage : surprise au nombre ${number}` });
   await message.react('🎁').catch(() => undefined);
@@ -70,10 +84,10 @@ export async function handleCountingMessage(message: Message) {
   else if (parsed!.kind === 'integer' && parsed.value !== expected) failure = `il fallait **${expected}**`;
 
   if (!failure) {
-    const { count } = await prisma.counting.updateMany({ where: { guildId: message.guildId, current: state.current }, data: { current: expected, lastMemberId: counterId, best: Math.max(state.best, expected) } });
+    const { count } = await prisma.counting.updateMany({ where: { guildId: message.guildId, current: state.current }, data: { current: expected, lastMemberId: counterId, best: Math.max(state.best, expected), correctTotal: { increment: 1 } } });
     if (count === 0) return handleCountingMessage(message); // quelqu'un a été plus rapide : on réévalue
     await message.react(CHECK).catch(() => undefined);
-    if (member) await maybeReward(message, member.id, expected, s);
+    if (member) await maybeReward(message, member.id, expected, state.correctTotal + 1, state.nextRewardAt, s);
     return;
   }
 

@@ -241,7 +241,7 @@ export const FORMS: Form[] = [
     fields: [
       { id: 'countingChannelId', label: 'Salon (vide = désactivé)', help: '#salon ou son nom', type: { kind: 'channel', required: false }, current: (s) => channelOf(s, s.countingChannelId) },
       { id: 'countingFine', label: 'Amende en cas d’erreur (0 = aucune)', type: int(0, 1_000_000), current: (s) => `${s.countingFine}` },
-      { id: 'countingRewardEvery', label: 'Surprise : 1 chance sur N par bon nombre (0 = jamais)', type: int(0, 100_000), current: (s) => `${s.countingRewardEvery}` },
+      { id: 'countingRewardEvery', label: 'Surprise : en moyenne tous les N bons nombres (0 = jamais)', type: int(0, 100_000), current: (s) => `${s.countingRewardEvery}` },
       { id: 'countingRewardMin', label: 'Surprise : montant minimal', type: int(0, 1_000_000), current: (s) => `${s.countingRewardMin}` },
       { id: 'countingRewardMax', label: 'Surprise : montant maximal', type: int(0, 1_000_000), current: (s) => `${s.countingRewardMax}` },
     ],
