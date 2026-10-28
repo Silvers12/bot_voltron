@@ -1,4 +1,4 @@
-import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder, SectionBuilder, StringSelectMenuBuilder, ThumbnailBuilder, time, TimestampStyles, userMention, type GuildMember, type MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder, StringSelectMenuBuilder, time, TimestampStyles, userMention, type GuildMember, type MessageActionRowComponentBuilder } from 'discord.js';
 import type { GuildSettings, Member, MemberAchievement, ShopItem, Transaction } from '../../generated/prisma/client.js';
 import type { DailyStatus } from '../economy/daily.service.js';
 import type { WeeklyStatus } from '../economy/weekly.service.js';
@@ -32,21 +32,15 @@ export interface ProfileData {
   title: ShopItem | null;
   /** Message ponctuel affiché sous le profil (résultat d'une action) */
   notice?: string;
+  /** Bannière générée (avatar, titre, niveau, bourse) */
+  image: Buffer;
 }
 
 /** Écran principal du profil. */
-export function buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, title, notice }: ProfileData) {
+export function buildProfileView({ member, settings, daily, weekly, achievements, notice, image }: ProfileData) {
   const c = card();
-  const header = [
-    `# ${member.displayName}`,
-    title ? `${title.emoji ? title.emoji + ' ' : '🏷️ '}**${title.name}**` : '',
-    `Dans la compagnie depuis ${member.joinedAt ? time(member.joinedAt, TimestampStyles.LongDate) : 'un moment'} · profil créé ${time(member.createdAt, TimestampStyles.RelativeTime)}`,
-  ].filter(Boolean).join('\n');
-  c.addSectionComponents(new SectionBuilder().addTextDisplayComponents(text(header)).setThumbnailAccessory(new ThumbnailBuilder().setURL(guildMember.displayAvatarURL({ size: 256 }))));
+  c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://profil.png').setDescription(`Profil de ${member.displayName}`)));
   if (notice) c.addTextDisplayComponents(text(`> ${notice}`));
-  c.addSeparatorComponents(divider(true));
-
-  c.addTextDisplayComponents(text(`💰 **Bourse** · **${formatAmount(balance, settings)}**\n${levelLine(member.xp, settings, rank)}`));
 
   const rewards: string[] = [];
   if (isFeatureEnabled(settings, 'quotidien')) {
@@ -64,8 +58,8 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
         : `🗓️ **Récompense de la semaine** · **${formatAmount(weekly.amount, settings)}** t’attendent !`,
     );
   }
-  if (rewards.length) { c.addSeparatorComponents(divider()); c.addTextDisplayComponents(text(rewards.join('\n'))); }
-  if (isFeatureEnabled(settings, 'succes')) { c.addSeparatorComponents(divider()); c.addTextDisplayComponents(text(`🏅 **Badges** · ${badgeLine(achievements)}`)); }
+  if (rewards.length) c.addTextDisplayComponents(text(rewards.join('\n')));
+  if (isFeatureEnabled(settings, 'succes')) c.addTextDisplayComponents(text(`🏅 **Badges** · ${badgeLine(achievements)}`));
 
   const row = new ActionRowBuilder<MessageActionRowComponentBuilder>();
   if (isFeatureEnabled(settings, 'quotidien')) {
@@ -90,7 +84,8 @@ export function buildProfileView({ member, guildMember, balance, settings, daily
 
   c.addSeparatorComponents(divider());
   c.addTextDisplayComponents(text(SIGNATURE));
-  return screen(c, rows);
+  // attachments: [] remplace l'ancienne bannière quand l'écran est mis à jour
+  return { ...screen(c, rows), files: [new AttachmentBuilder(image, { name: 'profil.png' })], attachments: [] };
 }
 
 /** Fiche publique d'un membre, en lecture seule : nom, titre, ancienneté, niveau et XP, badges. Rien de personnel (bourse, récompenses). */
@@ -102,12 +97,6 @@ export function buildPublicProfileView({ member, settings, achievements, image }
   return { ...screen(c), files: [new AttachmentBuilder(image, { name: 'profil.png' })] };
 }
 
-function levelLine(xp: number, settings: GuildSettings, rank: number): string {
-  const p = progressFor(xp, settings);
-  const filled = Math.round((p.current / p.needed) * 10);
-  const bar = '█'.repeat(filled) + '░'.repeat(10 - filled);
-  return `⭐ **Niveau ${p.level}** · ${rank}ᵉ de la compagnie\n\`${bar}\` ${p.current}/${p.needed} XP`;
-}
 
 function describeTransaction(t: Transaction): string {
   switch (t.type) {

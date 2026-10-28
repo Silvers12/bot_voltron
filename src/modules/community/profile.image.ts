@@ -13,15 +13,18 @@ export interface ProfileCard {
   title: ShopItem | null;
   badges: number;
   badgesTotal: number;
+  /** Bourse à afficher en haut à droite (fiche personnelle uniquement) */
+  balance?: number;
 }
 
 const dateFr = (d: Date, tz: string) => new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', timeZone: tz }).format(d);
 
 /** Bannière 1200 × 400 de la fiche publique : avatar, nom, titre en pastille, ancienneté, niveau avec barre d'XP, rang et badges. */
-export async function renderProfileCard({ member, avatarPng, settings, rank, title, badges, badgesTotal }: ProfileCard): Promise<Buffer> {
+export async function renderProfileCard({ member, avatarPng, settings, rank, title, badges, badgesTotal, balance }: ProfileCard): Promise<Buffer> {
   const p = progressFor(member.xp, settings);
   const x = 320, barW = 740, barY = 262;
-  const name = esc(member.displayName.length > 22 ? `${member.displayName.slice(0, 21)}…` : member.displayName);
+  const name = esc(member.displayName.length > (balance === undefined ? 22 : 16) ? `${member.displayName.slice(0, balance === undefined ? 21 : 15)}…` : member.displayName);
+  const purse = balance === undefined ? '' : `<rect x="${W - 320}" y="52" width="270" height="96" rx="22" fill="#000" opacity="0.25"/><text x="${W - 185}" y="88" text-anchor="middle" font-family="${FONT}" font-size="22" fill="#dfe6ee">Bourse</text><text x="${W - 185}" y="130" text-anchor="middle" font-family="${FONT}" font-size="34" font-weight="bold" fill="#f1c40f">${esc(new Intl.NumberFormat('fr-FR').format(balance))} ${esc(balance > 1 ? settings.currencyPlural : settings.currencySingular)}</text>`;
   const titleText = title ? esc(title.name.length > 30 ? `${title.name.slice(0, 29)}…` : title.name) : null;
   const since = member.joinedAt ? `Dans la compagnie depuis le ${dateFr(member.joinedAt, settings.timezone)}` : 'Dans la compagnie depuis un moment';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
@@ -30,6 +33,7 @@ export async function renderProfileCard({ member, avatarPng, settings, rank, tit
     </defs>
     <rect width="${W}" height="${H}" rx="36" fill="url(#g)"/>
     <circle cx="${40 + AVATAR / 2}" cy="${H / 2}" r="${AVATAR / 2 + 8}" fill="${COLOR}" opacity="0.9"/>
+    ${purse}
     <text x="${x}" y="92" font-family="${FONT}" font-size="52" font-weight="bold" fill="#fff">${name}</text>
     ${titleText ? `<rect x="${x}" y="112" width="${titleText.length * 14 + 36}" height="40" rx="20" fill="#f1c40f"/><text x="${x + 18}" y="140" font-family="${FONT}" font-size="24" font-weight="bold" fill="#1b2838">${titleText}</text>` : ''}
     <text x="${x}" y="${titleText ? 192 : 150}" font-family="${FONT}" font-size="26" fill="#dfe6ee">${since}</text>

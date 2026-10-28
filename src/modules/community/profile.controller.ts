@@ -61,7 +61,9 @@ export async function renderProfile(member: Member, guildMember: GuildMember, no
     listUnlocked(member.id),
     getEquippedTitle(member.id),
   ]);
-  return buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, title, notice });
+  const avatarPng = Buffer.from(await (await fetch(guildMember.displayAvatarURL({ extension: 'png', size: 256 }))).arrayBuffer());
+  const image = await renderProfileCard({ member, avatarPng, settings, rank, title, badges: achievements.length, badgesTotal: ACHIEVEMENTS.length, balance });
+  return buildProfileView({ member, guildMember, balance, settings, daily, weekly, rank, achievements, title, notice, image });
 }
 
 /** Fiche publique d'un autre membre. */
