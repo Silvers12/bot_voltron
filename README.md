@@ -37,12 +37,13 @@ src/
   modules/achievements/    # succès et badges
   modules/stats/           # statistiques de jeu
   modules/rates/           # taux du jour et duo (bannières générées)
+  modules/dice/            # dé et pile ou face
   modules/notify/          # page d'accueil et rôles de notification
   modules/features/        # interrupteurs de fonctionnalités
   modules/admin/           # panneau d'intendance, formulaires, /admin installer
   modules/moderation/      # /admin messages (suppression)
   modules/settings/        # réglages du serveur, salons des commandes
-content/                   # textes et catalogue éditables (compliments, insultes, duels, vols, boutique, icônes de taux)
+content/                   # textes et catalogue éditables (compliments, insultes, duels, vols, boutique, icônes de taux, visuels dé et pièce)
 scripts/                   # deploy.sh, backup.sh, restore.sh
 prisma/schema.prisma       # modèle de données
 prisma/migrations/         # migrations versionnées
@@ -220,6 +221,13 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - `/duo type:… membre:@… [avec:@…]` : taux entre deux membres (amour, amitié, complicité, rivalité, esprit d'équipe, chaos à deux), symétrique, fixe sur la journée. Bannière avec un avatar de chaque côté et l'icône remplie au centre. Clés d'icônes : amour, amitie, complicite, rivalite, equipe, chaos_duo.
 - Icônes : illustrations PNG fournies dans `content/taux/<clé>.png` (une par taux, voir `content/taux/README.md`) ; si un fichier manque, icône vectorielle de secours. Textes et couleurs dans `src/modules/rates/rates.catalog.ts`. Le conteneur installe `ttf-dejavu` et `font-noto-emoji` (emojis des pseudos, rendus en monochrome) pour le texte des images.
 
+
+## Dé et pile ou face
+
+- `/de [nombre]` : lance de 1 à 5 dés à six faces (aléa cryptographique). Réponse publique avec le visuel de chaque dé et le total.
+- `/pileouface [choix]` : lance une pièce ; avec un pari (pile ou face), Voltron dit si c'est gagné. Aucun cœur en jeu.
+- Visuels : PNG dans `content/jeux/` (`de_1.png` à `de_6.png`, `pile.png`, `face.png`, voir `content/jeux/README.md`). Sans fichier, réponse en texte seul. Fonctionnalité `des` dans le panneau.
+
 ## Statistiques
 
 - `/stats [membre]` : activité (messages, vocal, niveau, meilleure série), câlins donnés et reçus, blackjack, machine à sous, duels, vols, tombola, câlins collectifs, comptage, chacun avec son bilan net en cœurs. Seules les fonctionnalités actives apparaissent. Public.
@@ -295,6 +303,8 @@ Membres :
 - `/stats [membre]` : statistiques de jeu (public).
 - `/taux type [membre]` : taux du jour avec bannière (public).
 - `/duo type membre [avec]` : taux entre deux membres (public).
+- `/de [nombre]` : lance 1 à 5 dés à six faces (public).
+- `/pileouface [choix]` : lance une pièce, avec pari facultatif (public).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`

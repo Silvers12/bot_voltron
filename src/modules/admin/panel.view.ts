@@ -37,7 +37,7 @@ export const MODULES: ModuleInfo[] = [
   { key: 'comptage', label: 'Salon de comptage', emoji: '🔢', features: ['comptage'] },
   { key: 'commandes', label: 'Salons des commandes', emoji: '📍', features: [] },
   { key: 'accueil', label: 'Accueil et notifications', emoji: '🔔', features: [] },
-  { key: 'textes', label: 'Compliments, insultes et taux', emoji: '💐', features: ['compliments', 'insultes', 'taux'] },
+  { key: 'textes', label: 'Compliments, insultes, taux et dés', emoji: '💐', features: ['compliments', 'insultes', 'taux', 'des'] },
 ];
 
 export function moduleInfo(key: ModuleKey): ModuleInfo {
