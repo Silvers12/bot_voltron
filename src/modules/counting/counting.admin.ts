@@ -54,6 +54,7 @@ export function describeCounting(s: Awaited<ReturnType<typeof getSettings>>, c: 
   return [
     `**Salon :** ${s.countingChannelId ? channelMention(s.countingChannelId) : '*aucun (désactivé)*'}`,
     `**Amende :** ${formatAmount(s.countingFine, s)}`,
+    `**Surprise :** ${s.countingRewardEvery > 0 && s.countingRewardMax > 0 ? `environ un nombre sur ${s.countingRewardEvery}, de ${formatAmount(s.countingRewardMin, s)} à ${formatAmount(s.countingRewardMax, s)}` : 'désactivée'}`,
     `**Prochain nombre :** ${c.current + 1} · record ${c.best} · ${c.failures} erreur(s)`,
   ].join('\n');
 }

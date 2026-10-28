@@ -28,7 +28,7 @@ export function buildStatsView(displayName: string, st: GameStats, s: GuildSetti
     [on('vol'), `## 🥷 Vols\n${plural(st.thefts, 'tentative')} · **${plural(st.theftSuccesses, 'réussite')}** · ${net(st.theftNet, s)}`],
     [on('tombola'), `## 🎟️ Tombola\n${plural(st.lotteryTickets, 'ticket')} · **${plural(st.lotteryWins, 'tombola gagnée', 'tombolas gagnées')}** · ${net(st.lotteryNet, s)}`],
     [on('calin_collectif'), `## 🫂 Câlins collectifs\n${plural(st.groupHugs, 'participation')} · **${formatAmount(st.groupHugEarned, s)}** récoltés`],
-    [on('comptage') && st.countingFines > 0, `## 🔢 Comptage\n${plural(st.countingFines, 'erreur')} · ${formatAmount(st.countingFineTotal, s)} d’amendes`],
+    [on('comptage') && (st.countingFines > 0 || st.countingRewards > 0), `## 🔢 Comptage\n${plural(st.countingFines, 'erreur')} · ${formatAmount(st.countingFineTotal, s)} d’amendes · ${plural(st.countingRewards, 'surprise')} · ${formatAmount(st.countingRewardTotal, s)} gagnés`],
   ];
   for (const [show, body] of blocks) {
     if (!show) continue;

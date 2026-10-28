@@ -119,6 +119,7 @@ function describeTransaction(t: Transaction): string {
     case 'ADMIN_DEBIT': return '🛡️ retiré par l’intendance';
     case 'ACHIEVEMENT': return '🏅 succès débloqué';
     case 'COUNTING_FINE': return '🔢 amende de comptage';
+    case 'COUNTING_REWARD': return '🎁 surprise du comptage';
     case 'THEFT_GAIN': return `🥷 volé à ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'THEFT_LOSS': return `🥷 dérobé par ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;
     case 'THEFT_FINE': return `🚔 vol raté sur ${t.counterpartyDiscordId ? userMention(t.counterpartyDiscordId) : 'quelqu’un'}`;

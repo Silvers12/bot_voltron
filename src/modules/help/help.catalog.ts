@@ -84,7 +84,7 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     intro: () => 'Ce qui se passe sans commande, au fil de la vie du serveur.',
     entries: [
       { command: 'Câlin collectif', feature: 'calin_collectif', show: (s) => s.groupHugChannelIds.length > 0, describe: (s) => `${botName()} surgit à l’improviste (toutes les ${s.groupHugMinIntervalMinutes} à ${s.groupHugMaxIntervalMinutes} min) : cliquez **CÂLIN** pendant ${s.groupHugDurationSeconds} s, chacun reçoit ${fmt(s.groupHugReward, s)} par participant.` },
-      { command: 'Salon de comptage', feature: 'comptage', show: (s) => !!s.countingChannelId, describe: (s) => `Dans <#${s.countingChannelId}>, on compte à la suite (les petites formules sont acceptées), jamais deux fois d’affilée. Une erreur coûte ${fmt(s.countingFine, s)} ou le double, à pile ou face.` },
+      { command: 'Salon de comptage', feature: 'comptage', show: (s) => !!s.countingChannelId, describe: (s) => `Dans <#${s.countingChannelId}>, on compte à la suite (les petites formules sont acceptées), jamais deux fois d’affilée. Une erreur coûte ${fmt(s.countingFine, s)} ou le double, à pile ou face.${s.countingRewardEvery > 0 && s.countingRewardMax > 0 ? ` De temps en temps (environ un nombre sur ${s.countingRewardEvery}), un bon nombre cache une surprise de ${fmt(s.countingRewardMin, s)} à ${fmt(s.countingRewardMax, s)}.` : ''}` },
       { command: 'Notifications', show: (s) => !!(s.notifyChannelId ?? s.welcomeChannelId), describe: (s) => `Dans <#${s.notifyChannelId ?? s.welcomeChannelId}>, choisis les notifications que tu veux recevoir (câlins collectifs, tombola, duels).` },
     ],
   },

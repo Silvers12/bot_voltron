@@ -4,7 +4,7 @@ import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
 import { isAllowedGuild } from '../../core/config.js';
 import { ensureMember } from '../community/member.service.js';
-import { getBalance, debit } from '../economy/economy.service.js';
+import { getBalance, credit, debit } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { isFeatureEnabled } from '../features/features.js';
 import { evaluateExpression } from './expression.js';
@@ -25,6 +25,22 @@ export async function getCounting(guildId: string): Promise<Counting> {
 /** Remise à zéro par l'intendance. */
 export async function resetCounting(guildId: string): Promise<Counting> {
   return prisma.counting.upsert({ where: { guildId }, create: { guildId }, update: { current: 0, lastMemberId: null } });
+}
+
+/**
+ * Récompense surprise : à chaque bon nombre, une chance sur `countingRewardEvery` de gagner entre min et max.
+ * Pas de rythme fixe : en moyenne une fois tous les N nombres, parfois deux de suite, parfois rien pendant longtemps.
+ */
+async function maybeReward(message: Message<true>, memberId: string, number: number, s: Awaited<ReturnType<typeof getSettings>>) {
+  if (s.countingRewardEvery <= 0 || s.countingRewardMax <= 0 || randomInt(s.countingRewardEvery) !== 0) return;
+  const amount = randomInt(Math.min(s.countingRewardMin, s.countingRewardMax), Math.max(s.countingRewardMin, s.countingRewardMax) + 1);
+  await credit({ memberId, amount, type: 'COUNTING_REWARD', actorDiscordId: 'voltron', reason: `Comptage : surprise au nombre ${number}` });
+  await message.react('🎁').catch(() => undefined);
+  await message.channel.send({
+    content: `🎁 **Surprise !** ${userMention(message.author.id)} trouve **${formatAmount(amount, s)}** cachés sous le nombre **${number}**. ${botName()} les y avait glissés.`,
+    allowedMentions: { users: [message.author.id] },
+  }).catch((err) => log.warn('Message de récompense impossible', err));
+  log.info(`${message.author.id} gagne ${amount} au nombre ${number}`);
 }
 
 /**
@@ -57,6 +73,7 @@ export async function handleCountingMessage(message: Message) {
     const { count } = await prisma.counting.updateMany({ where: { guildId: message.guildId, current: state.current }, data: { current: expected, lastMemberId: counterId, best: Math.max(state.best, expected) } });
     if (count === 0) return handleCountingMessage(message); // quelqu'un a été plus rapide : on réévalue
     await message.react(CHECK).catch(() => undefined);
+    if (member) await maybeReward(message, member.id, expected, s);
     return;
   }
 

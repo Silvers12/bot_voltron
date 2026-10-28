@@ -212,6 +212,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Voltron peut compter lui-même via `/admin message` (sans amende s'il se trompe). Les autres bots sont ignorés.
 - Deux réponses simultanées : la première est acceptée, la seconde est évaluée contre le nouveau nombre.
 - Record et nombre d'erreurs conservés (`/admin comptage etat`).
+- Récompense surprise : à chaque bon nombre, une chance sur `countingRewardEvery` (50 par défaut) de gagner un montant tiré entre `countingRewardMin` et `countingRewardMax` (50 à 200 cœurs). Pas de rythme fixe, en moyenne une fois tous les 50 nombres. Réaction 🎁 et message public ; transaction `COUNTING_REWARD`. Réglable dans le panneau (0 = jamais).
 
 ## Taux du jour
 

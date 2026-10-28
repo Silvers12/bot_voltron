@@ -150,6 +150,10 @@ model GuildSettings {
   /// Salon de comptage (null = désactivé) et amende en cas d'erreur
   countingChannelId String?
   countingFine     Int      @default(1000)
+  /// Récompense surprise du comptage : en moyenne une fois tous les N bons nombres, montant tiré entre min et max (0 = jamais)
+  countingRewardEvery Int   @default(50)
+  countingRewardMin   Int   @default(50)
+  countingRewardMax   Int   @default(200)
   /// Salon des annonces de succès (null = pas d'annonce)
   achievementChannelId String?
   /// Fonctionnalités désactivées par l'intendance (clés du registre src/modules/features)
@@ -188,6 +192,7 @@ enum TransactionType {
   HUG_RECEIVED
   ACHIEVEMENT
   COUNTING_FINE
+  COUNTING_REWARD
   THEFT_GAIN
   THEFT_LOSS
   THEFT_FINE
