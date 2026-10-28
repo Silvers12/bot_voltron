@@ -13,6 +13,6 @@ export default defineCommand({
     if (!target) return void (await interaction.reply({ content: 'Ce membre ne fait pas (ou plus) partie du serveur.', flags: MessageFlags.Ephemeral }));
     if (target.user.bot) return void (await interaction.reply({ content: 'Insulter une loutre paladin ? Courageux. Mais non.', flags: MessageFlags.Ephemeral }));
     const draw = drawBanter('insulte', target.displayName, interaction.member.displayName);
-    await interaction.reply(buildBanterMessage('insulte', draw, interaction.user.id, target.id));
+    await interaction.reply(await buildBanterMessage('insulte', draw, interaction.user.id, target.id));
   },
 });
