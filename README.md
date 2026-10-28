@@ -200,7 +200,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Vol de cœurs
 
 - `/vol membre` : tentative de larcin publique. Une chance sur deux de réussir (réglable) ; en cas de réussite, le voleur empoche entre 10 et 100 % (tirés au sort) d'un plafond fixé à 10 % de la bourse de la cible (réglable), donc jamais de quoi la ruiner. En cas d'échec, le voleur verse à la cible une amende calculée de la même façon sur sa propre bourse (0 s'il est fauché).
-- Un vol par membre et par délai (24 h par défaut), verrou atomique. Une cible dont 10 % de la bourse vaut moins d'un cœur n'est pas volable. Textes dans `content/vols.json`.
+- Un vol par membre et par délai (4 h par défaut), verrou atomique. Une cible dont 10 % de la bourse vaut moins d'un cœur n'est pas volable. Textes dans `content/vols.json`.
 - Réglages dans `/admin panneau` → module « Vol de cœurs » (part maximale, chance de réussite, délai). Interrupteur « vol ». Bilan dans `/stats` et l'historique de la bourse.
 
 ## Salon de comptage

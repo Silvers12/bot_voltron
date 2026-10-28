@@ -97,7 +97,7 @@ model GuildSettings {
   /// Vol de cœurs : part maximale de la bourse de la cible (en %), chance de réussite (en %) et délai entre deux tentatives
   theftMaxPercent     Int @default(10)
   theftSuccessPercent Int @default(50)
-  theftCooldownHours  Int @default(24)
+  theftCooldownHours  Int @default(4)
   /// Tombola : salon d'annonce du tirage (null = désactivée)
   lotteryChannelId String?
   lotteryTicketPrice Int    @default(100)
