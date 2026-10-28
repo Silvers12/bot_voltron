@@ -15,6 +15,7 @@ export default defineCommand({
     if (target?.user.bot) return void (await interaction.reply({ content: 'Les bots ne jouent pas. Enfin, pas encore.', flags: MessageFlags.Ephemeral }));
     const shown = target ? await ensureMember(target) : member;
     const [s, st] = await Promise.all([getSettings(interaction.guildId), computeGameStats(shown.id)]);
-    await interaction.reply(buildStatsView(shown.displayName, st, s));
+    await interaction.deferReply();
+    await interaction.editReply(await buildStatsView(shown.displayName, st, s));
   },
 });

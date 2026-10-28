@@ -2,7 +2,7 @@ import sharp from 'sharp';
 
 /** Assistants partagés par les bannières générées (taux, dés, pièce). */
 export const BANNER_W = 1200, BANNER_H = 400, AVATAR = 260;
-export const FONT = 'DejaVu Sans, Noto Sans, Arial, sans-serif';
+export const FONT = 'DejaVu Sans, Noto Sans, Noto Emoji, Arial, sans-serif';
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
