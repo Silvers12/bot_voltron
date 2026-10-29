@@ -88,8 +88,8 @@ async function spin(interaction: ButtonInteraction<'cached'>, memberId: string) 
     await interaction.followUp({ content: `Il te reste ${formatAmount(result.balanceAfter, s)}.`, flags: MessageFlags.Ephemeral });
     trackAchievements(interaction.guild, member.id);
 
-    if (result.kind === 'jackpot' && interaction.channel?.isSendable()) {
-      await interaction.channel.send(await buildJackpotMessage(interaction.member, result.payout, result.pool, s)).catch(() => {});
+    if ((result.kind === 'jackpot' || result.kind === 'triple') && interaction.channel?.isSendable()) {
+      await interaction.channel.send(await buildJackpotMessage(interaction.member, result.payout, result.pool, s, { half: result.kind === 'triple', reels: result.reels })).catch(() => {});
     }
   } finally {
     spinning.delete(messageId);
