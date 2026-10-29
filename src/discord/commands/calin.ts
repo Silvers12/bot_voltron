@@ -1,5 +1,5 @@
-import { allowedUsers } from '../../modules/notify/mentions.js';
-import { MessageFlags, SlashCommandBuilder, userMention } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { buildHugMessage } from '../../modules/economy/hug.view.js';
 import { defineCommand } from '../types.js';
 import { trackAchievements } from '../../modules/achievements/achievements.service.js';
 import { ensureMember } from '../../modules/community/member.service.js';
@@ -20,13 +20,19 @@ export default defineCommand({
     const target = interaction.options.getMember('membre');
     const amount = interaction.options.getInteger('montant', true);
     const message = interaction.options.getString('message');
-    const refuse = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    // Refus toujours discret : si la réponse publique est déjà réservée, on l'efface et on répond en privé.
+    const refuse = async (content: string) => {
+      if (!interaction.deferred) return void (await interaction.reply({ content, flags: MessageFlags.Ephemeral }));
+      await interaction.deleteReply().catch(() => undefined);
+      await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+    };
 
     if (!target) return void (await refuse('Ce membre ne fait pas (ou plus) partie du serveur.'));
     if (target.user.bot) return void (await refuse(`Les bots ne savent pas recevoir les câlins. Pas même ${botName()}, hélas.`));
     if (target.id === interaction.user.id) return void (await refuse('Un câlin à soi-même ? Essaie plutôt avec un camarade.'));
 
     const toMember = await ensureMember(target);
+    await interaction.deferReply();
     try {
       const { sent } = await hug({
         fromMemberId: member.id,
@@ -38,11 +44,7 @@ export default defineCommand({
       });
       trackAchievements(interaction.guild, member.id);
       trackAchievements(interaction.guild, toMember.id);
-      const note = message ? `\n> ${message}` : '';
-      await interaction.reply({
-        content: `🤗 ${userMention(interaction.user.id)} fait un câlin à ${userMention(target.id)} et lui offre **${formatAmount(amount, settings)}** !${note}`,
-        allowedMentions: { users: await allowedUsers(interaction.guildId, 'calins', target.id) },
-      });
+      await interaction.editReply(await buildHugMessage(interaction.member, target, amount, message, settings));
       await interaction.followUp({ content: `Il te reste ${formatAmount(sent.balanceAfter, settings)}.`, flags: MessageFlags.Ephemeral });
     } catch (err) {
       if (err instanceof InsufficientFundsError) {
