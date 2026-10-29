@@ -11,7 +11,7 @@ export async function renderLotteryBanner(lottery: Lottery, s: GuildSettings): P
   const pot = formatAmount(lottery.pot, s);
   const sold = `${lottery.totalTickets} ticket${lottery.totalTickets > 1 ? 's' : ''} vendu${lottery.totalTickets > 1 ? 's' : ''}`;
   const price = `Ticket à ${formatAmount(lottery.ticketPrice, s)}`;
-  const max = s.lotteryMaxTickets > 0 ? ` · ${s.lotteryMaxTickets} max par membre` : '';
+  const max = s.lotteryMaxTickets > 0 ? ` · max ${s.lotteryMaxTickets} chacun` : '';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2a0845"/><stop offset="1" stop-color="#8e44ad"/></linearGradient>
@@ -25,7 +25,7 @@ export async function renderLotteryBanner(lottery: Lottery, s: GuildSettings): P
     <text x="${PAD}" y="${PAD + 226}" font-family="${FONT}" font-size="78" font-weight="bold" fill="#ffd54f">${esc(pot)}</text>
     <rect x="${PAD}" y="${PAD + 256}" width="${[...sold].length * 15 + 40}" height="40" rx="20" fill="#fff" opacity="0.15"/>
     <text x="${PAD + 20}" y="${PAD + 284}" font-family="${FONT}" font-size="25" font-weight="bold" fill="#fff">${esc(sold)}</text>
-    <text x="${PAD + [...sold].length * 15 + 60}" y="${PAD + 284}" font-family="${FONT}" font-size="25" fill="#e1bee7">${esc(price + max)}</text>
+    <text x="${PAD + [...sold].length * 15 + 60}" y="${PAD + 284}" font-family="${FONT}" font-size="22" fill="#e1bee7">${esc(price + max)}</text>
   </svg>`;
   const icon = await loadIllustration('tombola', 'tombola');
   const layers: Array<{ input: Buffer; left: number; top: number }> = [];
