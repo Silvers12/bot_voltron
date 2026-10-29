@@ -164,7 +164,7 @@ export async function handleCountingEdit(newMessage: Message | PartialMessage) {
     lines: [
       `Message modifié après coup : « ${message.content.slice(0, 20)} »`,
       trace.accepted ? `Vrai message : « ${trace.content.slice(0, 20)} » (${trace.number} ✅)` : `Message d’origine : « ${trace.content.slice(0, 20)} » (❌)`,
-      `La chaîne continue : prochain nombre ${state.current + 1}`,
+      `Chaîne intacte, prochain nombre : ${state.current + 1}`,
     ],
     minutes: s.prisonMinutes,
     until,

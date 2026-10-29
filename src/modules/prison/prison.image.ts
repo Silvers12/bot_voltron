@@ -28,7 +28,7 @@ export async function renderPrisonCard({ name, avatarPng, lines: input, minutes 
   const short = esc(name.length > 22 ? `${name.slice(0, 21)}…` : name);
   const x = PAD + AVATAR + 40;
   const textW = W - x - ICON - 20;
-  const lines = input.flatMap((l) => wrap(l, Math.floor(textW / 13))).slice(0, 4);
+  const lines = input.flatMap((l) => wrap(l, Math.floor(textW / 14))).slice(0, 4);
   const duration = minutes < 60 ? `${minutes} min` : minutes % 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60}` : `${minutes / 60} h`;
   const cx = PAD + AVATAR / 2, cy = H / 2;
   const bars = [-80, -40, 0, 40, 80].map((dx) => `<rect x="${cx + dx - 6}" y="${cy - AVATAR / 2 - 14}" width="12" height="${AVATAR + 28}" rx="6" fill="#263238" stroke="#90a4ae" stroke-width="2"/>`).join('');
@@ -44,7 +44,7 @@ export async function renderPrisonCard({ name, avatarPng, lines: input, minutes 
     <rect x="${x}" y="${PAD + 76}" width="${duration.length * 17 + 100}" height="38" rx="19" fill="#b71c1c"/>
     <text x="${x + 16}" y="${PAD + 103}" font-family="${FONT}" font-size="24" font-weight="bold" fill="#fff">🔒 ${duration} sans jeux</text>
     <text x="${x}" y="${PAD + 152}" font-family="${FONT}" font-size="34" font-weight="bold" fill="#eceff1">${short}</text>
-    ${lines.map((l, i) => `<text x="${x}" y="${PAD + 198 + i * 34}" font-family="${FONT}" font-size="26" fill="#cfd8dc">${esc(l)}</text>`).join('')}
+    ${lines.map((l, i) => `<text x="${x}" y="${PAD + 198 + i * 34}" font-family="${FONT}" font-size="25" fill="#cfd8dc">${esc(l)}</text>`).join('')}
   </svg>`;
   const [avatar, icon] = await Promise.all([sharp(await circleAvatar(avatarPng)).resize(AVATAR, AVATAR).png().toBuffer(), loadVisual()]);
   const layers: Array<{ input: Buffer; left: number; top: number }> = [{ input: avatar, left: PAD, top: Math.round(cy - AVATAR / 2) }, { input: Buffer.from(`<svg width="${W}" height="${H}">${bars}</svg>`), left: 0, top: 0 }];
