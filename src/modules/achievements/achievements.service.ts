@@ -82,11 +82,11 @@ export async function evaluateMember(guild: Guild, memberId: string, { announce 
     unlocks.push({ achievement: a, reward });
   }
   if (unlocks.length) {
-    const member = await prisma.member.findUniqueOrThrow({ where: { id: memberId }, select: { discordUserId: true } });
+    const member = await prisma.member.findUniqueOrThrow({ where: { id: memberId }, select: { discordUserId: true, displayName: true } });
     log.info(`${member.discordUserId} débloque : ${unlocks.map((u) => u.achievement.key).join(', ')}`);
     if (announce && s.achievementChannelId) {
       const channel = guild.channels.cache.get(s.achievementChannelId);
-      if (channel?.isTextBased()) await channel.send(buildUnlockAnnouncement(member.discordUserId, unlocks, s, await allowedUsers(guild.id, 'succes', member.discordUserId))).catch((err) => log.warn('Annonce de succès impossible', err));
+      if (channel?.isTextBased()) await channel.send(await buildUnlockAnnouncement(guild, member.discordUserId, member.displayName, unlocks, s, await allowedUsers(guild.id, 'succes', member.discordUserId))).catch((err) => log.warn('Annonce de succès impossible', err));
     }
   }
   return unlocks;

@@ -1,4 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, time, TimestampStyles, userMention, type MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MediaGalleryBuilder, MediaGalleryItemBuilder, time, TimestampStyles, userMention, type Guild, type MessageActionRowComponentBuilder } from 'discord.js';
+import { loadIllustration, memberAvatarPng } from '../../core/duo-card.js';
+import { renderSoloCard } from '../../core/solo-card.js';
 import { card, divider, screen, text } from '../../discord/v2.js';
 import type { GuildSettings, MemberAchievement } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
@@ -56,8 +58,34 @@ export function buildAchievementsView(displayName: string, unlocked: MemberAchie
   return screen(c, [row]);
 }
 
-export function buildUnlockAnnouncement(discordUserId: string, unlocks: Unlock[], s: GuildSettings, pingUsers: string[]) {
+const TIER_STYLE = {
+  bronze: { label: 'Bronze', badge: '#8d6e63', from: '#3e2723', to: '#a1887f' },
+  argent: { label: 'Argent', badge: '#78909c', from: '#263238', to: '#b0bec5' },
+  or: { label: 'Or', badge: '#f9a825', from: '#4e342e', to: '#fdd835' },
+} as const;
+const TIER_RANK = { bronze: 0, argent: 1, or: 2 } as const;
+
+/** Carte d'annonce de succès : avatar, palier le plus haut débloqué, succès et récompenses ; repli en embed si l'image échoue. */
+export async function buildUnlockAnnouncement(guild: Guild, discordUserId: string, displayName: string, unlocks: Unlock[], s: GuildSettings, pingUsers: string[]) {
   const lines = unlocks.map((u) => `${u.achievement.emoji} **${u.achievement.name}** (${TIER_LABEL[u.achievement.tier]}) : ${userMention(discordUserId)} ${u.achievement.description}${u.reward ? ` *+${formatAmount(u.reward, s)}*` : ''}`);
+  const top = unlocks.reduce((best, u) => (TIER_RANK[u.achievement.tier] > TIER_RANK[best.achievement.tier] ? u : best), unlocks[0]!);
+  const style = TIER_STYLE[top.achievement.tier];
+  const reward = unlocks.reduce((n, u) => n + u.reward, 0);
+  const image = await (async () => {
+    const illustration = (await loadIllustration('succes', top.achievement.tier)) ?? (await loadIllustration('succes', 'succes'));
+    return renderSoloCard({
+      title: unlocks.length > 1 ? 'Nouveaux succès !' : 'Nouveau succès !', badge: `Palier ${style.label}${reward ? ` · +${formatAmount(reward, s)}` : ''}`, badgeColor: style.badge, from: style.from, to: style.to,
+      name: displayName, avatarPng: await memberAvatarPng(guild, discordUserId),
+      lines: unlocks.slice(0, 3).map((u) => `${u.achievement.name} : ${u.achievement.description}`).concat(unlocks.length > 3 ? [`… et ${unlocks.length - 3} autre${unlocks.length > 4 ? 's' : ''}`] : []),
+      illustration,
+    });
+  })().catch(() => null);
+  if (image) {
+    const c = card(COLOR);
+    c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://succes.png').setDescription(`${displayName} débloque ${unlocks.map((u) => u.achievement.name).join(', ')}`)));
+    c.addTextDisplayComponents(text(`${lines.join('\n')}\n-# ${botName()} applaudit des deux pattes.`));
+    return { ...screen(c), files: [new AttachmentBuilder(image, { name: 'succes.png' })], allowedMentions: { users: pingUsers } };
+  }
   const embed = new EmbedBuilder()
     .setColor(COLOR)
     .setTitle(unlocks.length > 1 ? '🏅 Nouveaux succès !' : '🏅 Nouveau succès !')
