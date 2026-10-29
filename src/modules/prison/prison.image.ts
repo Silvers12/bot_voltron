@@ -25,7 +25,7 @@ export interface PrisonCard {
   next?: number;
 }
 
-/** Bannière 1200 × 400 : avatar derrière les barreaux à gauche, verdict au centre, loutre en prison à droite. */
+/** Bannière 1200 × 400 : avatar à gauche, verdict au centre, loutre en prison à droite. */
 export async function renderPrisonCard({ name, avatarPng, lines: input, minutes, next }: PrisonCard): Promise<Buffer> {
   const short = esc(name.length > 22 ? `${name.slice(0, 21)}…` : name);
   const x = PAD + AVATAR + 40;
@@ -39,7 +39,6 @@ export async function renderPrisonCard({ name, avatarPng, lines: input, minutes,
   const duration = minutes < 60 ? `${minutes} min` : minutes % 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60}` : `${minutes / 60} h`;
   const pill = `🔒 ${duration} sans jeux`;
   const cx = PAD + AVATAR / 2, cy = H / 2;
-  const bars = [-80, -40, 0, 40, 80].map((dx) => `<rect x="${cx + dx - 6}" y="${cy - AVATAR / 2 - 14}" width="12" height="${AVATAR + 28}" rx="6" fill="#263238" stroke="#90a4ae" stroke-width="2"/>`).join('');
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c1f26"/><stop offset="1" stop-color="#546e7a"/></linearGradient>
@@ -56,7 +55,7 @@ export async function renderPrisonCard({ name, avatarPng, lines: input, minutes,
     ${nextBox}
   </svg>`;
   const [avatar, icon] = await Promise.all([sharp(await circleAvatar(avatarPng)).resize(AVATAR, AVATAR).png().toBuffer(), loadVisual()]);
-  const layers: Array<{ input: Buffer; left: number; top: number }> = [{ input: avatar, left: PAD, top: Math.round(cy - AVATAR / 2) }, { input: Buffer.from(`<svg width="${W}" height="${H}">${bars}</svg>`), left: 0, top: 0 }];
+  const layers: Array<{ input: Buffer; left: number; top: number }> = [{ input: avatar, left: PAD, top: Math.round(cy - AVATAR / 2) }];
   if (icon) layers.push({ input: icon, left: W - PAD - ICON, top: Math.round((H - ICON) / 2) });
   return sharp(Buffer.from(svg)).composite(layers).png().toBuffer();
 }
