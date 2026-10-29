@@ -1,6 +1,6 @@
 import { channelMention, ChannelType, MessageFlags, time, TimestampStyles, type ChatInputCommandInteraction, type SlashCommandSubcommandGroupBuilder } from 'discord.js';
 import { formatAmount, getSettings, updateLotterySettings } from '../settings/settings.service.js';
-import { draw, getOrCreateOpenLottery, lastCallDate, nextDrawDate, publishLottery, reminderDate, resolveLotteryChannel } from './lottery.service.js';
+import { draw, getOrCreateOpenLottery, lastCallDate, nextDrawDate, publishLottery, reminderDate, resolveLotteryChannel, applySeedChange } from './lottery.service.js';
 import { PermissionFlagsBits } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 
@@ -76,6 +76,7 @@ export async function handleLotteryAdmin(interaction: ChatInputCommandInteractio
         data: { drawAt: nextDrawDate(updated), ...(changes.lotteryTicketPrice !== undefined ? { ticketPrice: updated.lotteryTicketPrice } : {}) },
       });
     }
+    if (changes.lotterySeed !== undefined) await applySeedChange(interaction.client, guildId, s.lotterySeed, updated.lotterySeed);
     await reply(describeLottery(updated, await prisma.lottery.findFirst({ where: { guildId, state: 'OPEN' } })));
     return;
   }

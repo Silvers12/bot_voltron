@@ -101,6 +101,21 @@ export async function refreshPublishedMessage(client: Client, lottery: Lottery, 
   await msg.edit(await buildLotteryMessage(lottery, s)).catch(() => undefined);
 }
 
+/**
+ * Changement d'amorce : la cagnotte du tirage en cours suit la différence (jamais sous zéro),
+ * et le message publié est rafraîchi. Les tickets vendus et le report restent comptés.
+ */
+export async function applySeedChange(client: Client, guildId: string, oldSeed: number, newSeed: number): Promise<Lottery | null> {
+  if (oldSeed === newSeed) return null;
+  const open = await prisma.lottery.findFirst({ where: { guildId, state: 'OPEN' } });
+  if (!open) return null;
+  const pot = Math.max(0, open.pot + (newSeed - oldSeed));
+  const updated = await prisma.lottery.update({ where: { id: open.id }, data: { pot } });
+  log.info(`Tombola ${open.id} : amorce ${oldSeed} → ${newSeed}, cagnotte ${open.pot} → ${pot}`);
+  await refreshPublishedMessage(client, updated);
+  return updated;
+}
+
 /** Tirage ouvert du serveur, créé si besoin (avec amorce et report éventuel). */
 export async function getOrCreateOpenLottery(guildId: string, carryOver = 0): Promise<Lottery> {
   const open = await prisma.lottery.findFirst({ where: { guildId, state: 'OPEN' } });

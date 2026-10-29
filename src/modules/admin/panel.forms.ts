@@ -4,7 +4,7 @@ import type { GuildSettings } from '../../generated/prisma/client.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { formatAmount, updateSettings } from '../settings/settings.service.js';
 import { resolveHugChannel, scheduleNext } from '../events/grouphug.service.js';
-import { nextDrawDate, publishLottery, resolveLotteryChannel } from '../lottery/lottery.service.js';
+import { applySeedChange, nextDrawDate, publishLottery, resolveLotteryChannel } from '../lottery/lottery.service.js';
 import { listLevelRoles, resyncAllLevels } from '../progression/levels.service.js';
 import type { Client } from 'discord.js';
 import type { ModuleKey } from './panel.view.js';
@@ -286,9 +286,10 @@ export const FORMS: Form[] = [
       { id: 'lotteryLastCallHours', label: 'Dernier rappel, heures avant (0 = aucun)', type: int(0, 72), current: (s) => `${s.lotteryLastCallHours}` },
       { id: 'lotterySeed', label: 'Amorce de la banque par tirage', type: int(0, 1_000_000), current: (s) => `${s.lotterySeed}` },
     ],
-    async apply({ guild, values }) {
-      await updateSettings(guild.id, values as Partial<GuildSettings>);
-      return 'Rappels enregistrés.';
+    async apply({ guild, client, before, values }) {
+      const s = await updateSettings(guild.id, values as Partial<GuildSettings>);
+      const adjusted = await applySeedChange(client, guild.id, before.lotterySeed, s.lotterySeed);
+      return adjusted ? `Rappels enregistrés. Nouvelle amorce appliquée au tirage en cours : cagnotte ${formatAmount(adjusted.pot, s)}.` : 'Rappels enregistrés.';
     },
   },
 ];
