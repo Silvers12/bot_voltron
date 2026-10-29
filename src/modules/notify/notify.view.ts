@@ -49,14 +49,17 @@ export function buildWelcomeMessage(s: GuildSettings, guildName: string) {
   container.addTextDisplayComponents(text(`# Bienvenue sur ${guildName} !\n${(s.welcomeText ?? DEFAULT_INTRO).replaceAll('\\n', '\n')}`));
 
   const on = (k: Parameters<typeof isFeatureEnabled>[1]) => isFeatureEnabled(s, k);
+  const surprise = s.countingRewardEvery > 0 && s.countingRewardMax > 0 ? ` De temps en temps, un bon nombre cache une surprise de ${formatAmount(s.countingRewardMin, s)} à ${formatAmount(s.countingRewardMax, s)}.` : '';
   const blocks: Array<{ name: string; value: string; show: boolean }> = [
-    { name: '💰 Ta bourse', value: `**${formatAmount(s.dailyAmount, s)}** chaque jour sur \`/profil\`, bonus de série, et **${formatAmount(s.weeklyAmount, s)}** par semaine. Offre des ${s.currencyPlural} avec \`/calin\`.`, show: on('quotidien') || on('hebdo') || on('calin') },
-    { name: '🛒 Boutique', value: 'Objets, rôles et **titres** à porter sur ton profil, depuis `/profil`.', show: on('boutique') },
-    { name: '🎲 Jeux', value: [on('blackjack') && '`/blackjack`', on('machine') && '`/machine`', on('duel') && '`/duel`', on('vol') && '`/vol`', on('tombola') && '`/tombola`', on('des') && '`/de` · `/pileouface`'].filter(Boolean).join(' · '), show: on('blackjack') || on('machine') || on('duel') || on('vol') || on('tombola') || on('des') },
-    { name: '⭐ Progression', value: 'De l’XP en discutant et en vocal, des niveaux, `/classement`, et des **succès** à débloquer (`/succes`).', show: on('xp') || on('succes') },
+    { name: '🦦 Ton profil', value: '`/profil` : ta bourse, tes récompenses, ta boutique, ton inventaire, tes succès, tes stats, ton historique et le **guide de toutes les commandes** (menu Explorer). `/profil membre:` montre la fiche publique de quelqu’un.', show: true },
+    { name: '💰 Ta bourse', value: `**${formatAmount(s.dailyAmount, s)}** chaque jour sur \`/profil\`, bonus de série, et **${formatAmount(s.weeklyAmount, s)}** par semaine. Offre des ${s.currencyPlural} avec \`/calin\`${on('boutique') ? ', un objet avec `/don`' : ''}.`, show: on('quotidien') || on('hebdo') || on('calin') },
+    { name: '🛒 Boutique', value: 'Objets absurdes, rôles et **titres** à porter sur ton profil, depuis `/profil`. Les objets s’offrent avec `/don`.', show: on('boutique') },
+    { name: '🎲 Jeux', value: [on('blackjack') && '`/blackjack` contre la banque', on('machine') && '`/machine` et sa cagnotte', on('duel') && '`/duel` avec mise', on('vol') && '`/vol` (une chance sur deux, et ça peut coûter cher)', on('tombola') && '`/tombola` chaque semaine', on('des') && '`/de` · `/pileouface`'].filter(Boolean).join(' · '), show: on('blackjack') || on('machine') || on('duel') || on('vol') || on('tombola') || on('des') },
+    { name: '🧸 Taux du jour', value: '`/taux` : ta chance, ta choupitude et le reste, renouvelés chaque jour. `/duo` pour vous deux.', show: on('taux') },
+    { name: '⭐ Progression', value: 'De l’XP en discutant et en vocal, des niveaux et leurs rôles, `/classement`, `/stats`, et des **succès** à débloquer (`/succes`).', show: on('xp') || on('succes') },
     { name: '🤗 Câlins collectifs', value: `${botName()} surgit à l’improviste : cliquez **CÂLIN**, plus vous êtes nombreux, plus ça rapporte.`, show: on('calin_collectif') && s.groupHugChannelIds.length > 0 },
-    { name: '🔢 Comptage', value: `Dans <#${s.countingChannelId}>, on compte à la suite. Une erreur coûte ${formatAmount(s.countingFine, s)} !`, show: on('comptage') && !!s.countingChannelId },
-    { name: '💐 Entre camarades', value: '`/compliment` et `/insulte` (second degré garanti).', show: on('compliments') || on('insultes') },
+    { name: '🔢 Comptage', value: `Dans <#${s.countingChannelId}>, on compte à la suite (les petites formules sont acceptées), jamais deux fois d’affilée. Une erreur coûte ${formatAmount(s.countingFine, s)}, puis pile ou face : on continue ou on repart à 1.${surprise} Modifier son message après coup envoie en **prison** : ${s.prisonMinutes} min sans aucun jeu.`, show: on('comptage') && !!s.countingChannelId },
+    { name: '💐 Entre camarades', value: '`/compliment` et `/insulte` (second degré garanti), avec des raretés à collectionner.', show: on('compliments') || on('insultes') },
   ];
   const shown = blocks.filter((b) => b.show && b.value);
   if (shown.length) {
