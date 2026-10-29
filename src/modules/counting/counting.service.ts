@@ -156,7 +156,7 @@ export async function handleCountingEdit(newMessage: Message | PartialMessage) {
   if (!guildMember || !member) return;
 
   const { until, roleGiven } = await imprison(guildMember, member, `Comptage : message ${trace.number} modifié après coup`);
-  await prisma.countingMessage.update({ where: { messageId: message.id }, data: { content: message.content } }).catch(() => undefined);
+  // La trace garde le contenu d'origine : chaque nouvelle modification est comparée au vrai message, pas au précédent faux.
   await message.react(POLICE).catch(() => undefined);
   const state = await getCounting(message.guildId);
   const original = trace.accepted ? `Le vrai message était « ${trace.content} » (${trace.number}, accepté).` : `Le message d’origine était « ${trace.content} » (refusé).`;
