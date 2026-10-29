@@ -28,7 +28,8 @@ export function buildLotteryMessage(lottery: Lottery, s: GuildSettings, intro?: 
   return screen(c, rows);
 }
 
-export function buildDrawAnnouncement(r: DrawResult, totalTickets: number, s: GuildSettings) {
+/** `pingUsers` : identifiants réellement notifiés (le gagnant, sauf refus). */
+export function buildDrawAnnouncement(r: DrawResult, totalTickets: number, s: GuildSettings, pingUsers: string[]) {
   const c = card(r.winner ? 0xf1c40f : 0x95a5a6);
   if (r.winner) {
     const chance = Math.round((100 * r.winner.tickets) / totalTickets);
@@ -37,7 +38,7 @@ export function buildDrawAnnouncement(r: DrawResult, totalTickets: number, s: Gu
     c.addTextDisplayComponents(text(`🏆 **${formatAmount(r.lottery.pot, s)}** remportés avec ${r.winner.tickets} ticket${r.winner.tickets > 1 ? 's' : ''} sur ${totalTickets} (${chance} % de chances).`));
     c.addSeparatorComponents(divider());
     c.addTextDisplayComponents(text(`-# Prochain tirage ${time(r.next.drawAt, TimestampStyles.RelativeTime)} : la cagnotte repart à ${formatAmount(r.next.pot, s)}.`));
-    return { ...screen(c), allowedMentions: { users: [r.winner.discordUserId] } };
+    return { ...screen(c), allowedMentions: { users: pingUsers } };
   }
   c.addTextDisplayComponents(text(`# 🎟️ Tirage de la tombola\nPersonne n’a pris de ticket cette semaine. ${botName()} range le chapeau, un peu déçu.`));
   c.addSeparatorComponents(divider(true));

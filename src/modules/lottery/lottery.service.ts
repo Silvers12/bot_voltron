@@ -1,3 +1,4 @@
+import { allowedUsers } from '../notify/mentions.js';
 import { randomInt } from 'node:crypto';
 import { ChannelType, PermissionFlagsBits, type Client, type Guild, type GuildTextBasedChannel } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
@@ -194,7 +195,7 @@ export async function draw(client: Client, lotteryId: string): Promise<DrawResul
   if (guild && winner) trackAchievements(guild, winner.memberId);
   if (guild && s.lotteryChannelId) {
     const channel = resolveLotteryChannel(guild, s.lotteryChannelId);
-    if (typeof channel !== 'string') await channel.send(buildDrawAnnouncement(result, total, s)).catch((err) => log.warn('Annonce du tirage impossible', err));
+    if (typeof channel !== 'string') await channel.send(buildDrawAnnouncement(result, total, s, result.winner ? await allowedUsers(s.guildId, 'gains', result.winner.discordUserId) : [])).catch((err) => log.warn('Annonce du tirage impossible', err));
     await retireMessage(client, lottery, s, { unpin: true });
     const published = await publishLottery(client, next, nextIntro(next, carryOver, s));
     if (published) result.next = published;

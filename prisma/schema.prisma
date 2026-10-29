@@ -36,6 +36,8 @@ model Member {
   lastMessageXpAt DateTime?
   /// Fin de la peine de prison (null = libre) : aucun jeu possible avant cette date
   prisonUntil   DateTime?
+  /// Mentions personnelles refusées (clés de src/modules/notify/mentions.ts)
+  mutedMentions String[]  @default([])
   voiceSession  VoiceSession?
   blackjackGames BlackjackGame[]
   groupHugs     GroupHugParticipant[]

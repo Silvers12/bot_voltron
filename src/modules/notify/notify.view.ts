@@ -5,10 +5,12 @@ import {
 import type { GuildSettings } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import { isFeatureEnabled } from '../features/features.js';
+import { MENTIONS } from './mentions.js';
 
 import { botBannerUrl, botName } from '../../core/identity.js';
 export const NOTIFY_TOGGLE_PREFIX = 'notify:toggle:';
 export const NOTIFY_SELECT_ID = 'notify:select';
+export const MENTIONS_SELECT_ID = 'notify:mentions';
 export type NotifyKey = 'hug' | 'lottery' | 'duel';
 
 export const NOTIFY_ROLES: Array<{ key: NotifyKey; field: 'notifyHugRoleId' | 'notifyLotteryRoleId' | 'notifyDuelRoleId'; label: string; emoji: string; roleName: string; description: string }> = [
@@ -95,12 +97,32 @@ function addNotifyBlock(container: ContainerBuilder, s: GuildSettings) {
       .addOptions(configured.map((r) => new StringSelectMenuOptionBuilder().setLabel(r.label).setValue(r.key).setDescription(r.description).setEmoji(r.emoji)));
     container.addActionRowComponents(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu));
   }
+  addMentionsBlock(container);
+}
+
+/** Bloc « Mentions à propos de toi » : tout ce pour quoi le bot peut te mentionner personnellement, à garder ou refuser. */
+function addMentionsBlock(container: ContainerBuilder) {
+  container.addSeparatorComponents(divider(true));
+  container.addTextDisplayComponents(
+    text(
+      `## 📣 Mentions à propos de toi\n` +
+        `${botName()} te mentionne aussi quand quelque chose te concerne directement. Garde coché ce que tu veux recevoir, décoche le reste : le message reste visible, mais tu n’es plus notifié.\n` +
+        MENTIONS.map((m) => `${m.emoji} **${m.label}** · ${m.description}`).join('\n'),
+    ),
+  );
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId(MENTIONS_SELECT_ID)
+    .setPlaceholder('Mentions à garder…')
+    .setMinValues(0)
+    .setMaxValues(MENTIONS.length)
+    .addOptions(MENTIONS.map((m) => new StringSelectMenuOptionBuilder().setLabel(m.label).setValue(m.key).setDescription(m.description).setEmoji(m.emoji)));
+  container.addActionRowComponents(new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(menu));
 }
 
 /** Page des notifications, publiée dans son propre salon : uniquement le choix des rôles. */
 export function buildNotifyMessage(s: GuildSettings) {
   const container = new ContainerBuilder().setAccentColor(COLOR);
-  container.addTextDisplayComponents(text(`# 🔔 Notifications\n${botName()} ne mentionne que celles et ceux qui l’ont demandé. Coche ce qui t’intéresse, décoche pour arrêter.`));
+  container.addTextDisplayComponents(text(`# 🔔 Notifications\n${botName()} ne mentionne que celles et ceux qui l’ont demandé. Coche ce qui t’intéresse, décoche pour arrêter. Deux menus : les annonces générales (rôles) et les mentions qui te concernent personnellement.`));
   addNotifyBlock(container, s);
   container.addSeparatorComponents(divider());
   container.addTextDisplayComponents(text(`-# ${botName()}, petite loutre du serveur · Un câlin ? 🦦`));

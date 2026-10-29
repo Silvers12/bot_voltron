@@ -56,14 +56,14 @@ export function buildAchievementsView(displayName: string, unlocked: MemberAchie
   return screen(c, [row]);
 }
 
-export function buildUnlockAnnouncement(discordUserId: string, unlocks: Unlock[], s: GuildSettings) {
+export function buildUnlockAnnouncement(discordUserId: string, unlocks: Unlock[], s: GuildSettings, pingUsers: string[]) {
   const lines = unlocks.map((u) => `${u.achievement.emoji} **${u.achievement.name}** (${TIER_LABEL[u.achievement.tier]}) : ${userMention(discordUserId)} ${u.achievement.description}${u.reward ? ` *+${formatAmount(u.reward, s)}*` : ''}`);
   const embed = new EmbedBuilder()
     .setColor(COLOR)
     .setTitle(unlocks.length > 1 ? '🏅 Nouveaux succès !' : '🏅 Nouveau succès !')
     .setDescription(lines.join('\n'))
     .setFooter({ text: `${botName()} applaudit des deux pattes.` });
-  return { embeds: [embed], allowedMentions: { users: [discordUserId] } };
+  return { embeds: [embed], allowedMentions: { users: pingUsers } };
 }
 
 export function describeAchievementForAdmin(a: Achievement, count: number): string {

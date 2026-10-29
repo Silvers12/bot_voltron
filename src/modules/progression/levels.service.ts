@@ -1,3 +1,4 @@
+import { allowedUsers } from '../notify/mentions.js';
 import { EmbedBuilder, roleMention, userMention, type Guild } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
@@ -79,7 +80,7 @@ async function announce(guild: Guild, s: GuildSettings, discordUserId: string, l
       `🎉 ${userMention(discordUserId)} atteint le **niveau ${level}** !` +
         (gainedTier && tier ? `\n${botName()} lui remet le rôle ${roleMention(tier.roleId)}. Quelle ascension !` : ''),
     );
-  await channel.send({ embeds: [embed], allowedMentions: { users: [discordUserId] } }).catch((err) => log.warn('Annonce de niveau impossible', err));
+  await channel.send({ embeds: [embed], allowedMentions: { users: await allowedUsers(guild.id, 'niveau', discordUserId) } }).catch((err) => log.warn('Annonce de niveau impossible', err));
 }
 
 /**

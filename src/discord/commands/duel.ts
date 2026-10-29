@@ -1,3 +1,4 @@
+import { allowedUsers } from '../../modules/notify/mentions.js';
 import { MessageFlags, SlashCommandBuilder, type Client } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { registerButtonPrefix, type ButtonContext } from '../components.js';
@@ -108,7 +109,7 @@ export default defineCommand({
       if (err instanceof DuelError) return void (await fail(err.message));
       throw err;
     }
-    const message = await interaction.reply({ ...buildChallengeMessage(duel, s), withResponse: true });
+    const message = await interaction.reply({ ...buildChallengeMessage(duel, s, await allowedUsers(interaction.guildId, 'defi', duel.opponent.discordUserId)), withResponse: true });
     const sent = message.resource?.message;
     if (sent) await setMessage(duel.id, sent.id);
     armDuelExpiry(interaction.client, { ...duel, messageId: sent?.id ?? null });

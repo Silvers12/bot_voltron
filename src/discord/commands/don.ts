@@ -1,3 +1,4 @@
+import { allowedUsers } from '../../modules/notify/mentions.js';
 import { MessageFlags, SlashCommandBuilder, userMention } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { ensureMember, findMember } from '../../modules/community/member.service.js';
@@ -43,7 +44,7 @@ export default defineCommand({
       const note = message ? `\n> ${message}` : '';
       await interaction.reply({
         content: `🎁 ${userMention(interaction.user.id)} offre ${label} à ${userMention(target.id)} !${note}`,
-        allowedMentions: { users: [target.id] },
+        allowedMentions: { users: await allowedUsers(interaction.guildId, 'calins', target.id) },
       });
       await interaction.followUp({
         content: `Il te reste ${leftForGiver} exemplaire(s) de « ${item.name} » ; ${target.displayName} en a maintenant ${quantityForReceiver}.`,

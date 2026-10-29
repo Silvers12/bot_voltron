@@ -10,6 +10,7 @@ import { isFeatureEnabled } from '../features/features.js';
 import { evaluateExpression } from './expression.js';
 import { formatRemaining, imprison, isImprisoned, prisonRemainingMs } from '../prison/prison.service.js';
 import { buildPrisonMessage } from '../prison/prison.view.js';
+import { allowedUsers } from '../notify/mentions.js';
 import type { Counting } from '../../generated/prisma/client.js';
 
 import { botName } from '../../core/identity.js';
@@ -58,7 +59,7 @@ async function maybeReward(message: Message<true>, memberId: string, number: num
   await message.react('🎁').catch(() => undefined);
   await message.channel.send({
     content: `🎁 **Surprise !** ${userMention(message.author.id)} trouve **${formatAmount(amount, s)}** cachés sous le nombre **${number}**. ${botName()} les y avait glissés.`,
-    allowedMentions: { users: [message.author.id] },
+    allowedMentions: { users: await allowedUsers(message.guildId, 'comptage', message.author.id) },
   }).catch((err) => log.warn('Message de récompense impossible', err));
   log.info(`${message.author.id} gagne ${amount} au nombre ${number}`);
 }
@@ -83,7 +84,7 @@ export async function handleCountingMessage(message: Message) {
     // Un prisonnier ne joue pas : son message est effacé (ou verrouillé) sans toucher à la chaîne.
     const deleted = await message.delete().then(() => true).catch(() => false);
     if (!deleted) await message.react(LOCK).catch(() => undefined);
-    await message.channel.send({ content: `${LOCK} ${userMention(message.author.id)}, tu es en prison encore **${formatRemaining(prisonRemainingMs(member))}** : pas de comptage pour toi.`, allowedMentions: { users: [message.author.id] } }).catch(() => undefined);
+    await message.channel.send({ content: `${LOCK} ${userMention(message.author.id)}, tu es en prison encore **${formatRemaining(prisonRemainingMs(member))}** : pas de comptage pour toi.`, allowedMentions: { users: await allowedUsers(message.guildId, 'comptage', message.author.id) } }).catch(() => undefined);
     return;
   }
   const counterId = member ? member.id : SELF_ID;
@@ -124,7 +125,7 @@ export async function handleCountingMessage(message: Message) {
     : `🪙 **Pile !** On continue : prochain nombre **${state.current + 1}**.`;
   await message.channel.send({
     content: `${CROSS} ${member ? userMention(message.author.id) : `${botName()}`} s’est trompé : ${failure}. ${fineText}\n${botName()} lance la pièce… ${coin}`,
-    allowedMentions: { users: [message.author.id] },
+    allowedMentions: { users: await allowedUsers(message.guildId, 'comptage', message.author.id) },
   }).catch((err) => log.warn('Message de comptage impossible', err));
 }
 
@@ -171,7 +172,7 @@ export async function handleCountingEdit(newMessage: Message | PartialMessage) {
   }).catch((err) => { log.warn('Carte de prison impossible', err); return null; });
   await message.channel.send(payload ?? {
     content: `${POLICE} ${userMention(message.author.id)} a modifié son message après coup. ${original} La chaîne continue : prochain nombre **${state.current + 1}**.\n${LOCK} Direction la prison jusqu’à <t:${Math.floor(until.getTime() / 1000)}:t> : plus aucun jeu d’ici là.`,
-    allowedMentions: { users: [message.author.id] },
+    allowedMentions: { users: await allowedUsers(message.guildId, 'comptage', message.author.id) },
   }).catch((err) => log.warn('Message de prison impossible', err));
   if (!roleGiven) log.warn(`${message.author.id} : rôle Prison non attribué`);
   log.info(`${message.author.id} modifie son message ${trace.number} (« ${trace.content} » → « ${message.content} »)`);

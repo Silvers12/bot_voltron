@@ -1,3 +1,4 @@
+import { allowedUsers } from '../../modules/notify/mentions.js';
 import { MessageFlags, SlashCommandBuilder, userMention } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { trackAchievements } from '../../modules/achievements/achievements.service.js';
@@ -40,7 +41,7 @@ export default defineCommand({
       const note = message ? `\n> ${message}` : '';
       await interaction.reply({
         content: `🤗 ${userMention(interaction.user.id)} fait un câlin à ${userMention(target.id)} et lui offre **${formatAmount(amount, settings)}** !${note}`,
-        allowedMentions: { users: [target.id] },
+        allowedMentions: { users: await allowedUsers(interaction.guildId, 'calins', target.id) },
       });
       await interaction.followUp({ content: `Il te reste ${formatAmount(sent.balanceAfter, settings)}.`, flags: MessageFlags.Ephemeral });
     } catch (err) {

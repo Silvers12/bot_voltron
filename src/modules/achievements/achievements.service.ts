@@ -1,3 +1,4 @@
+import { allowedUsers } from '../notify/mentions.js';
 import type { Guild } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
@@ -85,7 +86,7 @@ export async function evaluateMember(guild: Guild, memberId: string, { announce 
     log.info(`${member.discordUserId} débloque : ${unlocks.map((u) => u.achievement.key).join(', ')}`);
     if (announce && s.achievementChannelId) {
       const channel = guild.channels.cache.get(s.achievementChannelId);
-      if (channel?.isTextBased()) await channel.send(buildUnlockAnnouncement(member.discordUserId, unlocks, s)).catch((err) => log.warn('Annonce de succès impossible', err));
+      if (channel?.isTextBased()) await channel.send(buildUnlockAnnouncement(member.discordUserId, unlocks, s, await allowedUsers(guild.id, 'succes', member.discordUserId))).catch((err) => log.warn('Annonce de succès impossible', err));
     }
   }
   return unlocks;

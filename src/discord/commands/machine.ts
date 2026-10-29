@@ -1,3 +1,4 @@
+import { allowedUsers } from '../../modules/notify/mentions.js';
 import { card, divider, screen, text } from '../v2.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, type MessageActionRowComponentBuilder, MessageFlags, SlashCommandBuilder, userMention, type ButtonInteraction } from 'discord.js';
 import { setTimeout as sleep } from 'node:timers/promises';
@@ -90,7 +91,7 @@ async function spin(interaction: ButtonInteraction<'cached'>, memberId: string) 
     if (result.kind === 'jackpot' && interaction.channel?.isSendable()) {
       await interaction.channel.send({
         content: `🎰🦦 **JACKPOT !** ${userMention(interaction.user.id)} aligne trois loutres et rafle la cagnotte : **${formatAmount(result.payout, s)}** ! Quelle veine ! La cagnotte repart à ${formatAmount(result.pool, s)}.`,
-        allowedMentions: { users: [interaction.user.id] },
+        allowedMentions: { users: await allowedUsers(interaction.guildId, 'gains', interaction.user.id) },
       }).catch(() => {});
     }
   } finally {

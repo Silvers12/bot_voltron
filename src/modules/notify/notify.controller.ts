@@ -1,7 +1,8 @@
 import { MessageFlags } from 'discord.js';
 import { registerButtonPrefix, registerSelect } from '../../discord/components.js';
 import { applyNotifySelection, NotifyError, toggleNotifyRole } from './notify.service.js';
-import { NOTIFY_ROLES, NOTIFY_SELECT_ID, NOTIFY_TOGGLE_PREFIX, type NotifyKey } from './notify.view.js';
+import { MENTIONS_SELECT_ID, NOTIFY_ROLES, NOTIFY_SELECT_ID, NOTIFY_TOGGLE_PREFIX, type NotifyKey } from './notify.view.js';
+import { MENTIONS, setKeptMentions, type MentionKey } from './mentions.js';
 
 import { botName } from '../../core/identity.js';
 registerButtonPrefix(NOTIFY_TOGGLE_PREFIX, async ({ interaction, guildMember, arg }) => {
@@ -36,4 +37,16 @@ registerSelect(NOTIFY_SELECT_ID, async ({ interaction, guildMember, values }) =>
     if (err instanceof NotifyError) return void (await interaction.reply({ content: `Impossible pour le moment : ${err.message}`, flags: MessageFlags.Ephemeral }));
     throw err;
   }
+});
+
+// Menu des mentions personnelles : l'ensemble coché est gardé, tout le reste est refusé.
+registerSelect(MENTIONS_SELECT_ID, async ({ interaction, member, values }) => {
+  const kept = values.filter((v): v is MentionKey => MENTIONS.some((m) => m.key === v));
+  const result = await setKeptMentions(member.id, kept);
+  const label = (k: MentionKey) => { const m = MENTIONS.find((x) => x.key === k)!; return `${m.emoji} ${m.label}`; };
+  const lines = [
+    result.kept.length ? `Tu seras mentionné pour : ${result.kept.map(label).join(', ')}.` : `Plus aucune mention personnelle. ${botName()} chuchotera.`,
+    result.muted.length ? `Sans notification : ${result.muted.map(label).join(', ')}.` : '',
+  ].filter(Boolean);
+  await interaction.reply({ content: lines.join('\n'), flags: MessageFlags.Ephemeral });
 });

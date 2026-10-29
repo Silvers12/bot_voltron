@@ -11,7 +11,8 @@ export const DUEL_CANCEL_PREFIX = 'duel:cancel:';
 
 const COLOR = 0xc0392b;
 
-export function buildChallengeMessage(duel: DuelWithMembers, s: GuildSettings) {
+/** `pingUsers` : identifiants réellement notifiés (le défié, sauf s'il a refusé cette mention). */
+export function buildChallengeMessage(duel: DuelWithMembers, s: GuildSettings, pingUsers: string[]) {
   const ping = notifyMention(s, 'duel');
   const c = card(COLOR);
   c.addTextDisplayComponents(text(`${ping}${userMention(duel.opponent.discordUserId)}, on te défie !\n# ⚔️ Défi en duel !\n${userMention(duel.challenger.discordUserId)} jette son gant au visage de ${userMention(duel.opponent.discordUserId)} !`));
@@ -22,7 +23,7 @@ export function buildChallengeMessage(duel: DuelWithMembers, s: GuildSettings) {
     new ButtonBuilder().setCustomId(DUEL_DECLINE_PREFIX + duel.id).setLabel('Refuser').setStyle(ButtonStyle.Secondary).setEmoji('🏳️'),
     new ButtonBuilder().setCustomId(DUEL_CANCEL_PREFIX + duel.id).setLabel('Annuler').setStyle(ButtonStyle.Danger).setEmoji('✖️'),
   );
-  return { ...screen(c, [row]), allowedMentions: { users: [duel.opponent.discordUserId], parse: ['roles' as const] } };
+  return { ...screen(c, [row]), allowedMentions: { users: pingUsers, parse: ['roles' as const] } };
 }
 
 export function buildClosedMessage(duel: DuelWithMembers, s: GuildSettings, outcome: 'declined' | 'cancelled' | 'expired') {

@@ -1,3 +1,4 @@
+import { allowedUsers } from '../../modules/notify/mentions.js';
 import { MessageFlags, SlashCommandBuilder, userMention } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { trackAchievements } from '../../modules/achievements/achievements.service.js';
@@ -34,7 +35,7 @@ export default defineCommand({
       trackAchievements(interaction.guild, toMember.id);
       await interaction.reply({
         content: `${outcome.success ? '🥷' : '🚔'} ${outcome.text}`,
-        allowedMentions: { users: [target.id] },
+        allowedMentions: { users: await allowedUsers(interaction.guildId, 'vol', target.id) },
       });
       await interaction.followUp({ content: `Ta bourse : ${formatAmount(outcome.thiefBalanceAfter, settings)}.`, flags: MessageFlags.Ephemeral });
     } catch (err) {
