@@ -159,7 +159,7 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
       };
     }
     case 'comptage':
-      return { lines: describeCounting(s, await getCounting(guild.id)).split('\n'), commands: ['/admin comptage salon · amende · reinitialiser · etat'] };
+      return { lines: describeCounting(s, await getCounting(guild.id)).split('\n'), commands: ['/admin comptage salon · amende · reinitialiser · etat', '/admin prison liberer · envoyer · liste'] };
     case 'commandes':
       return { lines: [describeCommandChannels(s)], commands: ['/admin commandes ajouter-salon · retirer-salon · partout · liste'] };
     case 'accueil':

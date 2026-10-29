@@ -54,9 +54,9 @@ export async function ensurePrisonRole(guild: Guild, s: GuildSettings): Promise<
 }
 
 /** Envoie un membre en prison pour la durée réglée ; une peine déjà en cours repart de zéro. */
-export async function imprison(guildMember: GuildMember, member: Member, reason: string): Promise<{ until: Date; roleGiven: boolean }> {
+export async function imprison(guildMember: GuildMember, member: Member, reason: string, minutes?: number): Promise<{ until: Date; roleGiven: boolean }> {
   const s = await getSettings(guildMember.guild.id);
-  const until = new Date(Date.now() + Math.max(1, s.prisonMinutes) * 60_000);
+  const until = new Date(Date.now() + Math.max(1, minutes ?? s.prisonMinutes) * 60_000);
   await prisma.member.update({ where: { id: member.id }, data: { prisonUntil: until } });
   const roleId = await ensurePrisonRole(guildMember.guild, s);
   let roleGiven = false;
@@ -66,6 +66,23 @@ export async function imprison(guildMember: GuildMember, member: Member, reason:
   }
   log.info(`${guildMember.id} en prison jusqu'à ${until.toISOString()} : ${reason}`);
   return { until, roleGiven };
+}
+
+/** Libère un membre : date effacée et rôle retiré. */
+export async function release(guildMember: GuildMember, member: Pick<Member, 'id'> | null): Promise<void> {
+  if (member) await prisma.member.update({ where: { id: member.id }, data: { prisonUntil: null } });
+  const s = await getSettings(guildMember.guild.id);
+  if (s.prisonRoleId && guildMember.roles.cache.has(s.prisonRoleId)) await guildMember.roles.remove(s.prisonRoleId, 'Libéré').catch((err) => log.warn(`Rôle Prison impossible à retirer à ${guildMember.id}`, err));
+  log.info(`${guildMember.id} libéré`);
+}
+
+/** Rôle Prison retiré à la main par un admin : la peine s'arrête aussi. */
+export async function onRolesChanged(before: GuildMember, after: GuildMember): Promise<void> {
+  if (!config.discord.guildIds.includes(after.guild.id)) return;
+  const s = await getSettings(after.guild.id);
+  if (!s.prisonRoleId || !before.roles.cache.has(s.prisonRoleId) || after.roles.cache.has(s.prisonRoleId)) return;
+  const { count } = await prisma.member.updateMany({ where: { guildId: after.guild.id, discordUserId: after.id, prisonUntil: { gt: new Date() } }, data: { prisonUntil: null } });
+  if (count > 0) log.info(`${after.id} libéré (rôle retiré à la main)`);
 }
 
 /** Libère les membres dont la peine est finie : retire le rôle et efface la date. */
