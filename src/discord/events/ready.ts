@@ -9,6 +9,8 @@ import { reconcileHugs, tickScheduler } from '../../modules/events/grouphug.serv
 import { reconcileDuels } from '../../modules/duel/duel.service.js';
 import { tickLottery } from '../../modules/lottery/lottery.service.js';
 import { armDuelExpiry } from '../commands/duel.js';
+import { releaseDue } from '../../modules/prison/prison.service.js';
+import { pruneCountingMessages } from '../../modules/counting/counting.service.js';
 
 const log = createLogger('ready');
 
@@ -38,6 +40,10 @@ export default defineEvent({
     setInterval(() => void tickScheduler(client).catch((err) => log.error('Planificateur de câlins échoué', err)), 30_000);
     setInterval(() => void tickLottery(client).catch((err) => log.error('Tombola : pointage échoué', err)), 60_000);
     void tickLottery(client).catch((err) => log.error('Tombola : pointage initial échoué', err));
+    setInterval(() => void releaseDue(client).catch((err) => log.error('Prison : libération échouée', err)), 60_000);
+    void releaseDue(client).catch((err) => log.error('Prison : libération initiale échouée', err));
+    setInterval(() => void pruneCountingMessages().catch((err) => log.error('Comptage : purge des traces échouée', err)), 6 * 3_600_000);
+    void pruneCountingMessages().catch((err) => log.error('Comptage : purge initiale échouée', err));
     setInterval(() => {
       for (const guild of guilds) void tickVoiceSessions(guild).catch((err) => log.error(`Pointage vocal échoué (${guild.name})`, err));
     }, 60_000);

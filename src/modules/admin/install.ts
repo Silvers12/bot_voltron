@@ -4,6 +4,7 @@ import {
 import { createLogger } from '../../core/logger.js';
 import { getSettings, updateSettings } from '../settings/settings.service.js';
 import { ensureNotifyRoles, publishPages } from '../notify/notify.service.js';
+import { ensurePrisonRole } from '../prison/prison.service.js';
 import { scheduleNext } from '../events/grouphug.service.js';
 import { getOrCreateOpenLottery, publishLottery } from '../lottery/lottery.service.js';
 import type { GuildSettings } from '../../generated/prisma/client.js';
@@ -109,6 +110,8 @@ export async function handleInstall(interaction: ChatInputCommandInteraction<'ca
   } catch (err) {
     report.push(`⚠️ Accueil : ${(err as Error).message}`);
   }
+  const prisonRole = await ensurePrisonRole(guild, await getSettings(guild.id)).catch(() => null);
+  report.push(prisonRole ? '✔️ Rôle Prison prêt (tricheurs du comptage).' : '⚠️ Rôle Prison non créé : vérifiez « Gérer les rôles ».');
 
   // 4. Automatismes : première tombola publiée, premier câlin collectif programmé
   try {

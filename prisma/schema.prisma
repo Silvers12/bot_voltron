@@ -34,6 +34,8 @@ model Member {
   voiceSeconds  Int       @default(0)
   /// Dernier message ayant rapporté de l'XP (anti-spam)
   lastMessageXpAt DateTime?
+  /// Fin de la peine de prison (null = libre) : aucun jeu possible avant cette date
+  prisonUntil   DateTime?
   voiceSession  VoiceSession?
   blackjackGames BlackjackGame[]
   groupHugs     GroupHugParticipant[]
@@ -154,6 +156,9 @@ model GuildSettings {
   countingRewardEvery Int   @default(50)
   countingRewardMin   Int   @default(50)
   countingRewardMax   Int   @default(200)
+  /// Prison : rôle attribué aux tricheurs du comptage (créé au besoin) et durée de la peine en minutes
+  prisonRoleId     String?
+  prisonMinutes    Int      @default(60)
   /// Salon des annonces de succès (null = pas d'annonce)
   achievementChannelId String?
   /// Fonctionnalités désactivées par l'intendance (clés du registre src/modules/features)
@@ -391,6 +396,20 @@ model Counting {
   correctTotal Int     @default(0)
   nextRewardAt Int     @default(0)
   updatedAt    DateTime @updatedAt
+}
+
+/// Messages évalués dans le salon de comptage, pour détecter les modifications après coup.
+model CountingMessage {
+  messageId String   @id
+  guildId   String
+  memberId  String
+  content   String
+  /// Nombre attendu au moment du message
+  number    Int
+  accepted  Boolean
+  createdAt DateTime @default(now())
+
+  @@index([guildId, createdAt])
 }
 
 model LevelRole {

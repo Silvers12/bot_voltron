@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { userMention, type Message } from 'discord.js';
+import { userMention, type Message, type PartialMessage } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
 import { isAllowedGuild } from '../../core/config.js';
@@ -8,6 +8,7 @@ import { getBalance, credit, debit } from '../economy/economy.service.js';
 import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { isFeatureEnabled } from '../features/features.js';
 import { evaluateExpression } from './expression.js';
+import { formatRemaining, imprison, isImprisoned, prisonRemainingMs } from '../prison/prison.service.js';
 import type { Counting } from '../../generated/prisma/client.js';
 
 import { botName } from '../../core/identity.js';
@@ -15,6 +16,10 @@ const log = createLogger('comptage');
 
 export const CHECK = '✅';
 export const CROSS = '❌';
+export const LOCK = '🔒';
+export const POLICE = '🚔';
+/** Durée de conservation des messages de comptage servant à détecter les modifications. */
+const MESSAGE_RETENTION_DAYS = 30;
 /** Identifiant de compteur réservé à Voltron lui-même (jamais un id de membre). */
 const SELF_ID = 'voltron';
 
@@ -73,6 +78,13 @@ export async function handleCountingMessage(message: Message) {
   if (isSelf && parsed === null) return; // ses propres messages de jeu (❌, pile ou face) ne sont pas des tentatives
 
   const member = isSelf ? null : await ensureMember(message.member!);
+  if (member && isImprisoned(member)) {
+    // Un prisonnier ne joue pas : son message est effacé (ou verrouillé) sans toucher à la chaîne.
+    const deleted = await message.delete().then(() => true).catch(() => false);
+    if (!deleted) await message.react(LOCK).catch(() => undefined);
+    await message.channel.send({ content: `${LOCK} ${userMention(message.author.id)}, tu es en prison encore **${formatRemaining(prisonRemainingMs(member))}** : pas de comptage pour toi.`, allowedMentions: { users: [message.author.id] } }).catch(() => undefined);
+    return;
+  }
   const counterId = member ? member.id : SELF_ID;
   const state = await getCounting(message.guildId);
   const expected = state.current + 1;
@@ -86,6 +98,7 @@ export async function handleCountingMessage(message: Message) {
   if (!failure) {
     const { count } = await prisma.counting.updateMany({ where: { guildId: message.guildId, current: state.current }, data: { current: expected, lastMemberId: counterId, best: Math.max(state.best, expected), correctTotal: { increment: 1 } } });
     if (count === 0) return handleCountingMessage(message); // quelqu'un a été plus rapide : on réévalue
+    if (member) await recordMessage(message, member.id, expected, true);
     await message.react(CHECK).catch(() => undefined);
     if (member) await maybeReward(message, member.id, expected, state.correctTotal + 1, state.nextRewardAt, s);
     return;
@@ -94,6 +107,7 @@ export async function handleCountingMessage(message: Message) {
   // Erreur : croix, amende, pile ou face.
   const { count } = await prisma.counting.updateMany({ where: { guildId: message.guildId, current: state.current }, data: { failures: { increment: 1 } } });
   if (count === 0) return handleCountingMessage(message);
+  if (member) await recordMessage(message, member.id, expected, false);
   await message.react(CROSS).catch(() => undefined);
 
   const fine = member ? Math.min(s.countingFine, await getBalance(member.id)) : 0;
@@ -111,4 +125,43 @@ export async function handleCountingMessage(message: Message) {
     content: `${CROSS} ${member ? userMention(message.author.id) : `${botName()}`} s’est trompé : ${failure}. ${fineText}\n${botName()} lance la pièce… ${coin}`,
     allowedMentions: { users: [message.author.id] },
   }).catch((err) => log.warn('Message de comptage impossible', err));
+}
+
+/** Garde la trace d'un message évalué, pour repérer ensuite les modifications après coup. */
+async function recordMessage(message: Message<true>, memberId: string, number: number, accepted: boolean) {
+  await prisma.countingMessage.create({ data: { messageId: message.id, guildId: message.guildId, memberId, content: message.content, number, accepted } }).catch((err) => log.warn('Trace de comptage impossible', err));
+}
+
+/** Purge des traces anciennes (appelée périodiquement). */
+export async function pruneCountingMessages(): Promise<void> {
+  await prisma.countingMessage.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - MESSAGE_RETENTION_DAYS * 86_400_000) } } });
+}
+
+/**
+ * Message du salon de comptage modifié après coup. Si le contenu n'est plus celui qui a été évalué,
+ * l'auteur part en prison ; la chaîne, elle, continue comme si de rien n'était.
+ */
+export async function handleCountingEdit(newMessage: Message | PartialMessage) {
+  if (!newMessage.inGuild() || !isAllowedGuild(newMessage.guildId)) return;
+  const s = await getSettings(newMessage.guildId);
+  if (!s.countingChannelId || newMessage.channelId !== s.countingChannelId || !isFeatureEnabled(s, 'comptage')) return;
+  const trace = await prisma.countingMessage.findUnique({ where: { messageId: newMessage.id } });
+  if (!trace) return; // pas une tentative de comptage connue (message du bot, ancien message…)
+  const message = newMessage.partial ? await newMessage.fetch().catch(() => null) : newMessage;
+  if (!message || message.content === trace.content || !message.editedTimestamp) return; // aperçu de lien, pas une vraie modification
+
+  const guildMember = message.member ?? await message.guild.members.fetch(message.author.id).catch(() => null);
+  const member = await prisma.member.findUnique({ where: { id: trace.memberId } });
+  if (!guildMember || !member) return;
+
+  const { until, roleGiven } = await imprison(guildMember, member, `Comptage : message ${trace.number} modifié après coup`);
+  await prisma.countingMessage.update({ where: { messageId: message.id }, data: { content: message.content } }).catch(() => undefined);
+  await message.react(POLICE).catch(() => undefined);
+  const original = trace.accepted ? `Le vrai message était **${trace.content}** (${CHECK} ${trace.number})` : `Le message d’origine était **${trace.content}** (${CROSS})`;
+  const state = await getCounting(message.guildId);
+  await message.channel.send({
+    content: `${POLICE} ${userMention(message.author.id)} a modifié son message après coup. ${original}, la chaîne continue : prochain nombre **${state.current + 1}**.\n${LOCK} Direction la prison jusqu’à <t:${Math.floor(until.getTime() / 1000)}:t> : plus aucun jeu d’ici là.${roleGiven ? '' : ` (${botName()} n’a pas pu donner le rôle Prison.)`}`,
+    allowedMentions: { users: [message.author.id] },
+  }).catch((err) => log.warn('Message de prison impossible', err));
+  log.info(`${message.author.id} modifie son message ${trace.number} (« ${trace.content} » → « ${message.content} »)`);
 }

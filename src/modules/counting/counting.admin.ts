@@ -1,4 +1,4 @@
-import { channelMention, ChannelType, MessageFlags, PermissionFlagsBits, type ChatInputCommandInteraction, type SlashCommandSubcommandGroupBuilder } from 'discord.js';
+import { channelMention, ChannelType, MessageFlags, PermissionFlagsBits, type ChatInputCommandInteraction, type SlashCommandSubcommandGroupBuilder, roleMention } from 'discord.js';
 import { formatAmount, getSettings, updateSettings } from '../settings/settings.service.js';
 import { getCounting, resetCounting } from './counting.service.js';
 
@@ -55,6 +55,7 @@ export function describeCounting(s: Awaited<ReturnType<typeof getSettings>>, c: 
     `**Salon :** ${s.countingChannelId ? channelMention(s.countingChannelId) : '*aucun (désactivé)*'}`,
     `**Amende :** ${formatAmount(s.countingFine, s)}`,
     `**Surprise :** ${s.countingRewardEvery > 0 && s.countingRewardMax > 0 ? `environ un nombre sur ${s.countingRewardEvery}, de ${formatAmount(s.countingRewardMin, s)} à ${formatAmount(s.countingRewardMax, s)}` : 'désactivée'}`,
+    `**Prison :** ${s.prisonRoleId ? roleMention(s.prisonRoleId) : '*rôle « Prison » créé au besoin*'} · ${s.prisonMinutes} min sans aucun jeu pour qui modifie son message après coup`,
     `**Prochain nombre :** ${c.current + 1} · record ${c.best} · ${c.failures} erreur(s)`,
   ].join('\n');
 }

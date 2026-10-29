@@ -19,6 +19,7 @@ type FieldKind =
   | { kind: 'int'; min: number; max: number }
   | { kind: 'text'; maxLength: number; required: boolean }
   | { kind: 'channel'; required: boolean }
+  | { kind: 'role'; required: boolean }
   | { kind: 'channels' }
   | { kind: 'weekday'; allowNone: boolean }
   /** Paragraphe : une ligne par palier « niveau rôle » ; valeur = tableau [{ level, roleId }] */
@@ -50,6 +51,7 @@ export interface Form {
 const int = (min: number, max: number): FieldKind => ({ kind: 'int', min, max });
 const text = (maxLength: number, required = true): FieldKind => ({ kind: 'text', maxLength, required });
 const channelOf = (s: GuildSettings, id: string | null) => (id ? channelMention(id) : '');
+const roleOf = (id: string | null) => (id ? roleMention(id) : '');
 
 export const FORMS: Form[] = [
   {
@@ -251,6 +253,22 @@ export const FORMS: Form[] = [
     },
   },
   {
+    key: 'prison', module: 'comptage', title: 'Prison des tricheurs', button: 'Prison',
+    fields: [
+      { id: 'prisonRoleId', label: 'Rôle Prison (vide = créé au besoin)', help: '@Prison ou son nom', type: { kind: 'role', required: false }, current: (s) => roleOf(s.prisonRoleId) },
+      { id: 'prisonMinutes', label: 'Durée de la peine en minutes', type: int(1, 10_080), current: (s) => `${s.prisonMinutes}` },
+    ],
+    async apply({ guild, values }) {
+      const roleId = values.prisonRoleId as string | null;
+      if (roleId) {
+        const problem = roleAssignabilityProblem(guild, roleId);
+        if (problem) throw new FormError(`${roleMention(roleId)} : ${problem}`);
+      }
+      await updateSettings(guild.id, values as Partial<GuildSettings>);
+      return roleId ? `Prison enregistrée : ${roleMention(roleId)}, ${values.prisonMinutes} min.` : `Prison enregistrée : le rôle « Prison » sera créé à la première peine, ${values.prisonMinutes} min.`;
+    },
+  },
+  {
     key: 'commandes', module: 'commandes', title: 'Salons des commandes', button: 'Salons',
     fields: [
       { id: 'commandChannelIds', label: 'Salons autorisés (vide = partout)', help: '#salon1 #salon2…', type: { kind: 'channels' }, current: (s) => s.commandChannelIds.map((id) => channelMention(id)).join(' ') },
@@ -324,6 +342,13 @@ export function parseForm(form: Form, guild: Guild, raw: (id: string) => string)
         if (!input) { if (t.required) errors.push(`**${f.label}** : obligatoire.`); else values[f.id] = null; break; }
         const id = resolveChannelId(guild, input);
         if (!id) errors.push(`**${f.label}** : salon « ${input} » introuvable.`);
+        else values[f.id] = id;
+        break;
+      }
+      case 'role': {
+        if (!input) { if (t.required) errors.push(`**${f.label}** : obligatoire.`); else values[f.id] = null; break; }
+        const id = resolveRoleId(guild, input);
+        if (!id) errors.push(`**${f.label}** : rôle « ${input} » introuvable.`);
         else values[f.id] = id;
         break;
       }

@@ -8,6 +8,7 @@ import { getSettings } from '../../modules/settings/settings.service.js';
 import { DISABLED_MESSAGE, featureForCommand, featureForComponent, isFeatureEnabled } from '../../modules/features/features.js';
 import { isCommandChannelAllowed } from '../../modules/settings/commands.admin.js';
 import { channelMention } from 'discord.js';
+import { isGameFeature, isImprisoned, prisonMessage } from '../../modules/prison/prison.service.js';
 
 import { botName } from '../../core/identity.js';
 const log = createLogger('interactions');
@@ -51,6 +52,7 @@ export default defineEvent({
           }
         }
         const member = await ensureMember(interaction.member);
+        if (isGameFeature(featureForCommand(interaction.commandName)) && isImprisoned(member)) return replyError(interaction, prisonMessage(member));
         await command.execute({ interaction, guildMember: interaction.member, member });
         return;
       }
@@ -70,6 +72,7 @@ export default defineEvent({
         }
         if (await isDisabled(interaction.guildId, featureForComponent(interaction.customId))) return replyError(interaction, DISABLED_MESSAGE);
         const member = await ensureMember(interaction.member);
+        if (isGameFeature(featureForComponent(interaction.customId)) && isImprisoned(member)) return replyError(interaction, prisonMessage(member));
         await resolved.handler({ interaction, guildMember: interaction.member, member, arg: resolved.arg });
         return;
       }
@@ -93,6 +96,7 @@ export default defineEvent({
         }
         if (await isDisabled(interaction.guildId, featureForComponent(interaction.customId))) return replyError(interaction, DISABLED_MESSAGE);
         const member = await ensureMember(interaction.member);
+        if (isGameFeature(featureForComponent(interaction.customId)) && isImprisoned(member)) return replyError(interaction, prisonMessage(member));
         await handler({ interaction, guildMember: interaction.member, member, values: interaction.values });
         return;
       }
