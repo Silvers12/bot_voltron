@@ -13,6 +13,7 @@ export async function renderNotifyBanner(): Promise<Buffer> {
     'et les mentions qui te concernent personnellement.',
     'Coche ce qui t’intéresse, décoche pour arrêter.',
   ];
+  const pill = 'Choisis ce que tu reçois';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0d2b45"/><stop offset="1" stop-color="#2e86c1"/></linearGradient>
@@ -21,8 +22,8 @@ export async function renderNotifyBanner(): Promise<Buffer> {
     <rect width="${W}" height="${H}" rx="36" fill="url(#g)"/>
     <rect width="${W}" height="${H}" rx="36" fill="url(#dots)"/>
     <text x="${PAD}" y="${PAD + 60}" font-family="${FONT}" font-size="64" font-weight="bold" fill="#fff">Notifications</text>
-    <rect x="${PAD}" y="${PAD + 92}" width="260" height="36" rx="18" fill="#fff" opacity="0.15"/>
-    <text x="${PAD + 18}" y="${PAD + 117}" font-family="${FONT}" font-size="22" font-weight="bold" fill="#fff">Choisis ce que tu reçois</text>
+    <rect x="${PAD}" y="${PAD + 90}" width="${[...pill].length * 13 + 36}" height="40" rx="20" fill="#fff" opacity="0.15"/>
+    <text x="${PAD + 20}" y="${PAD + 118}" font-family="${FONT}" font-size="22" font-weight="bold" fill="#fff">${pill}</text>
     ${lines.map((l, i) => `<text x="${PAD}" y="${PAD + 178 + i * 36}" font-family="${FONT}" font-size="26" fill="#d6eaf8">${esc(l)}</text>`).join('')}
   </svg>`;
   const icon = await loadIllustration('notify', 'cloche');
