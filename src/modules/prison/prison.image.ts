@@ -21,14 +21,21 @@ export interface PrisonCard {
   /** Lignes courtes (motif, vraie valeur, suite de la chaîne) ; au plus 4 lignes après retour automatique. */
   lines: string[];
   minutes: number;
+  /** Prochain nombre de la chaîne, mis en valeur (absent pour une peine hors comptage). */
+  next?: number;
 }
 
 /** Bannière 1200 × 400 : avatar derrière les barreaux à gauche, verdict au centre, loutre en prison à droite. */
-export async function renderPrisonCard({ name, avatarPng, lines: input, minutes }: PrisonCard): Promise<Buffer> {
+export async function renderPrisonCard({ name, avatarPng, lines: input, minutes, next }: PrisonCard): Promise<Buffer> {
   const short = esc(name.length > 22 ? `${name.slice(0, 21)}…` : name);
   const x = PAD + AVATAR + 40;
   const textW = W - x - ICON - 20;
-  const lines = input.flatMap((l) => wrap(l, Math.floor(textW / 14))).slice(0, 4);
+  const lines = input.flatMap((l) => wrap(l, Math.floor(textW / 14))).slice(0, next === undefined ? 4 : 2);
+  const nextY = PAD + 198 + lines.length * 34 + 4;
+  const nextLabel = 'Prochain nombre';
+  const nextBox = next === undefined ? '' : `<rect x="${x}" y="${nextY}" width="${nextLabel.length * 13 + 60 + String(next).length * 26}" height="52" rx="26" fill="#2e7d32"/>
+    <text x="${x + 22}" y="${nextY + 34}" font-family="${FONT}" font-size="22" fill="#c8e6c9">${nextLabel}</text>
+    <text x="${x + 22 + nextLabel.length * 13 + 14}" y="${nextY + 37}" font-family="${FONT}" font-size="38" font-weight="bold" fill="#fff">${next}</text>`;
   const duration = minutes < 60 ? `${minutes} min` : minutes % 60 ? `${Math.floor(minutes / 60)} h ${minutes % 60}` : `${minutes / 60} h`;
   const pill = `🔒 ${duration} sans jeux`;
   const cx = PAD + AVATAR / 2, cy = H / 2;
@@ -46,6 +53,7 @@ export async function renderPrisonCard({ name, avatarPng, lines: input, minutes 
     <text x="${x + 18}" y="${PAD + 103}" font-family="${FONT}" font-size="24" font-weight="bold" fill="#fff">${pill}</text>
     <text x="${x}" y="${PAD + 152}" font-family="${FONT}" font-size="34" font-weight="bold" fill="#eceff1">${short}</text>
     ${lines.map((l, i) => `<text x="${x}" y="${PAD + 198 + i * 34}" font-family="${FONT}" font-size="25" fill="#cfd8dc">${esc(l)}</text>`).join('')}
+    ${nextBox}
   </svg>`;
   const [avatar, icon] = await Promise.all([sharp(await circleAvatar(avatarPng)).resize(AVATAR, AVATAR).png().toBuffer(), loadVisual()]);
   const layers: Array<{ input: Buffer; left: number; top: number }> = [{ input: avatar, left: PAD, top: Math.round(cy - AVATAR / 2) }, { input: Buffer.from(`<svg width="${W}" height="${H}">${bars}</svg>`), left: 0, top: 0 }];
