@@ -3,6 +3,7 @@ import path from 'node:path';
 import sharp from 'sharp';
 import { BANNER_W as W, circleAvatar, esc, FONT, wrap } from './image.js';
 import { contentDir } from './paths.js';
+import type { Guild } from 'discord.js';
 
 const AVATAR = 150, ICON = 230, PAD = 50, LINE = 33, TEXT_SIZE = 25, TEXT_TOP = 300;
 
@@ -55,10 +56,17 @@ export async function renderDuoCard(c: DuoCard): Promise<Buffer> {
   </svg>`;
   const [a, b] = await Promise.all([c.left.avatarPng, c.right.avatarPng].map(async (p) => sharp(await circleAvatar(p)).resize(AVATAR, AVATAR).png().toBuffer()));
   const layers: Array<{ input: Buffer; left: number; top: number }> = [{ input: a!, left: ax, top: ay }, { input: b!, left: bx, top: ay }];
-  if (c.illustration) layers.push({ input: c.illustration, left: W - PAD - ICON + 20, top: TEXT_TOP - 36 - ICON - 12 });
+  if (c.illustration) layers.push({ input: await sharp(c.illustration).resize(ICON, ICON, { fit: 'inside' }).png().toBuffer(), left: W - PAD - ICON + 20, top: TEXT_TOP - 36 - ICON - 12 });
   return sharp(Buffer.from(svg)).composite(layers).png().toBuffer();
 }
 
 export async function fetchAvatarPng(url: string): Promise<Buffer> {
   return Buffer.from(await (await fetch(url)).arrayBuffer());
+}
+
+/** Avatar PNG d'un membre du serveur (avatar de serveur s'il en a un), ou de l'utilisateur s'il est parti. */
+export async function memberAvatarPng(guild: Guild, discordUserId: string): Promise<Buffer> {
+  const member = await guild.members.fetch(discordUserId).catch(() => null);
+  const url = member ? member.displayAvatarURL({ extension: 'png', size: 256 }) : (await guild.client.users.fetch(discordUserId)).displayAvatarURL({ extension: 'png', size: 256 });
+  return fetchAvatarPng(url);
 }

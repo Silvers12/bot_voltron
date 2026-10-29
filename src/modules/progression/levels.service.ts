@@ -1,4 +1,5 @@
 import { allowedUsers } from '../notify/mentions.js';
+import { buildLevelUpMessage } from './levels.view.js';
 import { EmbedBuilder, roleMention, userMention, type Guild } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { createLogger } from '../../core/logger.js';
@@ -74,13 +75,15 @@ async function announce(guild: Guild, s: GuildSettings, discordUserId: string, l
   if (!s.levelUpChannelId) return;
   const channel = guild.channels.cache.get(s.levelUpChannelId);
   if (!channel?.isTextBased()) return;
-  const embed = new EmbedBuilder()
-    .setColor(0xf1c40f)
-    .setDescription(
-      `🎉 ${userMention(discordUserId)} atteint le **niveau ${level}** !` +
-        (gainedTier && tier ? `\n${botName()} lui remet le rôle ${roleMention(tier.roleId)}. Quelle ascension !` : ''),
-    );
-  await channel.send({ embeds: [embed], allowedMentions: { users: await allowedUsers(guild.id, 'niveau', discordUserId) } }).catch((err) => log.warn('Annonce de niveau impossible', err));
+  const roleName = gainedTier && tier ? guild.roles.cache.get(tier.roleId)?.name ?? null : null;
+  const member = await guild.members.fetch(discordUserId).catch(() => null);
+  const payload = member
+    ? await buildLevelUpMessage(member, level, roleName, tier && gainedTier ? tier.roleId : null).catch((err) => { log.warn('Carte de niveau impossible', err); return null; })
+    : null;
+  await channel.send(payload ?? {
+    embeds: [new EmbedBuilder().setColor(0xf1c40f).setDescription(`🎉 ${userMention(discordUserId)} atteint le **niveau ${level}** !` + (gainedTier && tier ? `\n${botName()} lui remet le rôle ${roleMention(tier.roleId)}. Quelle ascension !` : ''))],
+    allowedMentions: { users: await allowedUsers(guild.id, 'niveau', discordUserId) },
+  }).catch((err) => log.warn('Annonce de niveau impossible', err));
 }
 
 /**

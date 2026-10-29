@@ -59,7 +59,8 @@ registerButtonPrefix(DUEL_ACCEPT_PREFIX, (ctx) => withDuel(ctx, async (duel) => 
     disarm(duel.id);
     trackAchievements(interaction.guild, duel.challengerId);
     trackAchievements(interaction.guild, duel.opponentId);
-    await interaction.update(buildResolvedMessage(result, s));
+    await interaction.deferUpdate();
+    await interaction.editReply(await buildResolvedMessage(interaction.guild, result, s));
   } catch (err) {
     if (err instanceof InsufficientFundsError) {
       await interaction.reply({ content: `Il te faut ${formatAmount(duel.stake, s)} pour relever ce défi, et tu n’as que ${formatAmount(err.balance, s)}.`, flags: MessageFlags.Ephemeral });
@@ -95,12 +96,17 @@ export default defineCommand({
     const s = await getSettings(interaction.guildId);
     const target = interaction.options.getMember('membre');
     const stake = interaction.options.getInteger('mise', true);
-    const fail = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    const fail = async (content: string) => {
+      if (!interaction.deferred) return void (await interaction.reply({ content, flags: MessageFlags.Ephemeral }));
+      await interaction.deleteReply().catch(() => undefined);
+      await interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+    };
     if (!target) return void (await fail('Ce membre ne fait pas (ou plus) partie du serveur.'));
     if (target.user.bot) return void (await fail('Défier une petite loutre ? Elle préfère les câlins.'));
     if (target.id === interaction.user.id) return void (await fail(`Se défier soi-même ? ${botName()} admire l’audace, mais non.`));
 
     const opponent = await ensureMember(target);
+    await interaction.deferReply();
     let duel: DuelWithMembers;
     try {
       duel = await createDuel({ guildId: interaction.guildId, channelId: interaction.channelId, challenger: { id: member.id, discordUserId: interaction.user.id }, opponentId: opponent.id, stake });
@@ -109,9 +115,8 @@ export default defineCommand({
       if (err instanceof DuelError) return void (await fail(err.message));
       throw err;
     }
-    const message = await interaction.reply({ ...buildChallengeMessage(duel, s, await allowedUsers(interaction.guildId, 'defi', duel.opponent.discordUserId)), withResponse: true });
-    const sent = message.resource?.message;
-    if (sent) await setMessage(duel.id, sent.id);
-    armDuelExpiry(interaction.client, { ...duel, messageId: sent?.id ?? null });
+    const message = await interaction.editReply(await buildChallengeMessage(interaction.guild, duel, s, await allowedUsers(interaction.guildId, 'defi', duel.opponent.discordUserId)));
+    await setMessage(duel.id, message.id);
+    armDuelExpiry(interaction.client, { ...duel, messageId: message.id });
   },
 });

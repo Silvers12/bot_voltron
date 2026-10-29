@@ -1,4 +1,6 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, time, TimestampStyles, userMention, type MessageActionRowComponentBuilder } from 'discord.js';
+import { ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder, time, TimestampStyles, userMention, type Guild, type MessageActionRowComponentBuilder } from 'discord.js';
+import { loadIllustration, memberAvatarPng } from '../../core/duo-card.js';
+import { renderSoloCard } from '../../core/solo-card.js';
 import type { GuildSettings, Lottery } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import type { DrawResult } from './lottery.service.js';
@@ -28,11 +30,22 @@ export function buildLotteryMessage(lottery: Lottery, s: GuildSettings, intro?: 
   return screen(c, rows);
 }
 
-/** `pingUsers` : identifiants réellement notifiés (le gagnant, sauf refus). */
-export function buildDrawAnnouncement(r: DrawResult, totalTickets: number, s: GuildSettings, pingUsers: string[]) {
+/** Annonce du tirage : carte générée pour le gagnant (avatar, cagnotte, tickets, illustration), carte texte s'il n'y a personne. `pingUsers` : identifiants réellement notifiés. */
+export async function buildDrawAnnouncement(guild: Guild, r: DrawResult, totalTickets: number, s: GuildSettings, pingUsers: string[]) {
   const c = card(r.winner ? 0xf1c40f : 0x95a5a6);
   if (r.winner) {
     const chance = Math.round((100 * r.winner.tickets) / totalTickets);
+    const image = await renderSoloCard({
+      title: 'Tirage gagné !', badge: `+${formatAmount(r.lottery.pot, s)}`, badgeColor: '#e65100', from: '#311b92', to: '#f1c40f',
+      name: r.winner.displayName, avatarPng: await memberAvatarPng(guild, r.winner.discordUserId),
+      lines: [`${botName()} plonge la patte dans le chapeau… et en sort le ticket de ${r.winner.displayName} !`, `${r.winner.tickets} ticket${r.winner.tickets > 1 ? 's' : ''} sur ${totalTickets} (${chance} % de chances).`],
+      illustration: await loadIllustration('tombola', 'tirage'),
+    }).catch(() => null);
+    if (image) {
+      c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://tirage.png').setDescription(`${r.winner.displayName} remporte la tombola`)));
+      c.addTextDisplayComponents(text(`-# 🎟️ ${userMention(r.winner.discordUserId)} remporte **${formatAmount(r.lottery.pot, s)}** · prochain tirage ${time(r.next.drawAt, TimestampStyles.RelativeTime)}, la cagnotte repart à ${formatAmount(r.next.pot, s)}.`));
+      return { ...screen(c), files: [new AttachmentBuilder(image, { name: 'tirage.png' })], allowedMentions: { users: pingUsers } };
+    }
     c.addTextDisplayComponents(text(`# 🎟️ Tirage de la tombola !\n${botName()} plonge la patte dans le chapeau, farfouille longuement… et en sort le ticket de ${userMention(r.winner.discordUserId)} !`));
     c.addSeparatorComponents(divider(true));
     c.addTextDisplayComponents(text(`🏆 **${formatAmount(r.lottery.pot, s)}** remportés avec ${r.winner.tickets} ticket${r.winner.tickets > 1 ? 's' : ''} sur ${totalTickets} (${chance} % de chances).`));
