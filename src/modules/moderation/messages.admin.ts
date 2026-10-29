@@ -12,7 +12,7 @@ const log = createLogger('messages');
 export const PURGE_CONFIRM_PREFIX = 'admin:purge:';
 const CONFIRM_TTL_MS = 60_000;
 
-type Pending = { userId: string; channelId: string; fromMessageId: string | null; timer: NodeJS.Timeout };
+type Pending = { userId: string; channelId: string; fromMessageId: string | null; olderThanDays: number | null; keepPinned: boolean; timer: NodeJS.Timeout };
 const pending = new Map<string, Pending>();
 
 const CHANNEL_TYPES = [ChannelType.GuildText, ChannelType.GuildAnnouncement, ChannelType.PublicThread, ChannelType.PrivateThread] as const;
@@ -40,6 +40,14 @@ export function buildMessagesAdminGroup(group: SlashCommandSubcommandGroupBuilde
         .setName('vider')
         .setDescription('Supprime tous les messages du salon')
         .addChannelOption((o) => o.setName('salon').setDescription('Salon (par défaut : celui-ci)').addChannelTypes(...CHANNEL_TYPES)),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName('anciens')
+        .setDescription('Supprime les messages de plus de X jours')
+        .addIntegerOption((o) => o.setName('jours').setDescription('Âge minimal des messages à supprimer, en jours').setRequired(true).setMinValue(1).setMaxValue(3650))
+        .addChannelOption((o) => o.setName('salon').setDescription('Salon (par défaut : celui-ci)').addChannelTypes(...CHANNEL_TYPES))
+        .addBooleanOption((o) => o.setName('garder_epingles').setDescription('Conserver les messages épinglés (oui par défaut)')),
     );
 }
 
@@ -71,8 +79,10 @@ export async function handleMessagesAdmin(interaction: ChatInputCommandInteracti
     return;
   }
 
-  // depuis / vider : confirmation par bouton, valable une minute
+  // depuis / vider / anciens : confirmation par bouton, valable une minute
   let fromMessageId: string | null = null;
+  const olderThanDays = sub === 'anciens' ? interaction.options.getInteger('jours', true) : null;
+  const keepPinned = sub === 'anciens' ? interaction.options.getBoolean('garder_epingles') ?? true : false;
   if (sub === 'depuis') {
     fromMessageId = interaction.options.getString('id', true).trim();
     if (!/^\d{15,22}$/.test(fromMessageId)) return void (await reply('Identifiant invalide (clic droit sur le message → Copier l’identifiant du message).'));
@@ -80,8 +90,10 @@ export async function handleMessagesAdmin(interaction: ChatInputCommandInteracti
     if (!exists) return void (await reply(`Message introuvable dans ${channelMention(channel.id)}.`));
   }
   const token = randomUUID();
-  pending.set(token, { userId: interaction.user.id, channelId: channel.id, fromMessageId, timer: setTimeout(() => pending.delete(token), CONFIRM_TTL_MS) });
-  const what = fromMessageId ? `ce message et **tous** ceux postés après lui dans ${channelMention(channel.id)}` : `**tous** les messages de ${channelMention(channel.id)}, épinglés compris`;
+  pending.set(token, { userId: interaction.user.id, channelId: channel.id, fromMessageId, olderThanDays, keepPinned, timer: setTimeout(() => pending.delete(token), CONFIRM_TTL_MS) });
+  const what = olderThanDays
+    ? `les messages de plus de **${olderThanDays} jour${olderThanDays > 1 ? 's' : ''}** dans ${channelMention(channel.id)}${keepPinned ? ' (épinglés conservés)' : ', épinglés compris'}`
+    : fromMessageId ? `ce message et **tous** ceux postés après lui dans ${channelMention(channel.id)}` : `**tous** les messages de ${channelMention(channel.id)}, épinglés compris`;
   await interaction.reply({
     content: `⚠️ Supprimer ${what} ? C’est irréversible. Les messages de plus de 14 jours sont supprimés un par un, ce qui peut prendre du temps.`,
     components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -103,8 +115,9 @@ registerButtonPrefix(PURGE_CONFIRM_PREFIX, async ({ interaction, guildMember, ar
   if (!channel || !channel.isTextBased()) return void (await interaction.update({ content: 'Salon introuvable.', components: [] }));
 
   await interaction.update({ content: '🗑️ Suppression en cours…', components: [] });
-  const deleted = await purge(channel, job.fromMessageId, async (n) => { await interaction.editReply(`🗑️ Suppression en cours… ${n} message(s) supprimé(s).`).catch(() => undefined); });
-  log.info(`${interaction.user.id} supprime ${deleted} message(s) dans #${channel.name}${job.fromMessageId ? ` depuis ${job.fromMessageId}` : ' (vidage)'}`);
+  const progress = async (n: number) => { await interaction.editReply(`🗑️ Suppression en cours… ${n} message(s) supprimé(s).`).catch(() => undefined); };
+  const deleted = job.olderThanDays ? await purgeOlderThan(channel, job.olderThanDays, job.keepPinned, progress) : await purge(channel, job.fromMessageId, progress);
+  log.info(`${interaction.user.id} supprime ${deleted} message(s) dans #${channel.name}${job.olderThanDays ? ` (plus de ${job.olderThanDays} j)` : job.fromMessageId ? ` depuis ${job.fromMessageId}` : ' (vidage)'}`);
   await interaction.editReply(`✅ ${deleted} message(s) supprimé(s) dans ${channelMention(channel.id)}.`).catch(() => undefined);
 });
 
@@ -127,6 +140,22 @@ async function purge(channel: GuildTextBasedChannel, fromMessageId: string | nul
     deleted += await deleteMessages(channel, [...batch.values()]);
     if (Date.now() - lastReport > 5_000) { lastReport = Date.now(); await progress(deleted); }
     if (fromMessageId) fromMessageId = batch.reduce((max, m) => (BigInt(m.id) > BigInt(max) ? m.id : max), fromMessageId);
+  }
+}
+
+/** Supprime les messages plus vieux que `days` jours, en remontant l'historique du plus récent au plus ancien. */
+async function purgeOlderThan(channel: GuildTextBasedChannel, days: number, keepPinned: boolean, progress: (n: number) => Promise<void>): Promise<number> {
+  const cutoff = Date.now() - days * 24 * 3600_000;
+  let deleted = 0;
+  let lastReport = Date.now();
+  let before: string | undefined;
+  for (;;) {
+    const batch = await channel.messages.fetch({ limit: 100, ...(before ? { before } : {}) });
+    if (batch.size === 0) return deleted;
+    before = batch.reduce((min, m) => (BigInt(m.id) < BigInt(min) ? m.id : min), batch.first()!.id);
+    const targets = [...batch.values()].filter((m) => m.createdTimestamp < cutoff && !(keepPinned && m.pinned));
+    if (targets.length) deleted += await deleteMessages(channel, targets);
+    if (Date.now() - lastReport > 5_000) { lastReport = Date.now(); await progress(deleted); }
   }
 }
 

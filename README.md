@@ -326,7 +326,7 @@ Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Disc
 - `/admin panneau`, `/admin fonction`
 - `/admin accueil installer salon [salon_notifications]|roles|banniere|texte|publier|etat`
 - `/admin commandes ajouter-salon|retirer-salon|partout|liste`
-- `/admin messages supprimer id:… [salon]` : supprime un message · `depuis id:… [salon]` : supprime ce message et tous ceux postés après · `vider [salon]` : supprime tout le salon. Les deux derniers demandent une confirmation (bouton, 1 min). Les messages de moins de 14 jours partent par lots, les plus anciens un par un (plus lent). Le bot doit avoir « Gérer les messages » et « Lire l’historique » dans le salon.
+- `/admin messages supprimer id:… [salon]` : supprime un message · `depuis id:… [salon]` : supprime ce message et tous ceux postés après · `vider [salon]` : supprime tout le salon · `anciens jours:X [salon] [garder_epingles]` : supprime les messages de plus de X jours (épinglés conservés par défaut). Les trois derniers demandent une confirmation (bouton, 1 min). Les messages de moins de 14 jours partent par lots, les plus anciens un par un (plus lent). Le bot doit avoir « Gérer les messages » et « Lire l’historique » dans le salon.
 - `/admin message texte:… [salon] [repondre_a]` : écrit en tant que Voltron (`\n` pour un retour à la ligne, mentions de membres et de rôles autorisées, pas de @everyone)
 - `/admin monnaie singulier pluriel [symbole]` · `/admin bienvenue montant` · `/admin quotidien montant` · `/admin hebdo montant`
 - `/admin xp [par_message] [delai_message] [par_tranche_vocal] [tranche_vocal]` · `/admin blackjack min max` · `/admin machine [prix] [part_triple] [cagnotte_depart]` · `/admin duel min max` (le vol se règle dans le panneau)
