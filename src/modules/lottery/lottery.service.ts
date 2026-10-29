@@ -64,7 +64,7 @@ export async function publishLottery(client: Client, lottery: Lottery, intro: st
   if (typeof channel === 'string') { log.warn(`Publication de la tombola impossible sur ${guild.name} : ${channel}`); return null; }
 
   const fresh = await prisma.lottery.findUniqueOrThrow({ where: { id: lottery.id } });
-  const message = await channel.send({ ...buildLotteryMessage(fresh, s, `${notifyMention(s, 'lottery')}${intro}`), allowedMentions: { parse: ['roles' as const] } }).catch((err) => { log.warn('Publication de la tombola impossible', err); return null; });
+  const message = await channel.send({ ...(await buildLotteryMessage(fresh, s, `${notifyMention(s, 'lottery')}${intro}`)), allowedMentions: { parse: ['roles' as const] } }).catch((err) => { log.warn('Publication de la tombola impossible', err); return null; });
   if (!message) return null;
 
   const canPin = channel.permissionsFor(guild.members.me!).has(PermissionFlagsBits.ManageMessages);
@@ -82,7 +82,7 @@ async function retireMessage(client: Client, lottery: Lottery, s: GuildSettings,
   const old = await fetchLotteryMessage(client, lottery);
   if (!old) return;
   if (unpin && old.pinned) await old.unpin().catch(() => undefined);
-  await old.edit(buildLotteryMessage(lottery, s, undefined, { buttons: false })).catch(() => undefined);
+  await old.edit(await buildLotteryMessage(lottery, s, undefined, { buttons: false })).catch(() => undefined);
 }
 
 async function fetchLotteryMessage(client: Client, lottery: Pick<Lottery, 'channelId' | 'messageId'>) {
@@ -98,7 +98,7 @@ export async function refreshPublishedMessage(client: Client, lottery: Lottery, 
   const msg = await fetchLotteryMessage(client, lottery);
   if (!msg) return;
   const s = await getSettings(lottery.guildId);
-  await msg.edit(buildLotteryMessage(lottery, s)).catch(() => undefined);
+  await msg.edit(await buildLotteryMessage(lottery, s)).catch(() => undefined);
 }
 
 /** Tirage ouvert du serveur, créé si besoin (avec amorce et report éventuel). */

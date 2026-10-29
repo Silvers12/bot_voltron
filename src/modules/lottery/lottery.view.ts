@@ -4,30 +4,27 @@ import { renderSoloCard } from '../../core/solo-card.js';
 import type { GuildSettings, Lottery } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import type { DrawResult } from './lottery.service.js';
+import { renderLotteryBanner } from './lottery.image.js';
 import { card, divider, screen, text } from '../../discord/v2.js';
 
 import { botName } from '../../core/identity.js';
 export const LOTTERY_BUY_PREFIX = 'lottery:buy:';
 const COLOR = 0x8e44ad;
 
-/** Carte de la tombola. `intro` (annonce, rappel, mention du rôle) s'affiche au-dessus ; `buttons: false` pour un message retiré. */
-export function buildLotteryMessage(lottery: Lottery, s: GuildSettings, intro?: string, { buttons = true } = {}) {
+/** Carte de la tombola : bannière générée (cagnotte, tickets, illustration), date du tirage en texte. `intro` (annonce, rappel, mention du rôle) s'affiche au-dessus ; `buttons: false` pour un message retiré. */
+export async function buildLotteryMessage(lottery: Lottery, s: GuildSettings, intro?: string, { buttons = true } = {}) {
   const c = card(COLOR);
-  if (intro) { c.addTextDisplayComponents(text(intro)); c.addSeparatorComponents(divider()); }
-  c.addTextDisplayComponents(text(
-    `# 🎟️ Tombola de la compagnie\nUn seul gagnant rafle toute la cagnotte. Chaque ticket est une chance de plus.\n**Tirage ${time(lottery.drawAt, TimestampStyles.RelativeTime)}** · ${time(lottery.drawAt, TimestampStyles.LongDateTime)}`,
-  ));
-  c.addSeparatorComponents(divider(true));
-  c.addTextDisplayComponents(text(`💰 **Cagnotte** · **${formatAmount(lottery.pot, s)}**\n🎟️ **Ticket** · ${formatAmount(lottery.ticketPrice, s)} · **${lottery.totalTickets}** vendu${lottery.totalTickets > 1 ? 's' : ''}`));
-  c.addSeparatorComponents(divider());
-  c.addTextDisplayComponents(text(`-# ${s.lotteryMaxTickets > 0 ? `Maximum ${s.lotteryMaxTickets} tickets par membre. ` : ''}Chacun paie avec sa bourse.${buttons ? '' : ' Ce message n’est plus actif : voir le dernier message de tombola.'}`));
+  if (intro) c.addTextDisplayComponents(text(intro));
+  const image = await renderLotteryBanner(lottery, s);
+  c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://tombola.png').setDescription(`Tombola : cagnotte ${formatAmount(lottery.pot, s)}, ${lottery.totalTickets} ticket(s) vendu(s)`)));
+  c.addTextDisplayComponents(text(`🎟️ **Tirage ${time(lottery.drawAt, TimestampStyles.RelativeTime)}** · ${time(lottery.drawAt, TimestampStyles.LongDateTime)}\n-# Chacun paie avec sa bourse.${buttons ? '' : ' Ce message n’est plus actif : voir le dernier message de tombola.'}`));
   const rows = buttons
     ? [new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
         new ButtonBuilder().setCustomId(`${LOTTERY_BUY_PREFIX}1`).setLabel(`1 ticket (${formatAmount(lottery.ticketPrice, s)})`).setStyle(ButtonStyle.Primary).setEmoji('🎟️'),
         new ButtonBuilder().setCustomId(`${LOTTERY_BUY_PREFIX}5`).setLabel(`5 tickets (${formatAmount(lottery.ticketPrice * 5, s)})`).setStyle(ButtonStyle.Primary).setEmoji('🎟️').setDisabled(s.lotteryMaxTickets > 0 && s.lotteryMaxTickets < 5),
       )]
     : [];
-  return screen(c, rows);
+  return { ...screen(c, rows), files: [new AttachmentBuilder(image, { name: 'tombola.png' })], attachments: [] };
 }
 
 /** Annonce du tirage : carte générée pour le gagnant (avatar, cagnotte, tickets, illustration), carte texte s'il n'y a personne. `pingUsers` : identifiants réellement notifiés. */
