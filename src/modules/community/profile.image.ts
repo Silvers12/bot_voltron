@@ -36,7 +36,7 @@ export async function renderProfileCard({ member, avatarPng, settings, rank, tit
     ${purse}
     <text x="${x}" y="92" font-family="${FONT}" font-size="52" font-weight="bold" fill="#fff">${name}</text>
     ${titleText ? `<rect x="${x}" y="112" width="${titleText.length * 14 + 36}" height="40" rx="20" fill="#f1c40f"/><text x="${x + 18}" y="140" font-family="${FONT}" font-size="24" font-weight="bold" fill="#1b2838">${titleText}</text>` : ''}
-    <text x="${x}" y="${titleText ? 192 : 150}" font-family="${FONT}" font-size="26" fill="#dfe6ee">${since}</text>
+    <text x="${x}" y="192" font-family="${FONT}" font-size="26" fill="#dfe6ee">${since}</text>
     <text x="${x}" y="${barY - 16}" font-family="${FONT}" font-size="34" font-weight="bold" fill="#fff">Niveau ${p.level}</text>
     <text x="${x + barW}" y="${barY - 16}" text-anchor="end" font-family="${FONT}" font-size="26" fill="#dfe6ee">${rank}ᵉ de la compagnie</text>
     <rect x="${x}" y="${barY}" width="${barW}" height="26" rx="13" fill="#ffffff" opacity="0.22"/>
