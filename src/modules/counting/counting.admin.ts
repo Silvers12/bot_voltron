@@ -1,9 +1,10 @@
 import { channelMention, ChannelType, MessageFlags, PermissionFlagsBits, type ChatInputCommandInteraction, type SlashCommandSubcommandGroupBuilder, roleMention } from 'discord.js';
 import { formatAmount, getSettings, updateSettings } from '../settings/settings.service.js';
 import { getCounting, resetCounting } from './counting.service.js';
+import { addPrisonSubcommands, handlePrisonAdmin, PRISON_SUBCOMMANDS } from '../prison/prison.admin.js';
 
 export function buildCountingAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
-  return group
+  return addPrisonSubcommands(group)
     .setName('comptage')
     .setDescription('Salon de comptage')
     .addSubcommand((sub) =>
@@ -21,6 +22,7 @@ export function buildCountingAdminGroup(group: SlashCommandSubcommandGroupBuilde
 
 export async function handleCountingAdmin(interaction: ChatInputCommandInteraction<'cached'>) {
   const sub = interaction.options.getSubcommand(true);
+  if ((PRISON_SUBCOMMANDS as readonly string[]).includes(sub)) return handlePrisonAdmin(interaction);
   const guildId = interaction.guildId;
   const reply = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
 

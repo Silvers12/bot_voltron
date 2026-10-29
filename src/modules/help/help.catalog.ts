@@ -101,6 +101,6 @@ export const ADMIN_CATEGORY: HelpCategory = {
     { command: 'admin', sub: 'message', args: 'texte [salon] [repondre_a]', describe: () => `Fait parler ${botName()}. \`/admin messages\` pour supprimer des messages.` },
     { command: 'admin', sub: 'fonction', args: 'nom active', describe: () => 'Met une fonctionnalité en pause ou la réveille.' },
     { command: 'admin', sub: 'stats', describe: () => 'Vue d’ensemble de l’économie du serveur.' },
-    { command: 'admin', sub: 'prison liberer', args: 'membre', describe: () => 'Libère un détenu avant l’heure. `envoyer` pour enfermer à la main, `liste` pour voir qui est en prison.' },
+    { command: 'admin', sub: 'comptage liberer', args: 'membre', describe: () => 'Libère un détenu avant l’heure. `envoyer` pour enfermer à la main, `detenus` pour voir qui est en prison.' },
   ],
 };

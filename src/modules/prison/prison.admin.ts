@@ -3,23 +3,24 @@ import { prisma } from '../../infrastructure/prisma.js';
 import { findMember } from '../community/member.service.js';
 import { formatRemaining, imprison, isImprisoned, prisonRemainingMs, release } from './prison.service.js';
 
-export function buildPrisonAdminGroup(group: SlashCommandSubcommandGroupBuilder) {
+export const PRISON_SUBCOMMANDS = ['liberer', 'envoyer', 'detenus'] as const;
+
+/** Sous-commandes de prison, rangées dans le groupe /admin comptage (limite Discord de 25 entrées par commande). */
+export function addPrisonSubcommands(group: SlashCommandSubcommandGroupBuilder) {
   return group
-    .setName('prison')
-    .setDescription('Prison des tricheurs')
     .addSubcommand((sub) => sub.setName('liberer').setDescription('Libère un membre avant la fin de sa peine').addUserOption((o) => o.setName('membre').setDescription('Membre à libérer').setRequired(true)))
     .addSubcommand((sub) =>
       sub.setName('envoyer').setDescription('Envoie un membre en prison').addUserOption((o) => o.setName('membre').setDescription('Membre à enfermer').setRequired(true))
         .addIntegerOption((o) => o.setName('minutes').setDescription('Durée (par défaut : réglage du serveur)').setMinValue(1).setMaxValue(10_080)),
     )
-    .addSubcommand((sub) => sub.setName('liste').setDescription('Membres actuellement en prison'));
+    .addSubcommand((sub) => sub.setName('detenus').setDescription('Membres actuellement en prison'));
 }
 
 export async function handlePrisonAdmin(interaction: ChatInputCommandInteraction<'cached'>) {
   const sub = interaction.options.getSubcommand(true);
   const reply = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
 
-  if (sub === 'liste') {
+  if (sub === 'detenus') {
     const inside = await prisma.member.findMany({ where: { guildId: interaction.guildId, prisonUntil: { gt: new Date() } }, orderBy: { prisonUntil: 'asc' } });
     await reply(inside.length ? inside.map((m) => `🔒 ${userMention(m.discordUserId)} · encore ${formatRemaining(prisonRemainingMs(m))}`).join('\n') : 'Personne en prison.');
     return;

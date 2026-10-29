@@ -13,7 +13,6 @@ import { buildCountingAdminGroup, handleCountingAdmin } from '../../modules/coun
 import { buildMessagesAdminGroup, handleMessagesAdmin } from '../../modules/moderation/messages.admin.js';
 import { buildCommandsAdminGroup, handleCommandsAdmin } from '../../modules/settings/commands.admin.js';
 import { buildWelcomeAdminGroup, handleWelcomeAdmin } from '../../modules/notify/notify.admin.js';
-import { buildPrisonAdminGroup, handlePrisonAdmin } from '../../modules/prison/prison.admin.js';
 import { handleInstall } from '../../modules/admin/install.js';
 import { getJackpot } from '../../modules/casino/slots.service.js';
 import { openAdminPanel } from '../../modules/admin/panel.controller.js';
@@ -147,8 +146,7 @@ export default defineCommand({
     .addSubcommandGroup((group) => buildCountingAdminGroup(group))
     .addSubcommandGroup((group) => buildMessagesAdminGroup(group))
     .addSubcommandGroup((group) => buildCommandsAdminGroup(group))
-    .addSubcommandGroup((group) => buildWelcomeAdminGroup(group))
-    .addSubcommandGroup((group) => buildPrisonAdminGroup(group)),
+    .addSubcommandGroup((group) => buildWelcomeAdminGroup(group)),
 
   async autocomplete(interaction) {
     if (!isBotAdmin(interaction.member)) return void (await interaction.respond([]));
@@ -172,7 +170,6 @@ export default defineCommand({
     if (interaction.options.getSubcommandGroup(false) === 'messages') return handleMessagesAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'commandes') return handleCommandsAdmin(interaction);
     if (interaction.options.getSubcommandGroup(false) === 'accueil') return handleWelcomeAdmin(interaction);
-    if (interaction.options.getSubcommandGroup(false) === 'prison') return handlePrisonAdmin(interaction);
 
     const sub = interaction.options.getSubcommand(true);
     const settings = await getSettings(interaction.guildId);
