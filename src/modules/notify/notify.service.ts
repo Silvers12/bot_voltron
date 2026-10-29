@@ -72,7 +72,7 @@ export async function toggleNotifyRole(member: GuildMember, key: NotifyKey): Pro
   return true;
 }
 
-type PageSpec = { channelId: string | null; messageId: string | null; messageField: 'welcomeMessageId' | 'notifyMessageId'; label: string; build: () => ReturnType<typeof buildWelcomeMessage> | ReturnType<typeof buildNotifyMessage> };
+type PageSpec = { channelId: string | null; messageId: string | null; messageField: 'welcomeMessageId' | 'notifyMessageId'; label: string; build: () => ReturnType<typeof buildWelcomeMessage> | ReturnType<typeof buildNotifyMessage> | Promise<ReturnType<typeof buildWelcomeMessage>> };
 
 /** Publie ou met à jour une page épinglée dans son salon ; retourne « publiée » ou « mise à jour ». */
 async function publishPage(guild: Guild, page: PageSpec): Promise<string> {
@@ -82,7 +82,7 @@ async function publishPage(guild: Guild, page: PageSpec): Promise<string> {
   const perms = channel.permissionsFor(guild.members.me!);
   if (!perms.has(PermissionFlagsBits.ViewChannel) || !perms.has(PermissionFlagsBits.SendMessages)) throw new NotifyError(`Le bot ne peut pas écrire dans le salon ${page.label}.`);
 
-  const payload = page.build();
+  const payload = await page.build();
   const existing = page.messageId ? await channel.messages.fetch(page.messageId).catch(() => null) : null;
   if (existing) {
     // attachments: [] remplace l'ancienne bannière ; content/embeds vidés pour passer en composants V2 si besoin

@@ -6,6 +6,7 @@ import type { GuildSettings } from '../../generated/prisma/client.js';
 import { formatAmount } from '../settings/settings.service.js';
 import { isFeatureEnabled } from '../features/features.js';
 import { MENTIONS } from './mentions.js';
+import { renderNotifyBanner } from './notify.image.js';
 
 import { botBannerUrl, botName } from '../../core/identity.js';
 export const NOTIFY_TOGGLE_PREFIX = 'notify:toggle:';
@@ -120,11 +121,12 @@ function addMentionsBlock(container: ContainerBuilder) {
 }
 
 /** Page des notifications, publiée dans son propre salon : uniquement le choix des rôles. */
-export function buildNotifyMessage(s: GuildSettings) {
+export async function buildNotifyMessage(s: GuildSettings) {
   const container = new ContainerBuilder().setAccentColor(COLOR);
-  container.addTextDisplayComponents(text(`# 🔔 Notifications\n${botName()} ne mentionne que celles et ceux qui l’ont demandé. Coche ce qui t’intéresse, décoche pour arrêter. Deux menus : les annonces générales (rôles) et les mentions qui te concernent personnellement.`));
+  const banner = await renderNotifyBanner();
+  container.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL('attachment://notifications.png').setDescription('Notifications : choisis ce que tu reçois')));
   addNotifyBlock(container, s);
   container.addSeparatorComponents(divider());
   container.addTextDisplayComponents(text(`-# ${botName()}, petite loutre du serveur · Un câlin ? 🦦`));
-  return { components: [container], flags: MessageFlags.IsComponentsV2 as const };
+  return { components: [container], files: [new AttachmentBuilder(banner, { name: 'notifications.png' })], flags: MessageFlags.IsComponentsV2 as const };
 }
