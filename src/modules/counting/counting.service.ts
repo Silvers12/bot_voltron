@@ -9,6 +9,7 @@ import { formatAmount, getSettings } from '../settings/settings.service.js';
 import { isFeatureEnabled } from '../features/features.js';
 import { evaluateExpression } from './expression.js';
 import { formatRemaining, imprison, isImprisoned, prisonRemainingMs } from '../prison/prison.service.js';
+import { buildPrisonMessage } from '../prison/prison.view.js';
 import type { Counting } from '../../generated/prisma/client.js';
 
 import { botName } from '../../core/identity.js';
@@ -157,11 +158,21 @@ export async function handleCountingEdit(newMessage: Message | PartialMessage) {
   const { until, roleGiven } = await imprison(guildMember, member, `Comptage : message ${trace.number} modifié après coup`);
   await prisma.countingMessage.update({ where: { messageId: message.id }, data: { content: message.content } }).catch(() => undefined);
   await message.react(POLICE).catch(() => undefined);
-  const original = trace.accepted ? `Le vrai message était **${trace.content}** (${CHECK} ${trace.number})` : `Le message d’origine était **${trace.content}** (${CROSS})`;
   const state = await getCounting(message.guildId);
-  await message.channel.send({
-    content: `${POLICE} ${userMention(message.author.id)} a modifié son message après coup. ${original}, la chaîne continue : prochain nombre **${state.current + 1}**.\n${LOCK} Direction la prison jusqu’à <t:${Math.floor(until.getTime() / 1000)}:t> : plus aucun jeu d’ici là.${roleGiven ? '' : ` (${botName()} n’a pas pu donner le rôle Prison.)`}`,
+  const original = trace.accepted ? `Le vrai message était « ${trace.content} » (${trace.number}, accepté).` : `Le message d’origine était « ${trace.content} » (refusé).`;
+  const payload = await buildPrisonMessage(guildMember, {
+    lines: [
+      `Message modifié après coup : « ${message.content.slice(0, 20)} »`,
+      trace.accepted ? `Vrai message : « ${trace.content.slice(0, 20)} » (${trace.number} ✅)` : `Message d’origine : « ${trace.content.slice(0, 20)} » (❌)`,
+      `La chaîne continue : prochain nombre ${state.current + 1}`,
+    ],
+    minutes: s.prisonMinutes,
+    until,
+  }).catch((err) => { log.warn('Carte de prison impossible', err); return null; });
+  await message.channel.send(payload ?? {
+    content: `${POLICE} ${userMention(message.author.id)} a modifié son message après coup. ${original} La chaîne continue : prochain nombre **${state.current + 1}**.\n${LOCK} Direction la prison jusqu’à <t:${Math.floor(until.getTime() / 1000)}:t> : plus aucun jeu d’ici là.`,
     allowedMentions: { users: [message.author.id] },
   }).catch((err) => log.warn('Message de prison impossible', err));
+  if (!roleGiven) log.warn(`${message.author.id} : rôle Prison non attribué`);
   log.info(`${message.author.id} modifie son message ${trace.number} (« ${trace.content} » → « ${message.content} »)`);
 }
