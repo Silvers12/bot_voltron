@@ -71,6 +71,18 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     ],
   },
   {
+    key: 'musique', label: 'Musique', emoji: '🎵', blurb: 'YouTube dans le vocal',
+    intro: (s) => `Rejoins un salon vocal, puis lance une vidéo, une playlist ou une recherche YouTube. Le lecteur s’affiche avec ses boutons (lecture, pause, suivant, mélange, boucle, volume, file).${s.djRoleId ? ` Réservé au rôle <@&${s.djRoleId}>.` : ''}${s.musicChannelIds.length ? ` Commandes dans ${s.musicChannelIds.map((id) => `<#${id}>`).join(', ')}.` : ''} Je quitte le vocal après 5 min sans musique ou quand plus personne n’écoute.`,
+    entries: [
+      { command: 'youtube', sub: 'play', args: 'recherche', feature: 'musique', describe: () => 'Ajoute une vidéo, une playlist entière ou le premier résultat d’une recherche, et affiche le lecteur.' },
+      { command: 'youtube', sub: 'player', feature: 'musique', describe: () => 'Réaffiche le lecteur en bas du salon.' },
+      { command: 'youtube', sub: 'queue', args: '[page]', feature: 'musique', describe: () => 'La file d’attente, avec un menu pour sauter à une piste.' },
+      { command: 'youtube', sub: 'skip', feature: 'musique', describe: () => 'Piste suivante. `precedent` pour revenir en arrière, `pause` et `resume` pour marquer une pause.' },
+      { command: 'youtube', sub: 'loop', args: 'mode', feature: 'musique', describe: () => 'Boucle sur la piste ou sur toute la file. `shuffle` mélange, `volume` règle le son (0 à 200 %).' },
+      { command: 'youtube', sub: 'stop', feature: 'musique', describe: () => 'Arrête tout, vide la file et quitte le vocal. `remove` et `clear` pour trier la file.' },
+    ],
+  },
+  {
     key: 'progression', label: 'Progression', emoji: '⭐', blurb: 'XP, niveaux, classement, succès, stats',
     intro: (s) => `Tu gagnes de l’XP en discutant (${s.xpPerMessage} par message) et en vocal (${s.xpPerVoiceInterval} toutes les ${s.voiceIntervalMinutes} min). Les niveaux débloquent des rôles de palier.`,
     entries: [

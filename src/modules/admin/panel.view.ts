@@ -16,7 +16,7 @@ export const ADMIN_MODULE_PREFIX = 'admin:open:';
 const COLOR = 0xc0392b;
 const FOOTER = `Intendance de ${botName()} · panneau réservé, se ferme après 5 min d’inactivité`;
 
-export type ModuleKey = 'economie' | 'progression' | 'boutique' | 'casino' | 'duel' | 'vol' | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'commandes' | 'accueil' | 'textes';
+export type ModuleKey = 'economie' | 'progression' | 'boutique' | 'casino' | 'duel' | 'vol' | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'commandes' | 'accueil' | 'textes' | 'musique';
 
 export interface ModuleInfo {
   key: ModuleKey;
@@ -36,6 +36,7 @@ export const MODULES: ModuleInfo[] = [
   { key: 'tombola', label: 'Tombola', emoji: '🎟️', features: ['tombola'] },
   { key: 'succes', label: 'Succès et badges', emoji: '🏅', features: ['succes'] },
   { key: 'comptage', label: 'Salon de comptage', emoji: '🔢', features: ['comptage'] },
+  { key: 'musique', label: 'Musique YouTube', emoji: '🎵', features: ['musique'] },
   { key: 'commandes', label: 'Salons des commandes', emoji: '📍', features: [] },
   { key: 'accueil', label: 'Accueil et notifications', emoji: '🔔', features: [] },
   { key: 'textes', label: 'Compliments, insultes, taux et dés', emoji: '💐', features: ['compliments', 'insultes', 'taux', 'des'] },

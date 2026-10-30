@@ -1,3 +1,4 @@
+import { getPlayer } from '../music/music.service.js';
 import { MessageFlags, channelMention, roleMention, type ChatInputCommandInteraction, type Guild, type RepliableInteraction } from 'discord.js';
 import { prisma } from '../../infrastructure/prisma.js';
 import { isBotAdmin } from '../../core/permissions.js';
@@ -160,6 +161,17 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
     }
     case 'comptage':
       return { lines: describeCounting(s, await getCounting(guild.id)).split('\n'), commands: ['/admin comptage salon · amende · reinitialiser · etat', '/admin comptage liberer · envoyer · detenus'] };
+    case 'musique': {
+      const p = getPlayer(guild.id);
+      return {
+        lines: [
+          `Rôle DJ : ${s.djRoleId ? roleMention(s.djRoleId) : '*aucun (tout le monde)*'} · les administrateurs passent toujours`,
+          `Salons des commandes /youtube : ${s.musicChannelIds.length ? s.musicChannelIds.map(channelMention).join(', ') : '*ceux des commandes*'}`,
+          `Lecteur : ${p ? `connecté dans ${channelMention(p.voiceChannelId!)}, ${p.current ? `en lecture (${p.queue.length} en attente)` : 'en attente'}` : 'arrêté'}`,
+        ],
+        commands: ['/youtube play · player · skip · precedent · pause · resume · stop · queue · shuffle · loop · volume · remove · clear'],
+      };
+    }
     case 'commandes':
       return { lines: [describeCommandChannels(s)], commands: ['/admin commandes ajouter-salon · retirer-salon · partout · liste'] };
     case 'accueil':

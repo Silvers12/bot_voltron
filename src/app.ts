@@ -9,6 +9,7 @@ import './modules/events/grouphug.controller.js';
 import './modules/admin/panel.controller.js';
 import './modules/notify/notify.controller.js';
 import './modules/community/profile.nav.js';
+import './modules/music/music.controller.js';
 import { loadBanter } from './modules/banter/banter.service.js';
 import { loadDuelTexts } from './modules/duel/duel.service.js';
 import { loadTheftTexts } from './modules/theft/theft.service.js';

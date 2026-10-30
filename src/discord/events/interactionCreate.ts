@@ -7,6 +7,7 @@ import { resolveButton, resolveModal, resolveSelect } from '../components.js';
 import { getSettings } from '../../modules/settings/settings.service.js';
 import { DISABLED_MESSAGE, featureForCommand, featureForComponent, isFeatureEnabled } from '../../modules/features/features.js';
 import { isCommandChannelAllowed } from '../../modules/settings/commands.admin.js';
+import { isMusicChannelAllowed } from '../../modules/music/music.service.js';
 import { channelMention } from 'discord.js';
 import { isGameFeature, isImprisoned, prisonMessage } from '../../modules/prison/prison.service.js';
 
@@ -47,7 +48,12 @@ export default defineEvent({
         if (await isDisabled(interaction.guildId, featureForCommand(interaction.commandName))) return replyError(interaction, DISABLED_MESSAGE);
         if (interaction.commandName !== 'admin') {
           const s = await getSettings(interaction.guildId);
-          if (!isCommandChannelAllowed(s, interaction.channelId)) {
+          if (interaction.commandName === 'youtube') {
+            if (!isMusicChannelAllowed(s, interaction.channelId)) {
+              const where = s.musicChannelIds.length ? s.musicChannelIds : s.commandChannelIds;
+              return replyError(interaction, `La musique se commande dans ${where.map(channelMention).join(' ou ')}.`);
+            }
+          } else if (!isCommandChannelAllowed(s, interaction.channelId)) {
             return replyError(interaction, `Les commandes de ${botName()} s’utilisent dans ${s.commandChannelIds.map(channelMention).join(' ou ')}. Je t’y attends !`);
           }
         }

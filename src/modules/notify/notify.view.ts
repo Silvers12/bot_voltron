@@ -60,6 +60,7 @@ export function buildWelcomeMessage(s: GuildSettings, guildName: string) {
     { name: '🤗 Câlins collectifs', value: `${botName()} surgit à l’improviste : cliquez **CÂLIN**, plus vous êtes nombreux, plus ça rapporte.`, show: on('calin_collectif') && s.groupHugChannelIds.length > 0 },
     { name: '🔢 Comptage', value: `Dans <#${s.countingChannelId}>, on compte à la suite (les petites formules sont acceptées), jamais deux fois d’affilée. Une erreur coûte ${formatAmount(s.countingFine, s)}, puis pile ou face : on continue ou on repart à 1.${surprise} Modifier son message après coup envoie en **prison** : ${s.prisonMinutes} min sans aucun jeu.`, show: on('comptage') && !!s.countingChannelId },
     { name: '💐 Entre camarades', value: '`/compliment` et `/insulte` (second degré garanti), avec des raretés à collectionner.', show: on('compliments') || on('insultes') },
+    { name: '🎵 Musique', value: `\`/youtube play\` dans un vocal : vidéos, playlists ou recherches YouTube, avec un lecteur à boutons.${s.djRoleId ? ` Réservé au rôle <@&${s.djRoleId}>.` : ''}`, show: on('musique') },
   ];
   const shown = blocks.filter((b) => b.show && b.value);
   if (shown.length) {

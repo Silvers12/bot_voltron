@@ -11,6 +11,7 @@ import { tickLottery } from '../../modules/lottery/lottery.service.js';
 import { armDuelExpiry } from '../commands/duel.js';
 import { releaseDue } from '../../modules/prison/prison.service.js';
 import { pruneCountingMessages } from '../../modules/counting/counting.service.js';
+import { scheduleYtdlpUpdates } from '../../modules/music/music.service.js';
 
 const log = createLogger('ready');
 
@@ -44,6 +45,7 @@ export default defineEvent({
     void releaseDue(client).catch((err) => log.error('Prison : libération initiale échouée', err));
     setInterval(() => void pruneCountingMessages().catch((err) => log.error('Comptage : purge des traces échouée', err)), 6 * 3_600_000);
     void pruneCountingMessages().catch((err) => log.error('Comptage : purge initiale échouée', err));
+    scheduleYtdlpUpdates();
     setInterval(() => {
       for (const guild of guilds) void tickVoiceSessions(guild).catch((err) => log.error(`Pointage vocal échoué (${guild.name})`, err));
     }, 60_000);

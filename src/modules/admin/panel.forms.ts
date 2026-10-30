@@ -269,6 +269,17 @@ export const FORMS: Form[] = [
     },
   },
   {
+    key: 'musique', module: 'musique', title: 'Musique YouTube', button: 'Réglages',
+    fields: [
+      { id: 'djRoleId', label: 'Rôle DJ (vide = tout le monde)', help: '@DJ ou son nom', type: { kind: 'role', required: false }, current: (s) => roleOf(s.djRoleId) },
+      { id: 'musicChannelIds', label: 'Salons des commandes /youtube (vide = ceux des commandes)', help: '#salon1 #salon2…', type: { kind: 'channels' }, current: (s) => s.musicChannelIds.map((id) => channelMention(id)).join(' ') },
+    ],
+    async apply({ guild, values }) {
+      const s = await updateSettings(guild.id, values as Partial<GuildSettings>);
+      return `Musique enregistrée : ${s.djRoleId ? `rôle ${roleMention(s.djRoleId)} requis` : 'ouverte à tous'}, commandes ${s.musicChannelIds.length ? `dans ${s.musicChannelIds.map(channelMention).join(', ')}` : 'dans les salons des commandes'}.`;
+    },
+  },
+  {
     key: 'commandes', module: 'commandes', title: 'Salons des commandes', button: 'Salons',
     fields: [
       { id: 'commandChannelIds', label: 'Salons autorisés (vide = partout)', help: '#salon1 #salon2…', type: { kind: 'channels' }, current: (s) => s.commandChannelIds.map((id) => channelMention(id)).join(' ') },

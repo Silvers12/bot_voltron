@@ -204,6 +204,15 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 - Réglages dans `/admin panneau` → module « Vol de cœurs » (part maximale, chance de réussite, délai). Interrupteur « vol ». Bilan dans `/stats` et l'historique de la bourse.
 - Résultat affiché en bannière générée (`src/core/duo-card.ts` : voleur et cible, verdict, butin ou amende, récit, illustration `content/vol/reussite.png` ou `echec.png`). `/calin` utilise la même carte avec `content/calin/calin.png`.
 
+## Musique YouTube
+
+- `/youtube play recherche:` dans un salon textuel, en étant dans un vocal : ajoute une vidéo, une playlist entière (500 pistes max) ou le premier résultat d'une recherche, puis affiche le **lecteur** (piste en cours, barre de progression, chaîne, durée, vues, volume, boucle, file, piste suivante, dernier ajout) avec deux rangées de boutons : ⏮️ ⏯️ ⏭️ ⏹️ et 🔀 Mélanger · 🔁 Boucle · 🔉 · 🔊 · 📜 À suivre (file paginée, menu « Lire maintenant… »). Le lecteur est recréé en bas du salon à chaque changement de piste, les anciens sont supprimés.
+- Sous-commandes : `player`, `skip`, `precedent` (historique de 50 pistes), `pause`, `resume`, `stop`, `queue [page]`, `shuffle`, `loop mode:off|piste|file`, `volume niveau:0-200` (relance la piste à la même position), `remove numero:`, `clear`.
+- **Rôle DJ** : panneau → module Musique YouTube → rôle requis pour commander (vide = tout le monde, les administrateurs passent toujours). **Salons** : même formulaire, salons où `/youtube` est permis (vide = règle générale des salons de commandes), pour garder la musique dans un salon dédié.
+- Le bot quitte le vocal après 5 min sans musique ou quand plus personne n'écoute. Interrupteur « musique ».
+- Technique : `yt-dlp` (binaire autonome dans l'image, mis à jour chaque nuit vers 5 h par `yt-dlp -U` si rien n'est en lecture) résout les flux ; `ffmpeg` encode en Opus 192 kbps (`-f ogg`), relayé tel quel par `@discordjs/voice` (pas de ré-encodage Node, pas de bibliothèque Opus nécessaire). Code : `src/modules/music/`.
+- Si YouTube bloque l'adresse (« Sign in to confirm you're not a bot ») : exporter les cookies du navigateur (extension *Get cookies.txt LOCALLY*), monter le fichier dans le conteneur (par exemple `./cookies.txt:/app/cookies.txt:ro` dans `compose.yaml`, service `bot`) et mettre `YTDLP_COOKIES=/app/cookies.txt` dans `.env`. Ne jamais committer ce fichier.
+
 ## Salon de comptage
 
 - Nécessite l'intent privilégié **Message Content** (portail Discord → Bot → Privileged Gateway Intents). Le contenu n'est lu que dans le salon de comptage.

@@ -6,7 +6,7 @@ import { botName } from '../../core/identity.js';
 export type FeatureKey =
   | 'quotidien' | 'hebdo' | 'calin' | 'boutique' | 'xp'
   | 'compliments' | 'insultes' | 'blackjack' | 'machine' | 'duel'
-  | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'taux' | 'vol' | 'des';
+  | 'calin_collectif' | 'tombola' | 'succes' | 'comptage' | 'taux' | 'vol' | 'des' | 'musique';
 
 export interface FeatureInfo {
   key: FeatureKey;
@@ -33,6 +33,7 @@ export const FEATURES: FeatureInfo[] = [
   { key: 'comptage', label: 'Salon de comptage', emoji: '🔢', description: 'Compter à la suite, amende en cas d’erreur' },
   { key: 'taux', label: 'Taux du jour', emoji: '🧸', description: '/taux et /duo : chance, choupitude, amour…' },
   { key: 'des', label: 'Dé et pile ou face', emoji: '🎲', description: '/de et /pileouface' },
+  { key: 'musique', label: 'Musique YouTube', emoji: '🎵', description: '/youtube : playlists et vidéos dans le vocal' },
 ];
 
 export const FEATURE_KEYS = FEATURES.map((f) => f.key);
@@ -64,13 +65,13 @@ export async function setFeatureEnabled(guildId: string, key: FeatureKey, enable
 
 const COMMAND_FEATURES: Record<string, FeatureKey> = {
   calin: 'calin', don: 'boutique', hebdo: 'hebdo', classement: 'xp', compliment: 'compliments', insulte: 'insultes',
-  blackjack: 'blackjack', machine: 'machine', duel: 'duel', vol: 'vol', tombola: 'tombola', succes: 'succes', taux: 'taux', duo: 'taux', de: 'des', pileouface: 'des',
+  blackjack: 'blackjack', machine: 'machine', duel: 'duel', vol: 'vol', tombola: 'tombola', succes: 'succes', taux: 'taux', duo: 'taux', de: 'des', pileouface: 'des', youtube: 'musique',
 };
 
 /** Préfixes de customId des composants gardés. Les câlins collectifs déjà lancés restent cliquables. */
 const COMPONENT_FEATURES: Array<[prefix: string, key: FeatureKey]> = [
   ['profil:daily', 'quotidien'], ['profil:weekly', 'hebdo'], ['shop:', 'boutique'], ['lb:', 'xp'],
-  ['bj:', 'blackjack'], ['slots:', 'machine'], ['duel:', 'duel'], ['lottery:', 'tombola'], ['profil:achievements', 'succes'],
+  ['bj:', 'blackjack'], ['slots:', 'machine'], ['duel:', 'duel'], ['lottery:', 'tombola'], ['profil:achievements', 'succes'], ['yt:', 'musique'],
 ];
 
 export function featureForCommand(name: string): FeatureKey | undefined {
