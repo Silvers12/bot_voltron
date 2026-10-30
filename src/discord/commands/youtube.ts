@@ -14,7 +14,7 @@ export default defineCommand({
     .setName('youtube')
     .setDescription('Musique YouTube dans le vocal')
     .addSubcommand((s) => s.setName('play').setDescription('Joue une vidéo, une playlist YouTube ou une recherche').addStringOption((o) => o.setName('recherche').setDescription('URL YouTube (vidéo ou playlist) ou termes de recherche').setRequired(true)))
-    .addSubcommand((s) => s.setName('ajouter').setDescription('Ajoute une piste juste après celle en cours (passe devant la file)').addStringOption((o) => o.setName('recherche').setDescription('URL YouTube ou termes de recherche').setRequired(true)))
+    .addSubcommand((s) => s.setName('ajouter').setDescription('Ajoute une piste ou une playlist à la fin de la file').addStringOption((o) => o.setName('recherche').setDescription('URL YouTube ou termes de recherche').setRequired(true)))
     .addSubcommand((s) => s.setName('player').setDescription('Affiche le lecteur (piste en cours et boutons)'))
     .addSubcommand((s) => s.setName('skip').setDescription('Passe à la piste suivante'))
     .addSubcommand((s) => s.setName('precedent').setDescription('Revient à la piste précédente'))
@@ -35,7 +35,7 @@ export default defineCommand({
     if (!canDj(guildMember, s)) return void (await priv(`❌ Il faut le rôle <@&${s.djRoleId}> pour utiliser la musique.`));
 
     if (sub === 'play' || sub === 'ajouter') {
-      const playNext = sub === 'ajouter';
+      const playNext = false; // play et ajouter mettent tous deux en fin de file
       const query = interaction.options.getString('recherche', true).trim();
       const voice = guildMember.voice.channel;
       if (!voice) return void (await priv('❌ Tu dois être dans un salon vocal.'));

@@ -207,7 +207,7 @@ Après avoir ajouté une commande ou une option : `npm run deploy` (depuis l'hô
 ## Musique YouTube
 
 - `/youtube play recherche:` dans un salon textuel, en étant dans un vocal : ajoute une vidéo, une playlist entière (500 pistes max) ou le premier résultat d'une recherche, puis affiche le **lecteur** (piste en cours, barre de progression, chaîne, durée, vues, volume, boucle, file, piste suivante, dernier ajout) avec deux rangées de boutons : ⏮️ ⏯️ ⏭️ ⏹️ et 🔀 Mélanger · 🔁 Boucle · 🔉 · 🔊 · 📜 À suivre (file paginée, menu « Lire maintenant… »). Le lecteur est recréé en bas du salon à chaque changement de piste, les anciens sont supprimés.
-- `/youtube ajouter recherche:` : même chose, mais la piste (ou la playlist) est insérée juste après celle en cours, devant le reste de la file.
+- `/youtube ajouter recherche:` : même chose, ajoute la piste ou la playlist à la fin de la file, à la suite de ce qui est déjà prévu.
 - Sous-commandes : `player`, `skip`, `precedent` (historique de 50 pistes), `pause`, `resume`, `stop`, `queue [page]`, `shuffle`, `loop mode:off|piste|file`, `volume niveau:0-200` (relance la piste à la même position), `remove numero:`, `clear`.
 - **Rôle DJ** : panneau → module Musique YouTube → rôle requis pour commander (vide = tout le monde, les administrateurs passent toujours). **Salons** : même formulaire, salons où `/youtube` est permis (vide = règle générale des salons de commandes), pour garder la musique dans un salon dédié.
 - Le bot quitte le vocal après 5 min sans musique ou quand plus personne n'écoute. Interrupteur « musique ».
