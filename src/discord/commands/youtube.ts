@@ -53,7 +53,7 @@ export default defineCommand({
       }
       let result;
       try {
-        result = await extract(query, guildMember.displayName, guildMember.id);
+        result = await extract(query, guildMember.displayName, guildMember.id, guildMember.displayAvatarURL({ extension: 'png', size: 128 }));
       } catch (err) {
         log.warn(`Extraction échouée pour « ${query} » : ${(err as Error).message}`);
         await interaction.deleteReply().catch(() => undefined);

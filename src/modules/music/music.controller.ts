@@ -2,7 +2,7 @@ import { MessageFlags, type ButtonInteraction, type StringSelectMenuInteraction 
 import { registerButtonPrefix, registerSelect } from '../../discord/components.js';
 import { getSettings } from '../settings/settings.service.js';
 import { canDj, getPlayer } from './music.service.js';
-import { buildPlayerMessage, buildQueueMessage, YT_JUMP_ID, YT_PAGE_PREFIX, YT_PREFIX } from './music.view.js';
+import { buildQueueMessage, YT_JUMP_ID, YT_PAGE_PREFIX, YT_PREFIX } from './music.view.js';
 import { LOOP_LABEL, shorten } from './format.js';
 import type { GuildPlayer } from './player.js';
 
@@ -22,8 +22,8 @@ async function guard(interaction: ButtonInteraction<'cached'> | StringSelectMenu
 
 /** Met à jour le lecteur : sur place si c'est le message cliqué, sinon en privé puis via le contrôleur. */
 async function refresh(interaction: ButtonInteraction<'cached'>, p: GuildPlayer, toast: string) {
-  if (p.controller && interaction.message.id === p.controller.id) await interaction.update(buildPlayerMessage(p));
-  else { await interaction.reply(ephemeral(toast)); await p.editController(); }
+  await interaction.reply(ephemeral(toast));
+  await p.editController();
 }
 
 registerButtonPrefix(YT_PAGE_PREFIX, async ({ interaction, arg }) => {

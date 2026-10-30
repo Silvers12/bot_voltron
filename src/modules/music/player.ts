@@ -8,6 +8,7 @@ import { createLogger } from '../../core/logger.js';
 import { LOOP_NEXT, type LoopMode } from './format.js';
 import { resolveStream, type Track } from './ytdlp.js';
 import { buildPlayerMessage } from './music.view.js';
+import { renderIdleBanner, renderTrackBanner } from './music.image.js';
 
 const log = createLogger('musique');
 
@@ -39,6 +40,8 @@ export class GuildPlayer {
   private idleTimer: NodeJS.Timeout | null = null;
   private refreshTimer: NodeJS.Timeout | null = null;
   private advancing = false;
+  /** Bannière de la piste affichée : rendu mis en cache, et URL du fichier déjà envoyé pour les rafraîchissements. */
+  private banner: { track: Track | null; file: Buffer | null; url: string | null } = { track: null, file: null, url: null };
 
   constructor(readonly guild: Guild, public textChannel: GuildTextBasedChannel, private readonly onStop: () => void) {
     this.audio = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Play } });
@@ -319,9 +322,28 @@ export class GuildPlayer {
     await this.textChannel.send({ content, allowedMentions: { parse: [] } }).catch((err) => log.warn(`Envoi impossible dans #${this.textChannel.name}`, err));
   }
 
+  /** Bannière à joindre pour l'état courant (rendue une fois par piste), ou URL déjà en ligne. */
+  private async bannerFor(): Promise<{ file?: Buffer; url?: string }> {
+    const track = this.current;
+    if (this.banner.track !== track || !this.banner.file) {
+      const file = await (track ? renderTrackBanner(track) : renderIdleBanner()).catch((err) => { log.warn('Bannière du lecteur impossible', err); return null; });
+      this.banner = { track, file, url: null };
+    }
+    if (this.banner.url) return { url: this.banner.url };
+    return this.banner.file ? { file: this.banner.file } : {};
+  }
+
+  /** Après envoi, retient l'URL du fichier joint pour les rafraîchissements suivants. */
+  private rememberBannerUrl(message: Message | null): void {
+    if (!message) return;
+    const m = /"url":"(https:\/\/(?:cdn|media)\.discordapp\.(?:com|net)\/[^"]*lecteur\.png[^"]*)"/.exec(JSON.stringify(message.components));
+    this.banner.url = m?.[1]?.replace(/\\\//g, '/') ?? null;
+  }
+
   /** Publie (ou republie en bas du salon) le lecteur ; l'ancien message est supprimé. Avec une interaction, elle sert de réponse. */
   async showController(interaction?: RepliableInteraction): Promise<void> {
-    const payload = buildPlayerMessage(this);
+    this.banner.url = null;
+    const payload = buildPlayerMessage(this, await this.bannerFor());
     const old = this.controller;
     let sent: Message | null = null;
     try {
@@ -332,14 +354,17 @@ export class GuildPlayer {
       return;
     }
     this.controller = sent;
+    this.rememberBannerUrl(sent);
     if (old && sent && old.id !== sent.id) await old.delete().catch(() => undefined);
   }
 
   async editController(state?: 'disconnected'): Promise<void> {
     if (!this.controller) return;
-    const payload = buildPlayerMessage(this, state);
+    const banner = state ? {} : await this.bannerFor();
+    const payload = buildPlayerMessage(this, banner, state);
     try {
-      await this.controller.edit(payload);
+      const edited = await this.controller.edit(payload);
+      if (banner.file) this.rememberBannerUrl(edited);
     } catch (err) {
       if ((err as { code?: number }).code === 10008) this.controller = null;
       else log.warn('Mise à jour du lecteur impossible', err);

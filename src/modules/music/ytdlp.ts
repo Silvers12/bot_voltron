@@ -33,6 +33,7 @@ export interface Track {
   duration: number | null;
   requester: string;
   requesterId: string;
+  requesterAvatar: string | null;
   thumbnail: string | null;
   uploader: string | null;
   uploaderUrl: string | null;
@@ -46,13 +47,13 @@ export interface ExtractResult {
 
 type Info = Record<string, unknown> & { entries?: Array<Info | null> };
 
-function trackFrom(e: Info, url: string, requester: string, requesterId: string): Track {
+function trackFrom(e: Info, url: string, requester: string, requesterId: string, requesterAvatar: string | null): Track {
   const thumbs = e['thumbnails'] as Array<{ url?: string }> | undefined;
   return {
     title: (e['title'] as string) || 'Titre inconnu',
     webpageUrl: url,
     duration: typeof e['duration'] === 'number' ? e['duration'] : null,
-    requester, requesterId,
+    requester, requesterId, requesterAvatar,
     thumbnail: (e['thumbnail'] as string) ?? thumbs?.at(-1)?.url ?? null,
     uploader: (e['uploader'] as string) ?? (e['channel'] as string) ?? null,
     uploaderUrl: (e['uploader_url'] as string) ?? (e['channel_url'] as string) ?? null,
@@ -61,7 +62,7 @@ function trackFrom(e: Info, url: string, requester: string, requesterId: string)
 }
 
 /** Transforme une URL (vidéo ou playlist) ou une recherche en liste de pistes. */
-export async function extract(query: string, requester: string, requesterId: string): Promise<ExtractResult> {
+export async function extract(query: string, requester: string, requesterId: string, requesterAvatar: string | null = null): Promise<ExtractResult> {
   const out = await run(['-J', '--flat-playlist', query]);
   const info = JSON.parse(out) as Info;
   if (!info) throw new Error('Impossible de récupérer cette vidéo ou playlist.');
@@ -73,12 +74,12 @@ export async function extract(query: string, requester: string, requesterId: str
       let url = (e['url'] as string) || (e['webpage_url'] as string);
       if (!url) continue;
       if (!url.startsWith('http')) url = `https://www.youtube.com/watch?v=${(e['id'] as string) ?? url}`;
-      tracks.push(trackFrom(e, url, requester, requesterId));
+      tracks.push(trackFrom(e, url, requester, requesterId, requesterAvatar));
     }
     if (!tracks.length) throw new Error('Playlist vide ou vidéos indisponibles.');
     return { tracks, playlistTitle: tracks.length === 1 ? null : ((info['title'] as string) ?? null) };
   }
-  return { tracks: [trackFrom(info, (info['webpage_url'] as string) || query, requester, requesterId)], playlistTitle: null };
+  return { tracks: [trackFrom(info, (info['webpage_url'] as string) || query, requester, requesterId, requesterAvatar)], playlistTitle: null };
 }
 
 /** Résout l'URL du flux audio juste avant la lecture (les URLs expirent) et complète la fiche de la piste. */

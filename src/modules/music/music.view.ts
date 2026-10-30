@@ -1,9 +1,9 @@
 import {
-  ActionRowBuilder, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
+  ActionRowBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, MediaGalleryBuilder, MediaGalleryItemBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
   type MessageActionRowComponentBuilder,
 } from 'discord.js';
 import { card, divider, screen, text } from '../../discord/v2.js';
-import { fmtDuration, fmtViews, LOOP_LABEL, progressBar, shorten } from './format.js';
+import { fmtDuration, LOOP_LABEL, progressBar, shorten } from './format.js';
 import type { GuildPlayer } from './player.js';
 import type { Track } from './ytdlp.js';
 import { IDLE_TIMEOUT_MS } from './player.js';
@@ -36,8 +36,15 @@ function controls(): ActionRowBuilder<MessageActionRowComponentBuilder>[] {
   ];
 }
 
-/** Le lecteur : piste en cours, barre de progression, infos, file, et les boutons. */
-export function buildPlayerMessage(p: GuildPlayer, state?: 'disconnected') {
+/**
+ * Le lecteur : bannière générée (miniature, titre, chaîne, demandeur), barre de progression et infos en texte, boutons.
+ * `banner` : fichier à joindre (nouvelle piste) ou URL déjà envoyée (rafraîchissement), pour ne pas renvoyer l'image toutes les 15 s.
+ */
+export function buildPlayerMessage(p: GuildPlayer, banner: { file?: Buffer; url?: string } = {}, state?: 'disconnected') {
+  const files = banner.file ? [new AttachmentBuilder(banner.file, { name: 'lecteur.png' })] : [];
+  const bannerUrl = banner.file ? 'attachment://lecteur.png' : banner.url;
+  // Sans nouveau fichier, on ne touche pas aux pièces jointes : l'image déjà en ligne reste valide.
+  const attach = files.length ? { files, attachments: [] as [] } : {};
   if (state === 'disconnected') {
     const c = card(COLOR_DONE);
     c.addTextDisplayComponents(text('⏹️ **Lecteur arrêté.** Relance avec `/youtube play`.'));
@@ -46,24 +53,22 @@ export function buildPlayerMessage(p: GuildPlayer, state?: 'disconnected') {
   const t = p.current;
   if (!t) {
     const c = card(COLOR_IDLE);
-    c.addTextDisplayComponents(text(`## 💤 Lecteur en attente\nAucune piste en lecture. Ajoute de la musique avec \`/youtube play\` (je quitte le vocal après ${IDLE_TIMEOUT_MS / 60_000} min d’inactivité).${p.lastAdded ? `\n\n**➕ Dernier ajout**\n${p.lastAdded}` : ''}`));
-    return { ...screen(c, controls()), allowedMentions: { parse: [] as [] } };
+    if (bannerUrl) c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(bannerUrl).setDescription('Lecteur en attente')));
+    c.addTextDisplayComponents(text(`Aucune piste en lecture. Ajoute de la musique avec \`/youtube play\` (je quitte le vocal après ${IDLE_TIMEOUT_MS / 60_000} min d’inactivité).${p.lastAdded ? `\n➕ **Dernier ajout** · ${p.lastAdded}` : ''}`));
+    return { ...screen(c, controls()), ...attach, allowedMentions: { parse: [] as [] } };
   }
   const c = card(p.paused ? COLOR_PAUSED : COLOR_PLAYING);
-  c.addTextDisplayComponents(text(`## ${p.paused ? '⏸️ En pause' : '🎶 Lecture en cours'}\n**[${shorten(t.title, 90)}](${t.webpageUrl})**\n${progressBar(p.elapsed(), t.duration)}`));
-  if (t.thumbnail) c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(t.thumbnail).setDescription(t.title)));
+  if (bannerUrl) c.addMediaGalleryComponents(new MediaGalleryBuilder().addItems(new MediaGalleryItemBuilder().setURL(bannerUrl).setDescription(t.title)));
+  c.addTextDisplayComponents(text(`${p.paused ? '⏸️ **En pause**' : '🎶 **Lecture en cours**'} · [${shorten(t.title, 70)}](${t.webpageUrl})\n${progressBar(p.elapsed(), t.duration)}`));
   c.addSeparatorComponents(divider());
   const remaining = p.queue.reduce((n, x) => n + (x.duration ?? 0), 0);
   const next = p.queue[0];
   c.addTextDisplayComponents(text(
-    `📺 **Chaîne** · ${channelLabel(t)} · ⏱️ \`${fmtDuration(t.duration)}\` · 👁️ ${fmtViews(t.viewCount)}\n` +
-    `🔊 **Volume** · ${Math.round(p.volume * 100)} % · 🔁 **Boucle** · ${LOOP_LABEL[p.loopMode]} · 📜 **File** · ${p.queue.length} piste${p.queue.length > 1 ? 's' : ''} · \`${fmtDuration(remaining)}\`\n` +
+    `📺 ${channelLabel(t)} · 🔊 **Volume** · ${Math.round(p.volume * 100)} % · 🔁 **Boucle** · ${LOOP_LABEL[p.loopMode]} · 📜 **File** · ${p.queue.length} piste${p.queue.length > 1 ? 's' : ''} · \`${fmtDuration(remaining)}\`\n` +
     `⏭️ **Suivant** · ${next ? label(next) : '_Fin de la file_'}` +
     (p.lastAdded ? `\n➕ **Dernier ajout** · ${p.lastAdded}` : ''),
   ));
-  c.addSeparatorComponents(divider());
-  c.addTextDisplayComponents(text(`-# Demandé par ${t.requester}`));
-  return { ...screen(c, controls()), allowedMentions: { parse: [] as [] } };
+  return { ...screen(c, controls()), ...attach, allowedMentions: { parse: [] as [] } };
 }
 
 export function queuePages(p: GuildPlayer): number {
