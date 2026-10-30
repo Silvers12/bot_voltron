@@ -5,7 +5,7 @@ import { botName } from '../../core/identity.js';
 import { fmtDuration, fmtViews } from './format.js';
 import type { Track } from './ytdlp.js';
 
-const PAD = 50, THUMB_W = 440, THUMB_H = 248, ICON = 250, AVATAR = 44;
+const PAD = 50, THUMB_W = 440, THUMB_H = 248, ICON = 210, AVATAR = 44;
 
 async function fetchImage(url: string | null): Promise<Buffer | null> {
   if (!url) return null;
@@ -38,13 +38,13 @@ export async function renderTrackBanner(t: Track): Promise<Buffer> {
   const [thumbBuf, avatarBuf, illustration] = await Promise.all([fetchImage(t.thumbnail), fetchImage(t.requesterAvatar), loadIllustration('musique', 'dj')]);
   const x = PAD + THUMB_W + 40;
   const textW = W - x - (illustration ? ICON - 20 : 0) - PAD;
-  const titleLines = wrap(t.title, Math.floor(textW / 17)).slice(0, 2);
+  const titleLines = wrap(t.title, Math.floor(textW / 15.5)).slice(0, 2);
   if (titleLines.length === 2 && t.title.length > titleLines.join(' ').length) titleLines[1] = `${titleLines[1]!.slice(0, -1)}…`;
   const rounded = (w: number, h: number, r: number) => Buffer.from(`<svg width="${w}" height="${h}"><rect width="${w}" height="${h}" rx="${r}" fill="#fff"/></svg>`);
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}">
     <rect width="${W}" height="${H}" rx="36" fill="#000" opacity="0.25"/>
     <text x="${x}" y="${PAD + 24}" font-family="${FONT}" font-size="22" font-weight="bold" fill="#ff5c7a">EN LECTURE</text>
-    ${titleLines.map((l, i) => `<text x="${x}" y="${PAD + 72 + i * 40}" font-family="${FONT}" font-size="34" font-weight="bold" fill="#fff">${esc(l)}</text>`).join('')}
+    ${titleLines.map((l, i) => `<text x="${x}" y="${PAD + 72 + i * 40}" font-family="${FONT}" font-size="30" font-weight="bold" fill="#fff">${esc(l)}</text>`).join('')}
     <text x="${x}" y="${PAD + 72 + titleLines.length * 40 + 8}" font-family="${FONT}" font-size="24" fill="#d0d4e0">${esc(t.uploader ?? 'Chaîne inconnue')}</text>
     <rect x="${x}" y="${PAD + 72 + titleLines.length * 40 + 34}" width="${fmtDuration(t.duration).length * 15 + 30}" height="36" rx="18" fill="#fff" opacity="0.15"/>
     <text x="${x + 16}" y="${PAD + 72 + titleLines.length * 40 + 59}" font-family="${FONT}" font-size="22" font-weight="bold" fill="#fff">${esc(fmtDuration(t.duration))}</text>
