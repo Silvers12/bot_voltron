@@ -91,9 +91,10 @@ export class GuildPlayer {
     try {
       await entersState(connection, VoiceConnectionStatus.Ready, 15_000);
     } catch (err) {
+      log.warn(`Connexion vocale impossible sur ${channel.guild.name} (#${channel.name}, état ${connection.state.status})`, err);
       connection.destroy();
       this.connection = null;
-      throw new Error('Connexion au salon vocal impossible.');
+      throw new Error('Connexion au salon vocal impossible (délai dépassé). Vérifie mes permissions sur ce salon.');
     }
     connection.subscribe(this.audio);
   }

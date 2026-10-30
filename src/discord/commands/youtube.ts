@@ -1,4 +1,4 @@
-import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
 import { defineCommand } from '../types.js';
 import { createLogger } from '../../core/logger.js';
 import { getSettings } from '../../modules/settings/settings.service.js';
@@ -37,6 +37,9 @@ export default defineCommand({
       const query = interaction.options.getString('recherche', true).trim();
       const voice = guildMember.voice.channel;
       if (!voice) return void (await priv('❌ Tu dois être dans un salon vocal.'));
+      const perms = voice.permissionsFor(interaction.guild.members.me!);
+      const missing = [[PermissionFlagsBits.ViewChannel, 'Voir le salon'], [PermissionFlagsBits.Connect, 'Se connecter'], [PermissionFlagsBits.Speak, 'Parler']].filter(([p]) => !perms.has(p as bigint)).map(([, n]) => `« ${n} »`);
+      if (missing.length) return void (await priv(`❌ Il me manque ${missing.join(', ')} dans ${voice.name}. Un admin peut me l’accorder dans les permissions du salon.`));
       if (!interaction.channel?.isSendable() || interaction.channel.isDMBased()) return void (await priv('❌ Je ne peux pas afficher le lecteur ici.'));
       const existing = getPlayer(interaction.guildId);
       if (existing && existing.voiceChannelId !== voice.id && existing.playing) return void (await priv('❌ Je joue déjà dans un autre salon vocal.'));
