@@ -4,9 +4,25 @@ Bot privé pour un ou plusieurs serveurs choisis (liste `DISCORD_GUILD_IDS`) : a
 
 Chaque serveur autorisé a ses propres membres, bourses, boutique, réglages et classement ; les textes de `content/` et la liste des intendants (`DISCORD_ADMIN_IDS`) sont communs. Tout autre serveur est ignoré.
 
+## Aperçu
+
+Les résultats publics sont des bannières générées à la volée avec `sharp` (avatar, texte, illustration PNG de `content/`) ; les écrans à boutons gardent un bandeau image au-dessus du texte. Quelques exemples, rendus avec des membres fictifs :
+
+| | |
+|---|---|
+| **Profil** (`/profil`) ![](docs/cartes/profil.png) | **Taux du jour** (`/taux`) ![](docs/cartes/taux.png) |
+| **Dés** (`/de`) ![](docs/cartes/des.png) | **Compliment épique** (`/compliment`) ![](docs/cartes/compliment.png) |
+| **Câlin** (`/calin`) ![](docs/cartes/calin.png) | **Vol raté** (`/vol`) ![](docs/cartes/vol.png) |
+| **Duel** (`/duel`) ![](docs/cartes/duel.png) | **Niveau** (annonce) ![](docs/cartes/niveau.png) |
+| **Succès** (annonce) ![](docs/cartes/succes.png) | **Jackpot** (`/machine`) ![](docs/cartes/jackpot.png) |
+| **Tombola** (message épinglé) ![](docs/cartes/tombola.png) | **Prison** (comptage) ![](docs/cartes/prison.png) |
+| **Lecteur YouTube** (`/youtube play`) ![](docs/cartes/musique.png) | **Page des notifications** ![](docs/cartes/notifications.png) |
+
+Les illustrations (loutres) sont fournies par le propriétaire du bot dans `content/` ; sans elles, les cartes s'affichent avec leur zone libre.
+
 ## Stack
 
-Node 22 · TypeScript · discord.js 14 · PostgreSQL 17 · Prisma 7 · Docker Compose
+Node 22 · TypeScript · discord.js 14 · PostgreSQL 17 · Prisma 7 · Docker Compose · sharp (images) · ffmpeg + yt-dlp (musique)
 
 ## Structure
 
@@ -39,12 +55,15 @@ src/
   modules/rates/           # taux du jour et duo (bannières générées)
   modules/help/            # guide des commandes (menu du profil)
   modules/dice/            # dé et pile ou face
-  modules/notify/          # pages d'accueil et de notifications, rôles de notification
+  modules/notify/          # pages d'accueil et de notifications, rôles de notification, mentions personnelles
+  modules/prison/          # prison des tricheurs du comptage (rôle, peine, carte)
+  modules/music/           # musique YouTube dans le vocal (yt-dlp, ffmpeg, lecteur à boutons)
   modules/features/        # interrupteurs de fonctionnalités
   modules/admin/           # panneau d'intendance, formulaires, /admin installer
   modules/moderation/      # /admin messages (suppression)
   modules/settings/        # réglages du serveur, salons des commandes
-content/                   # textes et catalogue éditables (compliments, insultes, duels, vols, boutique, icônes de taux, visuels dé, pièce, compliment et insulte)
+content/                   # textes et catalogue éditables (compliments, insultes, duels, vols, boutique) et illustrations PNG des cartes (taux, jeux, banter, calin, vol, duel, niveau, succes, tombola, prison, musique, notify)
+docs/cartes/               # exemples de cartes générées (README)
 scripts/                   # deploy.sh, backup.sh, restore.sh
 prisma/schema.prisma       # modèle de données
 prisma/migrations/         # migrations versionnées
@@ -71,7 +90,7 @@ Voltron n'est pas un bot hébergé : chacun crée sa propre application Discord 
 https://discord.com/oauth2/authorize?client_id=VOTRE_CLIENT_ID&scope=bot%20applications.commands&permissions=2048
 ```
 
-À retrouver aussi dans **OAuth2 → URL Generator**. Ajouter *Gérer les rôles* si des articles-rôles ou des paliers sont utilisés, *Gérer les salons* pour `/admin installer`. Après invitation : ajouter l'identifiant du serveur à `DISCORD_GUILD_IDS`, relancer le bot, puis `npm run deploy`.
+À retrouver aussi dans **OAuth2 → URL Generator**. Ajouter *Gérer les rôles* si des articles-rôles ou des paliers sont utilisés (et pour la prison, les notifications), *Gérer les salons* pour `/admin installer`, *Se connecter* et *Parler* pour la musique. Après invitation : ajouter l'identifiant du serveur à `DISCORD_GUILD_IDS`, relancer le bot, puis `npm run deploy`.
 
 ## Développement
 
@@ -322,6 +341,7 @@ Membres :
 - `/duo type membre [avec]` : taux entre deux membres (public).
 - `/de [nombre]` : lance 1 à 5 dés à six faces (public).
 - `/pileouface [choix]` : lance une pièce, avec pari facultatif (public).
+- `/youtube play|ajouter recherche:` · `player` · `skip` · `precedent` · `pause` · `resume` · `stop` · `queue [page]` · `shuffle` · `loop mode` · `volume niveau` · `remove numero` · `clear` : musique YouTube dans le vocal (voir section dédiée ; rôle DJ et salons réglables).
 
 Intendance (`DISCORD_ADMIN_IDS` dans `.env` si renseigné, sinon permission Discord *Administrateur* ; vérifié côté serveur à chaque appel) :
 - `/admin crediter membre montant [raison]` · `/admin debiter membre montant [raison]`
