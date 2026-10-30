@@ -74,7 +74,8 @@ export const HELP_CATEGORIES: HelpCategory[] = [
     key: 'musique', label: 'Musique', emoji: '🎵', blurb: 'YouTube dans le vocal',
     intro: (s) => `Rejoins un salon vocal, puis lance une vidéo, une playlist ou une recherche YouTube. Le lecteur s’affiche avec ses boutons (lecture, pause, suivant, mélange, boucle, volume, file).${s.djRoleId ? ` Réservé au rôle <@&${s.djRoleId}>.` : ''}${s.musicChannelIds.length ? ` Commandes dans ${s.musicChannelIds.map((id) => `<#${id}>`).join(', ')}.` : ''} Je quitte le vocal après 5 min sans musique ou quand plus personne n’écoute.`,
     entries: [
-      { command: 'youtube', sub: 'play', args: 'recherche', feature: 'musique', describe: () => 'Ajoute une vidéo, une playlist entière ou le premier résultat d’une recherche, et affiche le lecteur.' },
+      { command: 'youtube', sub: 'play', args: 'recherche', feature: 'musique', describe: () => 'Ajoute une vidéo, une playlist entière ou le premier résultat d’une recherche en fin de file, et affiche le lecteur.' },
+      { command: 'youtube', sub: 'ajouter', args: 'recherche', feature: 'musique', describe: () => 'Pareil, mais la piste passe devant la file : elle sera jouée juste après celle en cours.' },
       { command: 'youtube', sub: 'player', feature: 'musique', describe: () => 'Réaffiche le lecteur en bas du salon.' },
       { command: 'youtube', sub: 'queue', args: '[page]', feature: 'musique', describe: () => 'La file d’attente, avec un menu pour sauter à une piste.' },
       { command: 'youtube', sub: 'skip', feature: 'musique', describe: () => 'Piste suivante. `precedent` pour revenir en arrière, `pause` et `resume` pour marquer une pause.' },

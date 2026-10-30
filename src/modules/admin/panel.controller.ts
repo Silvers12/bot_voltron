@@ -169,7 +169,7 @@ async function moduleDetails(guild: Guild, module: ModuleKey): Promise<ModuleDet
           `Salons des commandes /youtube : ${s.musicChannelIds.length ? s.musicChannelIds.map(channelMention).join(', ') : '*ceux des commandes*'}`,
           `Lecteur : ${p ? `connecté dans ${channelMention(p.voiceChannelId!)}, ${p.current ? `en lecture (${p.queue.length} en attente)` : 'en attente'}` : 'arrêté'}`,
         ],
-        commands: ['/youtube play · player · skip · precedent · pause · resume · stop · queue · shuffle · loop · volume · remove · clear'],
+        commands: ['/youtube play · ajouter · player · skip · precedent · pause · resume · stop · queue · shuffle · loop · volume · remove · clear'],
       };
     }
     case 'commandes':

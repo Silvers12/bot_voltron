@@ -108,8 +108,9 @@ export class GuildPlayer {
 
   // ---- actions ----
 
-  enqueue(tracks: Track[]): void {
-    this.queue.push(...tracks);
+  /** Ajoute en fin de file, ou juste après la piste en cours avec `next`. */
+  enqueue(tracks: Track[], { next = false } = {}): void {
+    if (next) this.queue.unshift(...tracks); else this.queue.push(...tracks);
     this.stopped = false;
     this.clearIdle();
     if (!this.current) void this.next();

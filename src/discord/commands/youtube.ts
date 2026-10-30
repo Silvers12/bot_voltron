@@ -14,6 +14,7 @@ export default defineCommand({
     .setName('youtube')
     .setDescription('Musique YouTube dans le vocal')
     .addSubcommand((s) => s.setName('play').setDescription('Joue une vidéo, une playlist YouTube ou une recherche').addStringOption((o) => o.setName('recherche').setDescription('URL YouTube (vidéo ou playlist) ou termes de recherche').setRequired(true)))
+    .addSubcommand((s) => s.setName('ajouter').setDescription('Ajoute une piste juste après celle en cours (passe devant la file)').addStringOption((o) => o.setName('recherche').setDescription('URL YouTube ou termes de recherche').setRequired(true)))
     .addSubcommand((s) => s.setName('player').setDescription('Affiche le lecteur (piste en cours et boutons)'))
     .addSubcommand((s) => s.setName('skip').setDescription('Passe à la piste suivante'))
     .addSubcommand((s) => s.setName('precedent').setDescription('Revient à la piste précédente'))
@@ -33,7 +34,8 @@ export default defineCommand({
     const priv = (content: string) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
     if (!canDj(guildMember, s)) return void (await priv(`❌ Il faut le rôle <@&${s.djRoleId}> pour utiliser la musique.`));
 
-    if (sub === 'play') {
+    if (sub === 'play' || sub === 'ajouter') {
+      const playNext = sub === 'ajouter';
       const query = interaction.options.getString('recherche', true).trim();
       const voice = guildMember.voice.channel;
       if (!voice) return void (await priv('❌ Tu dois être dans un salon vocal.'));
@@ -65,10 +67,10 @@ export default defineCommand({
         p.lastAdded = `📜 **${shorten(result.playlistTitle, 60)}** · ${result.tracks.length} pistes · \`${fmtDuration(total)}\` · par ${guildMember.displayName}`;
       } else {
         const t = result.tracks[0]!;
-        const pos = wasPlaying ? p.queue.length + 1 : 0;
+        const pos = wasPlaying ? (playNext ? 1 : p.queue.length + 1) : 0;
         p.lastAdded = `${label(t)}${pos ? ` · position #${pos}` : ''} · par ${guildMember.displayName}`;
       }
-      p.enqueue(result.tracks);
+      p.enqueue(result.tracks, { next: playNext });
       if (wasPlaying) await p.showController(interaction); // pas de changement de piste : le lecteur répond tout de suite
       else {
         // La lecture démarre et publie le lecteur en bas du salon ; on clôt la réponse discrètement.
