@@ -1,6 +1,7 @@
 import { ChannelType, PermissionFlagsBits, roleMention, type Guild, type GuildMember } from 'discord.js';
 import { createLogger } from '../../core/logger.js';
 import { roleAssignabilityProblem } from '../../core/roles.js';
+import { createStyledRole, restyleRole } from '../../core/role-style.js';
 import { getSettings, updateSettings } from '../settings/settings.service.js';
 import { buildNotifyMessage, buildWelcomeMessage, NOTIFY_ROLES, roleIdFor, type NotifyKey } from './notify.view.js';
 import type { GuildSettings } from '../../generated/prisma/client.js';
@@ -21,8 +22,10 @@ export async function ensureNotifyRoles(guild: Guild): Promise<GuildSettings> {
   let s = await getSettings(guild.id);
   if (!guild.members.me?.permissions.has(PermissionFlagsBits.ManageRoles)) throw new NotifyError('Le bot n’a pas la permission « Gérer les rôles ».');
   for (const r of NOTIFY_ROLES) {
-    if (s[r.field] && guild.roles.cache.has(s[r.field]!)) continue;
-    const role = await guild.roles.create({ name: r.roleName, mentionable: true, permissions: [], reason: `Rôle de notification ${botName()}` });
+    const style = { name: r.roleName, emoji: r.emoji, color: r.color };
+    const existing = s[r.field] ? guild.roles.cache.get(s[r.field]!) : undefined;
+    if (existing) { await restyleRole(existing, style); continue; }
+    const role = await createStyledRole(guild, style, { mentionable: true, reason: `Rôle de notification ${botName()}` });
     s = await updateSettings(guild.id, { [r.field]: role.id });
     log.info(`Rôle « ${role.name} » créé sur ${guild.name}`);
   }

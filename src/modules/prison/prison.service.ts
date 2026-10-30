@@ -4,12 +4,14 @@ import { createLogger } from '../../core/logger.js';
 import { config } from '../../core/config.js';
 import { botName } from '../../core/identity.js';
 import { getSettings, updateSettings } from '../settings/settings.service.js';
+import { createStyledRole, restyleRole, styledName } from '../../core/role-style.js';
 import type { FeatureKey } from '../features/features.js';
 import type { GuildSettings, Member } from '../../generated/prisma/client.js';
 
 const log = createLogger('prison');
 
 export const PRISON_ROLE_NAME = 'Prison';
+const PRISON_STYLE = { name: PRISON_ROLE_NAME, emoji: '🔒', color: 0x546e7a };
 
 /** Fonctionnalités interdites pendant une peine : tous les jeux. */
 const GAME_FEATURES = new Set<FeatureKey>(['blackjack', 'machine', 'duel', 'vol', 'des', 'taux', 'tombola', 'comptage']);
@@ -40,14 +42,16 @@ export function prisonMessage(member: Pick<Member, 'prisonUntil'>): string {
 
 /** Rôle Prison du serveur, créé s'il manque (le bot doit pouvoir gérer les rôles). Retourne null si impossible. */
 export async function ensurePrisonRole(guild: Guild, s: GuildSettings): Promise<string | null> {
-  if (s.prisonRoleId && guild.roles.cache.has(s.prisonRoleId)) return s.prisonRoleId;
+  const known = s.prisonRoleId ? guild.roles.cache.get(s.prisonRoleId) : undefined;
+  if (known) { await restyleRole(known, PRISON_STYLE); return known.id; }
   const me = guild.members.me;
   if (!me?.permissions.has(PermissionFlagsBits.ManageRoles)) {
     log.warn(`${guild.name} : impossible de créer le rôle Prison, permission « Gérer les rôles » manquante`);
     return null;
   }
-  const existing = guild.roles.cache.find((r) => r.name === PRISON_ROLE_NAME && !r.managed && r.position < me.roles.highest.position);
-  const role = existing ?? await guild.roles.create({ name: PRISON_ROLE_NAME, color: 0x546e7a, permissions: [], reason: `Rôle de prison ${botName()}` });
+  const existing = guild.roles.cache.find((r) => (r.name === PRISON_ROLE_NAME || r.name === styledName(PRISON_STYLE)) && !r.managed && r.position < me.roles.highest.position);
+  if (existing) await restyleRole(existing, PRISON_STYLE);
+  const role = existing ?? await createStyledRole(guild, PRISON_STYLE, { reason: `Rôle de prison ${botName()}` });
   await updateSettings(guild.id, { prisonRoleId: role.id });
   log.info(`${guild.name} : rôle Prison ${existing ? 'retrouvé' : 'créé'} (${role.id})`);
   return role.id;

@@ -14,10 +14,10 @@ export const NOTIFY_SELECT_ID = 'notify:select';
 export const MENTIONS_SELECT_ID = 'notify:mentions';
 export type NotifyKey = 'hug' | 'lottery' | 'duel';
 
-export const NOTIFY_ROLES: Array<{ key: NotifyKey; field: 'notifyHugRoleId' | 'notifyLotteryRoleId' | 'notifyDuelRoleId'; label: string; emoji: string; roleName: string; description: string }> = [
-  { key: 'hug', field: 'notifyHugRoleId', label: 'Câlins collectifs', emoji: '🤗', roleName: 'Câlins collectifs', description: `quand ${botName()} ouvre les bras` },
-  { key: 'lottery', field: 'notifyLotteryRoleId', label: 'Tombola', emoji: '🎟️', roleName: 'Tombola', description: 'nouvelle tombola, rappels, tirage' },
-  { key: 'duel', field: 'notifyDuelRoleId', label: 'Duels', emoji: '⚔️', roleName: 'Duels', description: 'quand un duel est lancé' },
+export const NOTIFY_ROLES: Array<{ key: NotifyKey; field: 'notifyHugRoleId' | 'notifyLotteryRoleId' | 'notifyDuelRoleId'; label: string; emoji: string; roleName: string; color: number; description: string }> = [
+  { key: 'hug', field: 'notifyHugRoleId', label: 'Câlins collectifs', emoji: '🤗', roleName: 'Câlins collectifs', color: 0xec407a, description: `quand ${botName()} ouvre les bras` },
+  { key: 'lottery', field: 'notifyLotteryRoleId', label: 'Tombola', emoji: '🎟️', roleName: 'Tombola', color: 0x8e44ad, description: 'nouvelle tombola, rappels, tirage' },
+  { key: 'duel', field: 'notifyDuelRoleId', label: 'Duels', emoji: '⚔️', roleName: 'Duels', color: 0xc0392b, description: 'quand un duel est lancé' },
 ];
 
 export function roleIdFor(s: GuildSettings, key: NotifyKey): string | null {
