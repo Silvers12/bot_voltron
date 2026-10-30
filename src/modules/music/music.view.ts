@@ -97,11 +97,11 @@ export function buildQueueMessage(p: GuildPlayer, page = 1) {
     ));
   }
   rows.push(new ActionRowBuilder<MessageActionRowComponentBuilder>().addComponents(
-    new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}1`).setEmoji('⏮️').setStyle(ButtonStyle.Secondary).setDisabled(page <= 1),
-    new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}${page - 1}`).setEmoji('◀️').setStyle(ButtonStyle.Primary).setDisabled(page <= 1),
+    new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}first:1`).setEmoji('⏮️').setStyle(ButtonStyle.Secondary).setDisabled(page <= 1),
+    new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}prev:${page - 1}`).setEmoji('◀️').setStyle(ButtonStyle.Primary).setDisabled(page <= 1),
     new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}same`).setLabel(`Page ${page}/${pages}`).setStyle(ButtonStyle.Secondary).setDisabled(true),
-    new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}${page + 1}`).setEmoji('▶️').setStyle(ButtonStyle.Primary).setDisabled(page >= pages),
-    new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}${pages}`).setEmoji('⏭️').setStyle(ButtonStyle.Secondary).setDisabled(page >= pages),
+    new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}next:${page + 1}`).setEmoji('▶️').setStyle(ButtonStyle.Primary).setDisabled(page >= pages),
+    new ButtonBuilder().setCustomId(`${YT_PAGE_PREFIX}last:${pages}`).setEmoji('⏭️').setStyle(ButtonStyle.Secondary).setDisabled(page >= pages),
   ));
   return { ...screen(c, rows), allowedMentions: { parse: [] as [] } };
 }

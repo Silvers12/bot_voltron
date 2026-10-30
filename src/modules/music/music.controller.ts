@@ -29,7 +29,7 @@ async function refresh(interaction: ButtonInteraction<'cached'>, p: GuildPlayer,
 registerButtonPrefix(YT_PAGE_PREFIX, async ({ interaction, arg }) => {
   const p = await guard(interaction);
   if (!p) return;
-  await interaction.update(buildQueueMessage(p, Number(arg) || 1));
+  await interaction.update(buildQueueMessage(p, Number(arg.split(':').pop()) || 1));
 });
 
 registerButtonPrefix(YT_PREFIX, async ({ interaction, arg }) => {
