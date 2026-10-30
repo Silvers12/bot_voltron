@@ -43,7 +43,9 @@ export class GuildPlayer {
   constructor(readonly guild: Guild, public textChannel: GuildTextBasedChannel, private readonly onStop: () => void) {
     this.audio = createAudioPlayer({ behaviors: { noSubscriber: NoSubscriberBehavior.Play } });
     this.audio.on('error', (err) => log.warn(`Erreur de lecture sur ${guild.name}`, err));
+    this.audio.on('debug', (m) => log.debug(`lecteur : ${m}`));
     this.audio.on('stateChange', (before, after) => {
+      log.info(`Lecteur ${guild.name} : ${before.status} → ${after.status}`);
       if (after.status === AudioPlayerStatus.Idle && before.status !== AudioPlayerStatus.Idle) void this.onTrackEnd();
     });
   }
@@ -88,6 +90,8 @@ export class GuildPlayer {
       }
     });
     connection.on('error', (err) => log.warn(`Connexion vocale sur ${channel.guild.name}`, err));
+    connection.on('stateChange', (before, after) => log.info(`Connexion ${channel.guild.name} : ${before.status} → ${after.status}`));
+    connection.on('debug', (m) => log.info(`connexion : ${m.slice(0, 300)}`));
     try {
       await entersState(connection, VoiceConnectionStatus.Ready, 15_000);
     } catch (err) {
@@ -259,6 +263,9 @@ export class GuildPlayer {
     const child = spawn('ffmpeg', args, { stdio: ['ignore', 'pipe', 'pipe'] });
     child.stderr?.on('data', (d: Buffer) => { const line = d.toString().trim(); if (line) log.warn(`ffmpeg : ${line.slice(0, 200)}`); });
     child.on('error', (err) => log.error('ffmpeg introuvable ou impossible à lancer', err));
+    let bytes = 0;
+    child.stdout?.on('data', (d: Buffer) => { if (bytes === 0) log.info(`ffmpeg : premier bloc audio (${d.length} o)`); bytes += d.length; });
+    child.on('close', (code) => log.info(`ffmpeg terminé (code ${code}), ${Math.round(bytes / 1024)} Ko produits`));
     this.ffmpeg = child;
     const resource = createAudioResource(child.stdout!, { inputType: StreamType.OggOpus });
     this.audio.play(resource);
